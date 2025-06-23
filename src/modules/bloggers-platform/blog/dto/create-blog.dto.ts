@@ -1,7 +1,7 @@
-export class CreateBlogDomainDto {
+export class CreateBlogDto {
   name: string;
   description: string;
   websiteUrl: string;
 }
 
-export class UpdateBlogDomainDto extends CreateBlogDomainDto {}
+export class UpdateBlogDto extends CreateBlogDto {}
