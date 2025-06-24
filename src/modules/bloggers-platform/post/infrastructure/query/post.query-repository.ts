@@ -19,14 +19,14 @@ export class PostQueryRepository {
   ) {}
   async getByIdOrNotFoundFail(id: string): Promise<PostViewDto> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException('Blog not found.');
+      throw new NotFoundException('Post not found.');
     }
     const post = await this.PostModel.findOne({
       _id: id,
       deletedAt: null,
     });
     if (!post) {
-      throw new NotFoundException('Blog not found.');
+      throw new NotFoundException('Post not found.');
     }
     const myStatus: likeStatus = likeStatus.None;
 
@@ -39,7 +39,7 @@ export class PostQueryRepository {
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const queryParams = plainToClass(GetPostQueryParams, query);
 
-    const filter: FilterQuery<Blog> = {
+    const filter: FilterQuery<Post> = {
       deletedAt: null,
     };
 

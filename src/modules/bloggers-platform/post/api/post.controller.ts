@@ -10,19 +10,20 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { PostRepository } from '../infrastructure/post.repository';
 import { PostService } from '../application/post.service';
 import { CreatePostDto } from './input-dto/post.input-dto';
 import { PostQueryRepository } from '../infrastructure/query/post.query-repository';
 import { UpdatePostDto } from './input-dto/updats-post.input-dto';
 import { GetPostQueryParams } from './input-dto/get-post-query-params.input-dto';
+import { CommentsQueryRepository } from '../../comment/infrastructure/query/comments.query-repository';
+import { GetCommentQueryParams } from '../../comment/api/input-dto/get-comment-query-params.input-dto';
 
 @Controller('posts')
 export class PostController {
   constructor(
-    private postRepository: PostRepository,
     private postService: PostService,
     private postQueryRepository: PostQueryRepository,
+    private commentsQueryRepository: CommentsQueryRepository,
   ) {}
 
   @Post()
@@ -51,5 +52,13 @@ export class PostController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') postId: string) {
     await this.postService.deletePost(postId);
+  }
+
+  @Get(':id/comments')
+  async getCommentByPost(
+    @Query() query: GetCommentQueryParams,
+    @Param('id') postId: string,
+  ) {
+    return this.commentsQueryRepository.getAll(query, postId);
   }
 }
