@@ -6,7 +6,6 @@ import { PostViewDto } from '../../api/view-dto/post.view-dto';
 import { likeStatus } from '../../domain/dto/like-status.domain.dto';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 import { plainToClass } from 'class-transformer';
-import { Blog } from '../../../blog/domain/blog.entity';
 import { GetPostQueryParams } from '../../api/input-dto/get-post-query-params.input-dto';
 import { BlogQueryRepository } from '../../../blog/infrastructure/query/blog.query-repository';
 
