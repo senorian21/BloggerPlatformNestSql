@@ -8,12 +8,14 @@ import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dt
 import { plainToClass } from 'class-transformer';
 import { Blog } from '../../../blog/domain/blog.entity';
 import { GetPostQueryParams } from '../../api/input-dto/get-post-query-params.input-dto';
+import { BlogQueryRepository } from '../../../blog/infrastructure/query/blog.query-repository';
 
 @Injectable()
 export class PostQueryRepository {
   constructor(
     @InjectModel(Post.name)
     private PostModel: PostModelType,
+    private blogQueryRepository: BlogQueryRepository,
   ) {}
   async getByIdOrNotFoundFail(id: string): Promise<PostViewDto> {
     if (!Types.ObjectId.isValid(id)) {
@@ -33,12 +35,18 @@ export class PostQueryRepository {
 
   async getAll(
     query: GetPostQueryParams,
+    blogId?: string,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const queryParams = plainToClass(GetPostQueryParams, query);
 
     const filter: FilterQuery<Blog> = {
       deletedAt: null,
     };
+
+    if (blogId) {
+      await this.blogQueryRepository.getByIdOrNotFoundFail(blogId);
+      filter.blogId = blogId;
+    }
 
     const rawPosts = await this.PostModel.find(filter)
       .sort({ [queryParams.sortBy]: queryParams.sortDirection })

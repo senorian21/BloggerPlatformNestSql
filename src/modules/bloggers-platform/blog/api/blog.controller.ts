@@ -14,12 +14,18 @@ import { BlogService } from '../application/blog.service';
 import { CreateBlogDto, UpdateBlogDto } from '../dto/create-blog.dto';
 import { BlogQueryRepository } from '../infrastructure/query/blog.query-repository';
 import { GetBlogsQueryParams } from './input-dto/get-blog-query-params.input-dto';
+import { PostService } from '../../post/application/post.service';
+import { PostQueryRepository } from '../../post/infrastructure/query/post.query-repository';
+import { GetPostQueryParams } from '../../post/api/input-dto/get-post-query-params.input-dto';
+import { CreatePostDto } from '../../post/api/input-dto/post.input-dto';
 
 @Controller('blogs')
 export class BlogController {
   constructor(
     private blogService: BlogService,
     private blogQueryRepository: BlogQueryRepository,
+    private postService: PostService,
+    private postQueryRepository: PostQueryRepository,
   ) {}
 
   @Post()
@@ -48,5 +54,22 @@ export class BlogController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBlog(@Param('id') blogId: string) {
     await this.blogService.deleteBlog(blogId);
+  }
+
+  @Get(':id/posts')
+  async getPostByBlog(
+    @Param('id') blogId: string,
+    @Query() query: GetPostQueryParams,
+  ) {
+    return this.postQueryRepository.getAll(query, blogId);
+  }
+
+  @Post(':id/posts')
+  async createPostByIdBlog(
+    @Param('id') blogId: string,
+    @Body() dto: CreatePostDto,
+  ) {
+    const postId = await this.postService.createPost(dto, blogId);
+    return this.postQueryRepository.getByIdOrNotFoundFail(postId);
   }
 }
