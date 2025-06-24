@@ -25,7 +25,7 @@ export class Blog {
     blog.description = dto.description;
     blog.websiteUrl = dto.websiteUrl;
     blog.createdAt = new Date();
-    blog.isMembership = true;
+    blog.isMembership = false;
     return blog as BlogDocument;
   }
   updateBlog(dto: UpdateBlogDomainDto) {

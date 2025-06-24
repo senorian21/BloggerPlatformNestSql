@@ -19,11 +19,23 @@ export class UserQueryRepository {
     const filter: FilterQuery<User> = {
       deletedAt: null,
     };
+
+    const orConditions: FilterQuery<User>[] = [];
+
     if (queryParams.searchEmailTerm) {
-      filter.name = { $regex: queryParams.searchEmailTerm, $options: 'i' };
+      orConditions.push({
+        email: { $regex: queryParams.searchEmailTerm, $options: 'i' },
+      });
     }
+
     if (queryParams.searchLoginTerm) {
-      filter.name = { $regex: queryParams.searchLoginTerm, $options: 'i' };
+      orConditions.push({
+        login: { $regex: queryParams.searchLoginTerm, $options: 'i' },
+      });
+    }
+
+    if (orConditions.length > 0) {
+      filter.$or = orConditions;
     }
 
     const user = await this.UserModel.find(filter)
