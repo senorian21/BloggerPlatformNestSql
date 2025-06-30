@@ -8,6 +8,16 @@ import { CreateUserDomainDto } from './dto/create-user.domain.dto';
 import { add } from 'date-fns';
 import { HydratedDocument, Model } from 'mongoose';
 
+export const loginConstraints = {
+  minLength: 3,
+  maxLength: 10,
+};
+
+export const passwordConstraints = {
+  minLength: 6,
+  maxLength: 20,
+};
+
 @Schema()
 export class User {
   @Prop({

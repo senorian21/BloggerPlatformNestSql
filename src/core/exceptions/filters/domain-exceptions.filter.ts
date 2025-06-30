@@ -40,6 +40,8 @@ export class DomainHttpExceptionsFilter implements ExceptionFilter {
         return HttpStatus.UNAUTHORIZED;
       case DomainExceptionCode.InternalServerError:
         return HttpStatus.INTERNAL_SERVER_ERROR;
+      case DomainExceptionCode.TooManyRequests:
+        return HttpStatus.TOO_MANY_REQUESTS;
       default:
         return HttpStatus.I_AM_A_TEAPOT;
     }

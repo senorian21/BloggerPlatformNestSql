@@ -4,6 +4,21 @@ import { CreatePostDomainDto } from './dto/create-post.domain.dto';
 import { likeStatus } from './dto/like-status.domain.dto';
 import { HydratedDocument, Model } from 'mongoose';
 
+export const titleConstraints = {
+  minLength: 3,
+  maxLength: 30,
+};
+
+export const shortDescriptionConstraints = {
+  minLength: 3,
+  maxLength: 100,
+};
+
+export const contentConstraints = {
+  minLength: 3,
+  maxLength: 1000,
+};
+
 @Schema()
 export class Post {
   @Prop({ type: String, required: true })

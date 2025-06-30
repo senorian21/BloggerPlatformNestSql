@@ -11,13 +11,14 @@ import {
   Query,
 } from '@nestjs/common';
 import { BlogService } from '../application/blog.service';
-import { CreateBlogDto, UpdateBlogDto } from '../dto/create-blog.dto';
 import { BlogQueryRepository } from '../infrastructure/query/blog.query-repository';
 import { GetBlogsQueryParams } from './input-dto/get-blog-query-params.input-dto';
 import { PostService } from '../../post/application/post.service';
 import { PostQueryRepository } from '../../post/infrastructure/query/post.query-repository';
 import { GetPostQueryParams } from '../../post/api/input-dto/get-post-query-params.input-dto';
 import { CreatePostDto } from '../../post/api/input-dto/post.input-dto';
+import { CreateBlogDto } from './input-dto/blog.input-dto';
+import { UpdateBlogDto } from './input-dto/updats-blog.input-dto';
 
 @Controller('blogs')
 export class BlogController {

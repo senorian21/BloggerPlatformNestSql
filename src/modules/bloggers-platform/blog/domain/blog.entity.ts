@@ -5,6 +5,21 @@ import {
 } from './dto/create-blog.domain.dto';
 import { HydratedDocument, Model } from 'mongoose';
 
+export const nameConstraints = {
+  minLength: 3,
+  maxLength: 15,
+};
+
+export const descriptionConstraints = {
+  minLength: 3,
+  maxLength: 500,
+};
+
+export const websiteUrlConstraints = {
+  minLength: 3,
+  maxLength: 100,
+};
+
 @Schema()
 export class Blog {
   @Prop({ type: String, required: true })
