@@ -9,6 +9,8 @@ import {
   RateLimiter,
   RateLimiterSchema,
 } from './guards/rate/domain/rate-limiter.entity';
+import { CryptoService } from './adapters/crypto.service';
+import { NodemailerService } from './adapters/nodemeiler/nodemeiler.service';
 
 @Module({
   imports: [
@@ -18,7 +20,13 @@ import {
     ]),
   ],
   controllers: [UserController],
-  providers: [UserRepository, UserQueryRepository, UserService],
+  providers: [
+    UserRepository,
+    UserQueryRepository,
+    UserService,
+    CryptoService,
+    NodemailerService,
+  ],
   exports: [],
 })
 export class UserAccountsModule {}
