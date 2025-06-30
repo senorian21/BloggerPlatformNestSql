@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostModelType } from '../../domain/post.entity';
 import { FilterQuery, Types } from 'mongoose';
@@ -8,6 +8,8 @@ import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dt
 import { plainToClass } from 'class-transformer';
 import { GetPostQueryParams } from '../../api/input-dto/get-post-query-params.input-dto';
 import { BlogQueryRepository } from '../../../blog/infrastructure/query/blog.query-repository';
+import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
+import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 
 @Injectable()
 export class PostQueryRepository {
@@ -18,14 +20,20 @@ export class PostQueryRepository {
   ) {}
   async getByIdOrNotFoundFail(id: string): Promise<PostViewDto> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException('Post not found.');
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: 'Post not found',
+      });
     }
     const post = await this.PostModel.findOne({
       _id: id,
       deletedAt: null,
     });
     if (!post) {
-      throw new NotFoundException('Post not found.');
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: 'Post not found',
+      });
     }
     const myStatus: likeStatus = likeStatus.None;
 

@@ -9,6 +9,9 @@ export function pipesSetup(app: INestApplication) {
       //соответственно применятся значения по-умолчанию
       //и методы классов dto
       transform: true,
+      //Выдавать первую ошибку для каждого поля
+      stopAtFirstError: true,
+      //Для преобразования ошибок класс валидатора в необходимый вид
     }),
   );
 }

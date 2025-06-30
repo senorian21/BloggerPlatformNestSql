@@ -7,6 +7,8 @@ import { CommentViewDto } from '../../api/view-dto/comment.view-dto';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 import { plainToClass } from 'class-transformer';
 import { GetCommentQueryParams } from '../../api/input-dto/get-comment-query-params.input-dto';
+import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
+import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 
 @Injectable()
 export class CommentsQueryRepository {
@@ -16,14 +18,20 @@ export class CommentsQueryRepository {
   ) {}
   async getByIdOrNotFoundFail(id: string): Promise<CommentViewDto> {
     if (!Types.ObjectId.isValid(id)) {
-      throw new NotFoundException('Comments not found.');
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: 'Comments not found',
+      });
     }
     const comment = await this.commentModel.findOne({
       _id: id,
       deletedAt: null,
     });
     if (!comment) {
-      throw new NotFoundException('Comments not found.');
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: 'Comments not found',
+      });
     }
     const myStatus: likeStatus = likeStatus.None;
 
