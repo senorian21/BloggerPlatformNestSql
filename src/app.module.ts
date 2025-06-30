@@ -23,11 +23,11 @@ import { AllHttpExceptionsFilter } from './core/exceptions/filters/all-exception
     AppService,
     {
       provide: APP_FILTER,
-      useClass: DomainHttpExceptionsFilter,
+      useClass: AllHttpExceptionsFilter,
     },
     {
       provide: APP_FILTER,
-      useClass: AllHttpExceptionsFilter,
+      useClass: DomainHttpExceptionsFilter,
     },
   ],
 })

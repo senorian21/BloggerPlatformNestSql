@@ -4,10 +4,10 @@ import {
   ExceptionFilter,
   HttpStatus,
 } from '@nestjs/common';
-import { DomainException } from '../domain-exceptions';
 import { Request, Response } from 'express';
-import { DomainExceptionCode } from '../domain-exception-codes';
 import { ErrorResponseBody } from './error-response-body.type';
+import { DomainException } from '../domain-exceptions';
+import { DomainExceptionCode } from '../domain-exception-codes';
 
 //https://docs.nestjs.com/exception-filters#exception-filters-1
 //Ошибки класса DomainException (instanceof DomainException)
