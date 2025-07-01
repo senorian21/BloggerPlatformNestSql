@@ -1,19 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import * as process from 'node:process';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class NodemailerService {
   private transporter: nodemailer.Transporter;
 
-  constructor() {
+  constructor(private readonly configService: ConfigService) {
+    const host = this.configService.get<string>('SMTP_HOST', 'smtp.yandex.by');
+    const port = this.configService.get<number>('SMTP_PORT', 465);
+    const secure = this.configService.get<boolean>('SMTP_SECURE', true);
+    const user = this.configService.get<string>('EMAIL_USER');
+    const password = this.configService.get<string>('EMAIL_PASSWORD');
+
+    if (!user || !password) {
+      throw new Error('Отсутствуют данные для аутентификации email');
+    }
+
     this.transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: process.env.SMTP_SECURE,
+      host,
+      port,
+      secure,
       auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
+        user,
+        pass: password,
       },
     });
   }
@@ -25,11 +35,16 @@ export class NodemailerService {
   ): Promise<void> {
     const { html, subject } = template(code);
 
-    await this.transporter.sendMail({
-      from: `"BloggerPlatform" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject,
-      html,
-    });
+    try {
+      await this.transporter.sendMail({
+        from: `"BloggerPlatform" <${this.configService.get<string>('EMAIL_USER')}>`,
+        to: email,
+        subject,
+        html,
+      });
+    } catch (error) {
+      console.error('Ошибка отправки email:', error);
+      throw new Error('Не удалось отправить email');
+    }
   }
 }

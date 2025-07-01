@@ -11,6 +11,7 @@ import {
 } from './guards/rate/domain/rate-limiter.entity';
 import { CryptoService } from './adapters/crypto.service';
 import { NodemailerService } from './adapters/nodemeiler/nodemeiler.service';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -18,6 +19,9 @@ import { NodemailerService } from './adapters/nodemeiler/nodemeiler.service';
     MongooseModule.forFeature([
       { name: RateLimiter.name, schema: RateLimiterSchema },
     ]),
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+    }),
   ],
   controllers: [UserController],
   providers: [
