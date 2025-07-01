@@ -1,4 +1,7 @@
-export const emailExamples = {
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class EmailService {
   registrationEmail(code: string) {
     return {
       html: `
@@ -8,15 +11,16 @@ export const emailExamples = {
       `,
       subject: 'Registration Confirmation',
     };
-  },
+  }
+
   passwordRecovery(code: string) {
     return {
       html: `
         <h1>Password Recovery</h1>
         <p>To reset your password, please follow the link below:</p>
-        <a href='https://somesite.com/password-recovery?recoveryCode=${code}'>Recover Password</a>
+        <a href=' https://somesite.com/password-recovery?recoveryCode=${code}'>Recover Password</a>
       `,
       subject: 'Password Recovery',
     };
-  },
-};
+  }
+}

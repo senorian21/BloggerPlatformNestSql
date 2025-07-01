@@ -14,6 +14,7 @@ export class DomainException extends Error {
 
   constructor(errorInfo: {
     code: DomainExceptionCode;
+    field?: string;
     message: string;
     extensions?: Extension[];
   }) {

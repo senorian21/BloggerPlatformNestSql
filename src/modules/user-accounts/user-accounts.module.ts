@@ -12,6 +12,10 @@ import {
 import { CryptoService } from './adapters/crypto.service';
 import { NodemailerService } from './adapters/nodemeiler/nodemeiler.service';
 import { ConfigModule } from '@nestjs/config';
+import { AuthService } from './auth/application/auth.service';
+import { AuthController } from './auth/api/auth.controller';
+import { JwtService } from './adapters/jwt/jwt.service';
+import { EmailService } from './adapters/nodemeiler/ template/email-examples';
 
 @Module({
   imports: [
@@ -23,13 +27,16 @@ import { ConfigModule } from '@nestjs/config';
       envFilePath: '.env',
     }),
   ],
-  controllers: [UserController],
+  controllers: [UserController, AuthController],
   providers: [
     UserRepository,
     UserQueryRepository,
     UserService,
     CryptoService,
     NodemailerService,
+    AuthService,
+    JwtService,
+    EmailService,
   ],
   exports: [],
 })

@@ -15,6 +15,19 @@ export class UserRepository {
     const user = await this.UserModel.findById(userId);
     return user;
   }
+  async findByLoginOrEmail(loginOrEmail: string): Promise<UserDocument | null> {
+    const user = await this.UserModel.findOne({
+      $or: [{ email: loginOrEmail }, { login: loginOrEmail }],
+    });
+    return user;
+  }
+  async findByCode(code: string) {
+    const user = await this.UserModel.findOne({
+      'emailConfirmation.confirmationCode': code,
+    });
+    return user;
+  }
+
   async doesExistByLoginOrEmail(login: string, email: string) {
     return await this.UserModel.findOne({
       $or: [{ login }, { email }],
