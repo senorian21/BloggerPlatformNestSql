@@ -1,4 +1,12 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from '../application/auth.service';
 import { loginInputDto } from './input-dto/login.input-dto';
 import { PasswordRecoveryInputDto } from '../dto/password-recovery.input-dto';
@@ -6,10 +14,17 @@ import { newPasswordInputDto } from './input-dto/new-password.input-dto';
 import { registrationConfirmationUser } from './input-dto/registration-confirmation.input-dto';
 import { registrationInputDto } from './input-dto/registration.input-dto';
 import { RegistrationEmailResending } from './input-dto/registration-email-resending.input-dto';
+import { BearerAuthGuard } from '../../guards/bearer/bearer-auth.guard';
+import { ExtractUserFromRequest } from '../../guards/decorators/param/user.decorator';
+import { UserContextDto } from '../dto/user-context.dto';
+import { AuthQueryRepository } from '../infrastructure/query/auth.query-repository';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private authQueryRepository: AuthQueryRepository,
+  ) {}
 
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
@@ -40,5 +55,12 @@ export class AuthController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationEmailResending(@Body() dto: RegistrationEmailResending) {
     await this.authService.registrationEmailResending(dto);
+  }
+
+  @Get('me')
+  @UseGuards(BearerAuthGuard)
+  async me(@ExtractUserFromRequest() user: UserContextDto) {
+    const userEntity = await this.authQueryRepository.me(user.id.toString()); // ✅ id уже string
+    return userEntity;
   }
 }

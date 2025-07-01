@@ -16,6 +16,7 @@ import { AuthService } from './auth/application/auth.service';
 import { AuthController } from './auth/api/auth.controller';
 import { JwtService } from './adapters/jwt/jwt.service';
 import { EmailService } from './adapters/nodemeiler/ template/email-examples';
+import { AuthQueryRepository } from './auth/infrastructure/query/auth.query-repository';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { EmailService } from './adapters/nodemeiler/ template/email-examples';
     AuthService,
     JwtService,
     EmailService,
+    AuthQueryRepository,
   ],
   exports: [],
 })
