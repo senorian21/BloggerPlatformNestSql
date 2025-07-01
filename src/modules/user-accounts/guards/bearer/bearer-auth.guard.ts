@@ -35,17 +35,30 @@ export class BearerAuthGuard implements CanActivate {
 
     const token = authHeader.split(' ')[1];
 
-    const result = await this.jwtService.verifyToken(token);
+    try {
+      const result = await this.jwtService.verifyToken(token);
 
-    if (!result) {
+      if (!result) {
+        throw new DomainException({
+          code: DomainExceptionCode.Unauthorized,
+          message: 'Invalid or expired token',
+        });
+      }
+
+      request.user = { id: result.userId } as IdType;
+      return true;
+    } catch (error) {
+      if (error.name === 'TokenExpiredError') {
+        throw new DomainException({
+          code: DomainExceptionCode.Unauthorized,
+          message: 'Token expired',
+        });
+      }
+
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
-        message: 'Invalid or expired token',
+        message: 'Invalid token',
       });
     }
-
-    request.user = { id: result.userId } as IdType;
-
-    return true;
   }
 }
