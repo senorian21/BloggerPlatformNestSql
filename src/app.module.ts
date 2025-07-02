@@ -9,9 +9,11 @@ import { UserAccountsModule } from './modules/user-accounts/user-accounts.module
 import { DomainHttpExceptionsFilter } from './core/exceptions/filters/domain-exceptions.filter';
 import { APP_FILTER } from '@nestjs/core';
 import { AllHttpExceptionsFilter } from './core/exceptions/filters/all-exceptions.filter';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     MongooseModule.forRoot('mongodb://localhost/nest-bloggers-platform'),
     CoreModule,
     BloggerPlatformModule,
