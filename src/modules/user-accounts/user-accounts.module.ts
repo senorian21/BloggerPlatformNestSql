@@ -14,10 +14,14 @@ import { NodemailerService } from './adapters/nodemeiler/nodemeiler.service';
 import { ConfigModule } from '@nestjs/config';
 import { AuthService } from './auth/application/auth.service';
 import { AuthController } from './auth/api/auth.controller';
-import { JwtService } from './adapters/jwt/jwt.service';
 import { EmailService } from './adapters/nodemeiler/ template/email-examples';
 import { AuthQueryRepository } from './auth/infrastructure/query/auth.query-repository';
 import { JwtStrategy } from './guards/bearer/jwt.strategy';
+import { JwtService } from '@nestjs/jwt';
+import {
+  ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
+  REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
+} from './constants/auth-tokens.inject-constants';
 
 @Module({
   imports: [
@@ -41,6 +45,26 @@ import { JwtStrategy } from './guards/bearer/jwt.strategy';
     EmailService,
     AuthQueryRepository,
     JwtStrategy,
+    {
+      provide: ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
+      useFactory: (): JwtService => {
+        return new JwtService({
+          secret: 'access-token-secret',
+          signOptions: { expiresIn: '5m' },
+        });
+      },
+      inject: [],
+    },
+    {
+      provide: REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
+      useFactory: (): JwtService => {
+        return new JwtService({
+          secret: 'refresh-token-secret',
+          signOptions: { expiresIn: '10m' },
+        });
+      },
+      inject: [],
+    },
   ],
   exports: [],
 })

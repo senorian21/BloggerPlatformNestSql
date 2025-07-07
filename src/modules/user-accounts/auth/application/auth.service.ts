@@ -1,11 +1,11 @@
-import { JwtService } from '../../adapters/jwt/jwt.service';
+import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserModelType } from '../../user/domain/user.entity';
 import { UserRepository } from '../../user/infrastructure/user.repository';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 import { CryptoService } from '../../adapters/crypto.service';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
 import { NodemailerService } from '../../adapters/nodemeiler/nodemeiler.service';
@@ -16,17 +16,25 @@ import { registrationInputDto } from '../dto/registration.input-dto';
 import { newPasswordInputDto } from '../dto/new-password.input-dto';
 import { registrationConfirmationUser } from '../dto/registration-confirmation';
 import { RegistrationEmailResending } from '../dto/registration-email-resending.input-dto';
+import {
+  ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
+  REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
+} from '../../constants/auth-tokens.inject-constants';
 
 @Injectable()
 export class AuthService {
   constructor(
     @InjectModel(User.name)
     private userModel: UserModelType,
-    private jwtService: JwtService,
     private userRepository: UserRepository,
     private cryptoService: CryptoService,
     private nodemailerService: NodemailerService,
     private emailService: EmailService,
+    @Inject(ACCESS_TOKEN_STRATEGY_INJECT_TOKEN)
+    private accessTokenContext: JwtService,
+
+    @Inject(REFRESH_TOKEN_STRATEGY_INJECT_TOKEN)
+    private refreshTokenContext: JwtService,
   ) {}
 
   async loginUser(dto: loginInputDto) {
@@ -37,7 +45,9 @@ export class AuthService {
 
     const userId = result._id.toString();
 
-    const accessToken = await this.jwtService.createToken(userId);
+    const accessToken = this.accessTokenContext.sign({
+      userId: userId,
+    });
 
     return { accessToken };
   }
