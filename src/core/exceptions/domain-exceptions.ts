@@ -11,6 +11,7 @@ export class DomainException extends Error {
   message: string;
   code: DomainExceptionCode;
   extensions: Extension[];
+  field?: string;
 
   constructor(errorInfo: {
     code: DomainExceptionCode;
@@ -22,5 +23,6 @@ export class DomainException extends Error {
     this.message = errorInfo.message;
     this.code = errorInfo.code;
     this.extensions = errorInfo.extensions || [];
+    this.field = errorInfo.field;
   }
 }

@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { User, UserModelType } from '../domain/user.entity';
 import { UserRepository } from '../infrastructure/user.repository';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { CryptoService } from '../../adapters/crypto.service';
+import { DomainException } from '../../../../core/exceptions/domain-exceptions';
+import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 
 @Injectable()
 export class UserService {
@@ -24,8 +26,11 @@ export class UserService {
 
   async deleteUser(userId: string) {
     const user = await this.userRepository.findById(userId);
-    if (!user) {
-      throw new NotFoundException(`User with id ${userId} not found`);
+    if (!user || user.deletedAt !== null) {
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: `User with id ${userId} not found.`,
+      });
     }
     user.softDeleteUser();
     await this.userRepository.save(user);

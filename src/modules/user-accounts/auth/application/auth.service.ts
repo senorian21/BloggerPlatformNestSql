@@ -47,7 +47,7 @@ export class AuthService {
 
     if (!user) {
       throw new DomainException({
-        code: DomainExceptionCode.BadRequest,
+        code: DomainExceptionCode.Unauthorized,
         message: 'User does not exist',
       });
     }
@@ -113,6 +113,7 @@ export class AuthService {
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
+        field: 'code',
         message: 'User does not exist',
       });
     }
@@ -120,8 +121,8 @@ export class AuthService {
     if (user.emailConfirmation.isConfirmed) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        field: 'isConfirmed',
-        message: 'User does not exist',
+        field: 'code', // ← Изменили на 'code'
+        message: 'Code is invalid or already used',
       });
     }
 
@@ -144,8 +145,8 @@ export class AuthService {
       if (user.login === dto.login) {
         throw new DomainException({
           code: DomainExceptionCode.BadRequest,
-          field: 'login',
           message: 'Login is already taken',
+          field: 'login',
         });
       } else {
         throw new DomainException({
@@ -191,7 +192,7 @@ export class AuthService {
     if (user.emailConfirmation.isConfirmed) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        field: 'isConfirmed',
+        field: 'email', // Changed from 'isConfirmed' to 'email'
         message: 'Already confirmed',
       });
     }

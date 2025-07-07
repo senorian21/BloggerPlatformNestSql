@@ -11,8 +11,8 @@ export class AuthQueryRepository {
     private userModel: UserModelType,
   ) {}
   async me(id: string) {
-    const objectId = new Types.ObjectId(id); // ✅ Преобразование строки в ObjectId
-    const user = await this.userModel.findOne({ _id: objectId });
+    const objectId = new Types.ObjectId(id);
+    const user = await this.userModel.findById(objectId);
     if (!user || user.deletedAt !== null) {
       return null;
     }

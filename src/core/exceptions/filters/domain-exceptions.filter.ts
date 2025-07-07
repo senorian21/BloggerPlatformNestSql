@@ -65,6 +65,7 @@ export class DomainHttpExceptionsFilter implements ExceptionFilter {
         errorsMessages: [
           {
             message: exception.message,
+            field: exception.field || undefined,
           },
         ],
       };

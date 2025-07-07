@@ -14,10 +14,10 @@ import { newPasswordInputDto } from './input-dto/new-password.input-dto';
 import { registrationConfirmationUser } from './input-dto/registration-confirmation.input-dto';
 import { registrationInputDto } from './input-dto/registration.input-dto';
 import { RegistrationEmailResending } from './input-dto/registration-email-resending.input-dto';
-import { BearerAuthGuard } from '../../guards/bearer/bearer-auth.guard';
 import { ExtractUserFromRequest } from '../../guards/decorators/param/user.decorator';
 import { UserContextDto } from '../dto/user-context.dto';
 import { AuthQueryRepository } from '../infrastructure/query/auth.query-repository';
+import { JwtAuthGuard } from '../../guards/bearer/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -32,6 +32,7 @@ export class AuthController {
     await this.authService.passwordRecovery(dto);
   }
   @Post('login')
+  @HttpCode(HttpStatus.OK)
   async login(@Body() dto: loginInputDto) {
     const accessToken = await this.authService.loginUser(dto);
     return accessToken;
@@ -58,9 +59,9 @@ export class AuthController {
   }
 
   @Get('me')
-  @UseGuards(BearerAuthGuard)
+  @UseGuards(JwtAuthGuard)
   async me(@ExtractUserFromRequest() user: UserContextDto) {
-    const userEntity = await this.authQueryRepository.me(user.id.toString()); // ✅ id уже string
+    const userEntity = await this.authQueryRepository.me(user.id.toString());
     return userEntity;
   }
 }
