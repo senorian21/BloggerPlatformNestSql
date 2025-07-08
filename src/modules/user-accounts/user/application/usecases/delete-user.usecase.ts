@@ -13,10 +13,7 @@ export class DeleteUserCommand {
 export class DeleteUserUseCase
   implements ICommandHandler<DeleteUserCommand, void>
 {
-  constructor(
-    @InjectModel(User.name)
-    private userRepository: UserRepository,
-  ) {}
+  constructor(private userRepository: UserRepository) {}
   async execute({ userId }: DeleteUserCommand): Promise<void> {
     const user = await this.userRepository.findById(userId);
     if (!user || user.deletedAt !== null) {

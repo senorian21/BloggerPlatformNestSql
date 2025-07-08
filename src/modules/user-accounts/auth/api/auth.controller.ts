@@ -15,7 +15,6 @@ import { registrationInputDto } from './input-dto/registration.input-dto';
 import { RegistrationEmailResending } from './input-dto/registration-email-resending.input-dto';
 import { ExtractUserFromRequest } from '../../guards/decorators/param/user.decorator';
 import { UserContextDto } from '../dto/user-context.dto';
-import { AuthQueryRepository } from '../infrastructure/query/auth.query-repository';
 import { JwtAuthGuard } from '../../guards/bearer/jwt-auth.guard';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { PasswordRecoveryCommand } from '../application/usecases/password-recovery.usecase';
@@ -30,7 +29,6 @@ import { AuthViewDto } from './view-dto/auth.view-dto';
 @Controller('auth')
 export class AuthController {
   constructor(
-    private authQueryRepository: AuthQueryRepository,
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
   ) {}

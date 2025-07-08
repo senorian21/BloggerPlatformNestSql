@@ -10,10 +10,10 @@ export class UserRepository {
     @InjectModel(User.name)
     private UserModel: UserModelType,
   ) {}
-  async save(user: UserDocument) {
+  async save(user: UserDocument): Promise<void> {
     await user.save();
   }
-  async findById(userId: string) {
+  async findById(userId: string): Promise<UserDocument> {
     const user = await this.UserModel.findById(userId);
     if (!user) {
       throw new DomainException({
@@ -29,14 +29,17 @@ export class UserRepository {
     });
     return user;
   }
-  async findByCode(code: string) {
+  async findByCode(code: string): Promise<UserDocument | null> {
     const user = await this.UserModel.findOne({
       'emailConfirmation.confirmationCode': code,
     });
     return user;
   }
 
-  async doesExistByLoginOrEmail(login: string, email: string) {
+  async doesExistByLoginOrEmail(
+    login: string,
+    email: string,
+  ): Promise<UserDocument | null> {
     return await this.UserModel.findOne({
       $or: [{ login }, { email }],
       deletedAt: null,
