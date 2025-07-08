@@ -7,7 +7,6 @@ import { BlogQueryRepository } from './blog/infrastructure/query/blog.query-repo
 import { PostQueryRepository } from './post/infrastructure/query/post.query-repository';
 import { PostRepository } from './post/infrastructure/post.repository';
 import { Post, PostSchema } from './post/domain/post.entity';
-import { PostService } from './post/application/post.service';
 import { PostController } from './post/api/post.controller';
 import { Comment, CommentSchema } from './comment/domain/comment.entity';
 import { CommentsQueryRepository } from './comment/infrastructure/query/comments.query-repository';
@@ -17,14 +16,27 @@ import { UpdateBlogUseCase } from './blog/application/usecases/update-blog.useca
 import { DeleteBlogUseCase } from './blog/application/usecases/delete-blog.usecase';
 import { GetBlogByIdQueryHandler } from './blog/application/queries/get-blog-by-id.query-handler';
 import { GetAllBlogsQueryHandler } from './blog/application/queries/get-all-blogs.query-handler';
+import { CreatePostUseCase } from './post/application/usecases/create-post.usecase';
+import { DeletePostUseCase } from './post/application/usecases/delete-post.usecase';
+import { UpdatePostUseCase } from './post/application/usecases/update-post.usecase';
+import { GetPostByIdQueryHandler } from './post/application/queries/get-post-by-id.query-handler';
+import { GetAllPostQueryHandler } from './post/application/queries/get-all-post.query-handler';
 
 const commandHandlers = [
   CreateBlogUseCase,
   UpdateBlogUseCase,
   DeleteBlogUseCase,
+  CreatePostUseCase,
+  DeletePostUseCase,
+  UpdatePostUseCase,
 ];
 
-const queryHandlers = [GetBlogByIdQueryHandler, GetAllBlogsQueryHandler];
+const queryHandlers = [
+  GetBlogByIdQueryHandler,
+  GetAllBlogsQueryHandler,
+  GetPostByIdQueryHandler,
+  GetAllPostQueryHandler,
+];
 
 @Module({
   imports: [
@@ -38,7 +50,6 @@ const queryHandlers = [GetBlogByIdQueryHandler, GetAllBlogsQueryHandler];
     BlogQueryRepository,
     PostQueryRepository,
     PostRepository,
-    PostService,
     CommentsQueryRepository,
     ...commandHandlers,
     ...queryHandlers,

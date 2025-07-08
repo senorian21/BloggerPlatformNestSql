@@ -4,7 +4,7 @@ import {
   titleConstraints,
 } from '../../domain/post.entity';
 import { websiteUrlConstraints } from '../../../blog/domain/blog.entity';
-import { IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class CreatePostDto {
   @IsStringWithTrim(titleConstraints.minLength, titleConstraints.maxLength)
@@ -20,5 +20,6 @@ export class CreatePostDto {
   )
   content: string;
   @IsString()
+  @IsOptional()
   blogId: string;
 }

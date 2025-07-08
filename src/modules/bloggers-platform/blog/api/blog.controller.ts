@@ -10,9 +10,7 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { BlogQueryRepository } from '../infrastructure/query/blog.query-repository';
 import { GetBlogsQueryParams } from './input-dto/get-blog-query-params.input-dto';
-import { PostService } from '../../post/application/post.service';
 import { PostQueryRepository } from '../../post/infrastructure/query/post.query-repository';
 import { GetPostQueryParams } from '../../post/api/input-dto/get-post-query-params.input-dto';
 import { CreatePostDto } from '../../post/api/input-dto/post.input-dto';
@@ -26,12 +24,14 @@ import { GetAllBlogsQuery } from '../application/queries/get-all-blogs.query-han
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { BlogViewDto } from './view-dto/blog.view-dto';
 import { GetBlogByIdQuery } from '../application/queries/get-blog-by-id.query-handler';
+import { CreatePostCommand } from '../../post/application/usecases/create-post.usecase';
+import { GetAllPostQuery } from '../../post/application/queries/get-all-post.query-handler';
+import { PostViewDto } from '../../post/api/view-dto/post.view-dto';
+import { GetPostByIdQuery } from '../../post/application/queries/get-post-by-id.query-handler';
 
 @Controller('blogs')
 export class BlogController {
   constructor(
-    private postService: PostService,
-    private postQueryRepository: PostQueryRepository,
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
   ) {}
@@ -78,7 +78,10 @@ export class BlogController {
     @Param('id') blogId: string,
     @Query() query: GetPostQueryParams,
   ) {
-    return this.postQueryRepository.getAll(query, blogId);
+    return this.queryBus.execute<
+      GetAllPostQuery,
+      PaginatedViewDto<PostViewDto[]>
+    >(new GetAllPostQuery(query, blogId));
   }
 
   @Post(':id/posts')
@@ -86,7 +89,11 @@ export class BlogController {
     @Param('id') blogId: string,
     @Body() dto: CreatePostDto,
   ) {
-    const postId = await this.postService.createPost(dto, blogId);
-    return this.postQueryRepository.getByIdOrNotFoundFail(postId);
+    const postId = await this.commandBus.execute<CreatePostCommand, string>(
+      new CreatePostCommand(dto, blogId),
+    );
+    return this.queryBus.execute<GetPostByIdQuery, string>(
+      new GetPostByIdQuery(postId),
+    );
   }
 }
