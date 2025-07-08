@@ -3,7 +3,6 @@ import { Blog, BolgShema } from './blog/domain/blog.entity';
 import { MongooseModule } from '@nestjs/mongoose';
 import { BlogController } from './blog/api/blog.controller';
 import { BlogsRepository } from './blog/infrastructure/blog.repository';
-import { BlogService } from './blog/application/blog.service';
 import { BlogQueryRepository } from './blog/infrastructure/query/blog.query-repository';
 import { PostQueryRepository } from './post/infrastructure/query/post.query-repository';
 import { PostRepository } from './post/infrastructure/post.repository';
@@ -13,6 +12,19 @@ import { PostController } from './post/api/post.controller';
 import { Comment, CommentSchema } from './comment/domain/comment.entity';
 import { CommentsQueryRepository } from './comment/infrastructure/query/comments.query-repository';
 import { CommentController } from './comment/api/comment.controller';
+import { CreateBlogUseCase } from './blog/application/usecases/create-blog.usecase';
+import { UpdateBlogUseCase } from './blog/application/usecases/update-blog.usecase';
+import { DeleteBlogUseCase } from './blog/application/usecases/delete-blog.usecase';
+import { GetBlogByIdQueryHandler } from './blog/application/queries/get-blog-by-id.query-handler';
+import { GetAllBlogsQueryHandler } from './blog/application/queries/get-all-blogs.query-handler';
+
+const commandHandlers = [
+  CreateBlogUseCase,
+  UpdateBlogUseCase,
+  DeleteBlogUseCase,
+];
+
+const queryHandlers = [GetBlogByIdQueryHandler, GetAllBlogsQueryHandler];
 
 @Module({
   imports: [
@@ -24,11 +36,12 @@ import { CommentController } from './comment/api/comment.controller';
   providers: [
     BlogsRepository,
     BlogQueryRepository,
-    BlogService,
     PostQueryRepository,
     PostRepository,
     PostService,
     CommentsQueryRepository,
+    ...commandHandlers,
+    ...queryHandlers,
   ],
   exports: [],
 })
