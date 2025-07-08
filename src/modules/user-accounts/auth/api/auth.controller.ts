@@ -7,7 +7,6 @@ import {
   Post,
   UseGuards,
 } from '@nestjs/common';
-import { AuthService } from '../application/auth.service';
 import { loginInputDto } from './input-dto/login.input-dto';
 import { PasswordRecoveryInputDto } from '../dto/password-recovery.input-dto';
 import { newPasswordInputDto } from './input-dto/new-password.input-dto';
@@ -18,50 +17,76 @@ import { ExtractUserFromRequest } from '../../guards/decorators/param/user.decor
 import { UserContextDto } from '../dto/user-context.dto';
 import { AuthQueryRepository } from '../infrastructure/query/auth.query-repository';
 import { JwtAuthGuard } from '../../guards/bearer/jwt-auth.guard';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { PasswordRecoveryCommand } from '../application/usecases/password-recovery.usecase';
+import { LoginUserCommand } from '../application/usecases/login-user.usecase';
+import { NewPasswordCommand } from '../application/usecases/new-password.usecase';
+import { RegistrationConfirmationUserCommand } from '../application/usecases/registration-confirmation-user.usecase';
+import { RegisterUserCommand } from '../application/usecases/register-user.usecase';
+import { RegistrationEmailResendingCommand } from '../application/usecases/registration-email-resending.usecase';
+import { AboutUserQuery } from '../application/queries/me.query-handler';
+import { AuthViewDto } from './view-dto/auth.view-dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(
-    private authService: AuthService,
     private authQueryRepository: AuthQueryRepository,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Post('password-recovery')
   @HttpCode(HttpStatus.NO_CONTENT)
   async passwordRecovery(@Body() dto: PasswordRecoveryInputDto) {
-    await this.authService.passwordRecovery(dto);
+    await this.commandBus.execute<PasswordRecoveryCommand, void>(
+      new PasswordRecoveryCommand(dto),
+    );
   }
   @Post('login')
   @HttpCode(HttpStatus.OK)
   async login(@Body() dto: loginInputDto) {
-    const accessToken = await this.authService.loginUser(dto);
+    const accessToken = await this.commandBus.execute<
+      LoginUserCommand,
+      { accessToken: string }
+    >(new LoginUserCommand(dto));
     return accessToken;
   }
   @Post('new-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   async newPassword(@Body() dto: newPasswordInputDto) {
-    await this.authService.newPassword(dto);
+    await this.commandBus.execute<NewPasswordCommand, void>(
+      new NewPasswordCommand(dto),
+    );
   }
   @Post('registration-confirmation')
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationConfirmation(@Body() dto: registrationConfirmationUser) {
-    await this.authService.registrationConfirmationUser(dto);
+    await this.commandBus.execute<RegistrationConfirmationUserCommand, void>(
+      new RegistrationConfirmationUserCommand(dto),
+    );
   }
   @Post('registration')
   @HttpCode(HttpStatus.NO_CONTENT)
   async registration(@Body() dto: registrationInputDto) {
-    await this.authService.registerUser(dto);
+    await this.commandBus.execute<RegisterUserCommand, void>(
+      new RegisterUserCommand(dto),
+    );
   }
   @Post('registration-email-resending')
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationEmailResending(@Body() dto: RegistrationEmailResending) {
-    await this.authService.registrationEmailResending(dto);
+    await this.commandBus.execute<RegistrationEmailResendingCommand, void>(
+      new RegistrationEmailResendingCommand(dto),
+    );
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
   async me(@ExtractUserFromRequest() user: UserContextDto) {
-    const userEntity = await this.authQueryRepository.me(user.id.toString());
+    const userEntity = await this.queryBus.execute<
+      AboutUserQuery,
+      AuthViewDto | null
+    >(new AboutUserQuery(user.id.toString()));
     return userEntity;
   }
 }

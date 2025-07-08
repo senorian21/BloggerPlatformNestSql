@@ -11,7 +11,7 @@ import {
 import { CryptoService } from './adapters/crypto.service';
 import { NodemailerService } from './adapters/nodemeiler/nodemeiler.service';
 import { ConfigModule } from '@nestjs/config';
-import { AuthService } from './auth/application/auth.service';
+import { AuthService } from './auth/application/service/auth.service';
 import { AuthController } from './auth/api/auth.controller';
 import { EmailService } from './adapters/nodemeiler/ template/email-examples';
 import { AuthQueryRepository } from './auth/infrastructure/query/auth.query-repository';
@@ -25,10 +25,30 @@ import { CreateUserUseCase } from './user/application/usecases/create-user.useca
 import { DeleteUserUseCase } from './user/application/usecases/delete-user.usecase';
 import { GetAllUsersQueryHandler } from './user/application/queries/get-all-users.query-handler';
 import { GetUserByIdQueryHandler } from './user/application/queries/get-users-by-id.query-handler';
+import { LoginUserUseCase } from './auth/application/usecases/login-user.usecase';
+import { NewPasswordUseCase } from './auth/application/usecases/new-password.usecase';
+import { PasswordRecoveryUseCase } from './auth/application/usecases/password-recovery.usecase';
+import { RegisterUserUseCase } from './auth/application/usecases/register-user.usecase';
+import { RegistrationConfirmationUserUseCase } from './auth/application/usecases/registration-confirmation-user.usecase';
+import { RegistrationEmailResendingUseCase } from './auth/application/usecases/registration-email-resending.usecase';
+import { AboutUserQueryHandler } from './auth/application/queries/me.query-handler';
 
-const commandHandlers = [CreateUserUseCase, DeleteUserUseCase];
+const commandHandlers = [
+  CreateUserUseCase,
+  DeleteUserUseCase,
+  LoginUserUseCase,
+  NewPasswordUseCase,
+  PasswordRecoveryUseCase,
+  RegisterUserUseCase,
+  RegistrationConfirmationUserUseCase,
+  RegistrationEmailResendingUseCase,
+];
 
-const queryHandlers = [GetAllUsersQueryHandler, GetUserByIdQueryHandler];
+const queryHandlers = [
+  GetAllUsersQueryHandler,
+  GetUserByIdQueryHandler,
+  AboutUserQueryHandler,
+];
 
 @Module({
   imports: [
