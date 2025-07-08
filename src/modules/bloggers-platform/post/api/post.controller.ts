@@ -24,6 +24,8 @@ import { GetPostByIdQuery } from '../application/queries/get-post-by-id.query-ha
 import { PostViewDto } from './view-dto/post.view-dto';
 import { GetAllPostQuery } from '../application/queries/get-all-post.query-handler';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
+import { GetAllCommentsQuery } from '../../comment/application/queries/get-all-comments.query-handler';
+import { CommentViewDto } from '../../comment/api/view-dto/comment.view-dto';
 
 @Controller('posts')
 export class PostController {
@@ -77,6 +79,9 @@ export class PostController {
     @Query() query: GetCommentQueryParams,
     @Param('id') postId: string,
   ) {
-    return this.commentsQueryRepository.getAll(query, postId);
+    return this.queryBus.execute<
+      GetAllCommentsQuery,
+      PaginatedViewDto<CommentViewDto[]>
+    >(new GetAllCommentsQuery(query, postId));
   }
 }

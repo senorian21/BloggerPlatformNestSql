@@ -10,34 +10,48 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { UserService } from '../application/user.service';
-import { UserQueryRepository } from '../infrastructure/query/user.query-repository';
 import { CreateUserDto } from './input-dto/user.input-dto';
 import { GetUserQueryParams } from './input-dto/get-user-query-params.input-dto';
 import { BasicAuthGuard } from '../../guards/basic/basic-auth.guard';
+import { CommandBus, QueryBus } from '@nestjs/cqrs';
+import { CreateUserCommand } from '../application/usecases/create-user.usecase';
+import { DeleteUserCommand } from '../application/usecases/delete-user.usecase';
+import { GetAllUsersQuery } from '../application/queries/get-all-users.query-handler';
+import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
+import { UserViewDto } from './view-dto/user.view-dto';
+import { GetUserByIdQuery } from '../application/queries/get-users-by-id.query-handler';
 
 @Controller('users')
 @UseGuards(BasicAuthGuard)
 export class UserController {
   constructor(
-    private userService: UserService,
-    private userQueryRepository: UserQueryRepository,
+    private readonly commandBus: CommandBus,
+    private readonly queryBus: QueryBus,
   ) {}
 
   @Post()
-  async createPost(@Body() dto: CreateUserDto) {
-    const userId = await this.userService.createUser(dto);
-    return this.userQueryRepository.getByIdOrNotFoundFail(userId);
+  async createUser(@Body() dto: CreateUserDto) {
+    const userId = await this.commandBus.execute<CreateUserCommand, string>(
+      new CreateUserCommand(dto),
+    );
+    return this.queryBus.execute<GetUserByIdQuery, UserViewDto>(
+      new GetUserByIdQuery(userId),
+    );
   }
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') userId: string) {
-    await this.userService.deleteUser(userId);
+    await this.commandBus.execute<DeleteUserCommand, void>(
+      new DeleteUserCommand(userId),
+    );
   }
 
   @Get()
   async getAllUsers(@Query() query: GetUserQueryParams) {
-    return this.userQueryRepository.getAll(query);
+    return this.queryBus.execute<
+      GetAllUsersQuery,
+      PaginatedViewDto<UserViewDto[]>
+    >(new GetAllUsersQuery(query));
   }
 }

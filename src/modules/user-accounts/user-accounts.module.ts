@@ -3,7 +3,6 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './user/domain/user.entity';
 import { UserRepository } from './user/infrastructure/user.repository';
 import { UserQueryRepository } from './user/infrastructure/query/user.query-repository';
-import { UserService } from './user/application/user.service';
 import { UserController } from './user/api/user.controller';
 import {
   RateLimiter,
@@ -22,6 +21,14 @@ import {
   ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
   REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
 } from './constants/auth-tokens.inject-constants';
+import { CreateUserUseCase } from './user/application/usecases/create-user.usecase';
+import { DeleteUserUseCase } from './user/application/usecases/delete-user.usecase';
+import { GetAllUsersQueryHandler } from './user/application/queries/get-all-users.query-handler';
+import { GetUserByIdQueryHandler } from './user/application/queries/get-users-by-id.query-handler';
+
+const commandHandlers = [CreateUserUseCase, DeleteUserUseCase];
+
+const queryHandlers = [GetAllUsersQueryHandler, GetUserByIdQueryHandler];
 
 @Module({
   imports: [
@@ -37,13 +44,14 @@ import {
   providers: [
     UserRepository,
     UserQueryRepository,
-    UserService,
     CryptoService,
     NodemailerService,
     AuthService,
     JwtService,
     EmailService,
     AuthQueryRepository,
+    ...commandHandlers,
+    ...queryHandlers,
     JwtStrategy,
     {
       provide: ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,

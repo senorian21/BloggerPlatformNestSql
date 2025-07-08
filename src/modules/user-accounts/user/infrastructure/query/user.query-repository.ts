@@ -13,7 +13,9 @@ export class UserQueryRepository {
     @InjectModel(User.name)
     private UserModel: UserModelType,
   ) {}
-  async getAll(query: GetUserQueryParams) {
+  async getAll(
+    query: GetUserQueryParams,
+  ): Promise<PaginatedViewDto<UserViewDto[]>> {
     const queryParams = plainToClass(GetUserQueryParams, query);
 
     const filter: FilterQuery<User> = {
