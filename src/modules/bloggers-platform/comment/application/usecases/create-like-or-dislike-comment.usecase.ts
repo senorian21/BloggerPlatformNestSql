@@ -4,7 +4,7 @@ import {
   LikeComment,
   likeCommentModelType,
   likeStatus,
-} from '../../../like/domain/like.entity';
+} from '../../../like/domain/like=comment.entity';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { UsersExternalQueryRepository } from '../../../../user-accounts/user/infrastructure/external-query/users.external-query-repository';

@@ -10,6 +10,7 @@ import { GetPostQueryParams } from '../../api/input-dto/get-post-query-params.in
 import { BlogQueryRepository } from '../../../blog/infrastructure/query/blog.query-repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
+import { PostRepository } from '../post.repository';
 
 @Injectable()
 export class PostQueryRepository {
@@ -17,8 +18,12 @@ export class PostQueryRepository {
     @InjectModel(Post.name)
     private PostModel: PostModelType,
     private blogQueryRepository: BlogQueryRepository,
+    private postsRepository: PostRepository,
   ) {}
-  async getByIdOrNotFoundFail(id: string): Promise<PostViewDto> {
+  async getByIdOrNotFoundFail(
+    id: string,
+    userId?: string,
+  ): Promise<PostViewDto> {
     if (!Types.ObjectId.isValid(id)) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -35,7 +40,13 @@ export class PostQueryRepository {
         message: 'Post not found',
       });
     }
-    const myStatus: likeStatus = likeStatus.None;
+    let myStatus: likeStatus = likeStatus.None;
+    if (userId) {
+      const userLike = await this.postsRepository.findLikeByIdUser(userId, id);
+      if (userLike) {
+        myStatus = userLike.status;
+      }
+    }
 
     return PostViewDto.mapToView(post, myStatus);
   }

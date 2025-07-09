@@ -9,7 +9,7 @@ import {
   LikeComment,
   likeCommentDocument,
   likeCommentModelType,
-} from '../../like/domain/like.entity';
+} from '../../like/domain/like=comment.entity';
 
 @Injectable()
 export class CommentRepository {

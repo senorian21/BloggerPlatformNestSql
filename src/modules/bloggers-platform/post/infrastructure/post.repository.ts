@@ -1,10 +1,19 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocument, PostModelType } from '../domain/post.entity';
+import {
+  LikePost,
+  likePostDocument,
+  likePostModelType,
+} from '../../like/domain/like-post.entity';
 
 @Injectable()
 export class PostRepository {
-  constructor(@InjectModel(Post.name) private PostModel: PostModelType) {}
+  constructor(
+    @InjectModel(Post.name) private PostModel: PostModelType,
+    @InjectModel(LikePost.name)
+    private likePostModel: likePostModelType,
+  ) {}
   async save(post: PostDocument) {
     await post.save();
   }
@@ -17,14 +26,14 @@ export class PostRepository {
     return post;
   }
 
-  // async findLikeByIdUser(
-  //   userId: string,
-  //   postId: string | string[],
-  // ): Promise<likePostsDocument | null> {
-  //   return LikePostModel.findOne({ userId, postId });
-  // }
-  //
-  // async saveLike(like: likePostsDocument) {
-  //   await like.save();
-  // }
+  async findLikeByIdUser(
+    userId: string,
+    postId: string,
+  ): Promise<likePostDocument | null> {
+    return this.likePostModel.findOne({ userId, postId });
+  }
+
+  async saveLike(like: likePostDocument) {
+    await like.save();
+  }
 }

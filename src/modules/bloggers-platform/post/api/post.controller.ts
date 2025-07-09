@@ -33,6 +33,8 @@ import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guar
 import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/param/user.decorator';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
+import { LikeStatusPostCommand } from '../application/usecases/post-like-status.usecase';
+import { LikeStatusInputDto } from './input-dto/like-status-post.input-dto';
 
 @Controller('posts')
 export class PostController {
@@ -60,9 +62,14 @@ export class PostController {
   }
 
   @Get(':id')
-  async getPost(@Param('id') postId: string) {
+  @UseGuards(JwtOptionalAuthGuard)
+  async getPost(
+    @Param('id') postId: string,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+  ) {
+    const userId = user?.id?.toString();
     return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(
-      new GetPostByIdQuery(postId),
+      new GetPostByIdQuery(postId, userId),
     );
   }
 
@@ -106,6 +113,19 @@ export class PostController {
     >(new CreateCommentCommand(dto, user.id.toString(), postId));
     return this.queryBus.execute<GetCommentsByIdQuery, CommentViewDto>(
       new GetCommentsByIdQuery(commentId),
+    );
+  }
+
+  @Put(':id/like-status')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async likeStatus(
+    @Param('id') postId: string,
+    @ExtractUserFromRequest() user: UserContextDto,
+    @Body() dto: LikeStatusInputDto,
+  ) {
+    await this.commandBus.execute<LikeStatusPostCommand, void>(
+      new LikeStatusPostCommand(postId, user.id.toString(), dto.likeStatus),
     );
   }
 }

@@ -8,6 +8,7 @@ export class GetAllPostQuery {
   constructor(
     public params: GetPostQueryParams,
     public blogId?: string,
+    public userId?: string | null,
   ) {}
 }
 
