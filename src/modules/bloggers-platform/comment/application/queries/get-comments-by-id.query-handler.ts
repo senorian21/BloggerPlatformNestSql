@@ -3,7 +3,10 @@ import { CommentViewDto } from '../../api/view-dto/comment.view-dto';
 import { CommentsQueryRepository } from '../../infrastructure/query/comments.query-repository';
 
 export class GetCommentsByIdQuery {
-  constructor(public commentId: string) {}
+  constructor(
+    public commentId: string,
+    public userId?: string,
+  ) {}
 }
 
 @QueryHandler(GetCommentsByIdQuery)
@@ -12,7 +15,13 @@ export class GetCommentsByIdQueryHandler
 {
   constructor(private commentsQueryRepository: CommentsQueryRepository) {}
 
-  async execute({ commentId }: GetCommentsByIdQuery): Promise<CommentViewDto> {
-    return this.commentsQueryRepository.getByIdOrNotFoundFail(commentId);
+  async execute({
+    commentId,
+    userId,
+  }: GetCommentsByIdQuery): Promise<CommentViewDto> {
+    return this.commentsQueryRepository.getByIdOrNotFoundFail(
+      commentId,
+      userId,
+    );
   }
 }

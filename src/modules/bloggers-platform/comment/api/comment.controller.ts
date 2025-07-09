@@ -19,6 +19,10 @@ import { UserContextDto } from '../../../user-accounts/auth/dto/user-context.dto
 import { DeleteCommentCommand } from '../application/usecases/delete-comment.usecase';
 import { UpdateCommentCommand } from '../application/usecases/update-comment.usecase';
 import { UpdateCommentDto } from './input-dto/updats-comment.input-dto';
+import { CommentLikeStatusInputDto } from './input-dto/comment-like-status.input-dto';
+import { LikeStatusCommentCommand } from '../application/usecases/create-like-or-dislike-comment.usecase';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
+import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 
 @Controller('comments')
 export class CommentController {
@@ -29,9 +33,13 @@ export class CommentController {
   ) {}
 
   @Get(':id')
-  async getCommentById(@Param('id') commentId: string) {
+  @UseGuards(JwtOptionalAuthGuard)
+  async getCommentById(
+    @Param('id') commentId: string,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto,
+  ) {
     return this.queryBus.execute<GetCommentsByIdQuery, CommentViewDto>(
-      new GetCommentsByIdQuery(commentId),
+      new GetCommentsByIdQuery(commentId, user.id.toString()),
     );
   }
 
@@ -57,6 +65,23 @@ export class CommentController {
   ) {
     await this.commandBus.execute<UpdateCommentCommand, void>(
       new UpdateCommentCommand(commentId, user.id.toString(), dto),
+    );
+  }
+
+  @Put(':id/like-status')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  async likeStatus(
+    @Param('id') commentId: string,
+    @ExtractUserFromRequest() user: UserContextDto,
+    @Body() dto: CommentLikeStatusInputDto,
+  ) {
+    await this.commandBus.execute<LikeStatusCommentCommand, void>(
+      new LikeStatusCommentCommand(
+        commentId,
+        user.id.toString(),
+        dto.likeStatus,
+      ),
     );
   }
 }

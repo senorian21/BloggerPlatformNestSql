@@ -28,6 +28,8 @@ import { CreateCommentUseCase } from './post/application/usecases/create-comment
 import { CommentRepository } from './comment/infrastructure/comment.repository';
 import { DeleteCommentUseCase } from './comment/application/usecases/delete-comment.usecase';
 import { UpdateCommentUseCase } from './comment/application/usecases/update-comment.usecase';
+import { LikeComment, likeCommentShema } from './like/domain/like.entity';
+import { LikeStatusCommentUseCase } from './comment/application/usecases/create-like-or-dislike-comment.usecase';
 
 const commandHandlers = [
   CreateBlogUseCase,
@@ -48,6 +50,7 @@ const queryHandlers = [
   GetCommentsByIdQueryHandler,
   DeleteCommentUseCase,
   UpdateCommentUseCase,
+  LikeStatusCommentUseCase,
 ];
 
 @Module({
@@ -55,6 +58,9 @@ const queryHandlers = [
     MongooseModule.forFeature([{ name: Blog.name, schema: BolgShema }]),
     MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
     MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema }]),
+    MongooseModule.forFeature([
+      { name: LikeComment.name, schema: likeCommentShema },
+    ]),
     UserAccountsModule,
   ],
   controllers: [BlogController, PostController, CommentController],

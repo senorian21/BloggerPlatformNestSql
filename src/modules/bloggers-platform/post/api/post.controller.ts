@@ -14,7 +14,6 @@ import {
 import { CreatePostDto } from './input-dto/post.input-dto';
 import { UpdatePostDto } from './input-dto/updats-post.input-dto';
 import { GetPostQueryParams } from './input-dto/get-post-query-params.input-dto';
-import { CommentsQueryRepository } from '../../comment/infrastructure/query/comments.query-repository';
 import { GetCommentQueryParams } from '../../comment/api/input-dto/get-comment-query-params.input-dto';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { CreatePostCommand } from '../application/usecases/create-post.usecase';
@@ -32,6 +31,8 @@ import { CreateCommentCommand } from '../application/usecases/create-comment.use
 import { GetCommentsByIdQuery } from '../../comment/application/queries/get-comments-by-id.query-handler';
 import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
 import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/param/user.decorator';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
+import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 
 @Controller('posts')
 export class PostController {
@@ -80,14 +81,16 @@ export class PostController {
   }
 
   @Get(':id/comments')
+  @UseGuards(JwtOptionalAuthGuard)
   async getCommentByPost(
     @Query() query: GetCommentQueryParams,
     @Param('id') postId: string,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto,
   ) {
     return this.queryBus.execute<
       GetAllCommentsQuery,
       PaginatedViewDto<CommentViewDto[]>
-    >(new GetAllCommentsQuery(query, postId));
+    >(new GetAllCommentsQuery(query, postId, user.id.toString()));
   }
 
   @Post(':id/comments')

@@ -8,6 +8,7 @@ export class GetAllCommentsQuery {
   constructor(
     public params: GetCommentQueryParams,
     public postId: string,
+    public userId?: string,
   ) {}
 }
 
@@ -21,7 +22,8 @@ export class GetAllCommentsQueryHandler
   async execute({
     params,
     postId,
+    userId,
   }: GetAllCommentsQuery): Promise<PaginatedViewDto<CommentViewDto[]>> {
-    return this.commentsQueryRepository.getAll(params, postId);
+    return this.commentsQueryRepository.getAll(params, postId, userId);
   }
 }
