@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Res,
   UseGuards,
 } from '@nestjs/common';
 import { loginInputDto } from './input-dto/login.input-dto';
@@ -25,6 +26,7 @@ import { RegisterUserCommand } from '../application/usecases/register-user.useca
 import { RegistrationEmailResendingCommand } from '../application/usecases/registration-email-resending.usecase';
 import { AboutUserQuery } from '../application/queries/me.query-handler';
 import { AuthViewDto } from './view-dto/auth.view-dto';
+import { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -40,15 +42,28 @@ export class AuthController {
       new PasswordRecoveryCommand(dto),
     );
   }
+
   @Post('login')
   @HttpCode(HttpStatus.OK)
-  async login(@Body() dto: loginInputDto) {
-    const accessToken = await this.commandBus.execute<
+  async login(
+    @Body() dto: loginInputDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken } = await this.commandBus.execute<
       LoginUserCommand,
-      { accessToken: string }
+      { accessToken: string; refreshToken: string }
     >(new LoginUserCommand(dto));
-    return accessToken;
+
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true, // Только для HTTPS (в продакшене)
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
+    });
+
+    return { accessToken };
   }
+
   @Post('new-password')
   @HttpCode(HttpStatus.NO_CONTENT)
   async newPassword(@Body() dto: newPasswordInputDto) {

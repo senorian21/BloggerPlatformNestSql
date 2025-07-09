@@ -26,7 +26,9 @@ export class LoginUserUseCase
     private authService: AuthService,
   ) {}
 
-  async execute({ dto }: LoginUserCommand): Promise<{ accessToken: string }> {
+  async execute({
+    dto,
+  }: LoginUserCommand): Promise<{ accessToken: string; refreshToken: string }> {
     const result = await this.authService.checkUserCredentials(
       dto.loginOrEmail,
       dto.password,
@@ -38,6 +40,10 @@ export class LoginUserUseCase
       userId: userId,
     });
 
-    return { accessToken };
+    const refreshToken = this.refreshTokenContext.sign({
+      userId: userId,
+    });
+
+    return { accessToken, refreshToken };
   }
 }

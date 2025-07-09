@@ -35,6 +35,7 @@ import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-o
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { LikeStatusPostCommand } from '../application/usecases/post-like-status.usecase';
 import { LikeStatusInputDto } from './input-dto/like-status-post.input-dto';
+import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 
 @Controller('posts')
 export class PostController {
@@ -44,6 +45,7 @@ export class PostController {
   ) {}
 
   @Post()
+  @UseGuards(BasicAuthGuard)
   async createPost(@Body() postDto: CreatePostDto) {
     const postId = await this.commandBus.execute<CreatePostCommand, string>(
       new CreatePostCommand(postDto),
@@ -54,6 +56,7 @@ export class PostController {
   }
 
   @Put(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(@Param('id') postId: string, @Body() dto: UpdatePostDto) {
     await this.commandBus.execute<UpdatePostCommand, void>(
@@ -82,6 +85,7 @@ export class PostController {
   }
 
   @Delete(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(@Param('id') postId: string) {
     await this.commandBus.execute(new DeletePostCommand(postId));

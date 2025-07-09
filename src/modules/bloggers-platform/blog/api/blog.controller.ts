@@ -9,6 +9,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { GetBlogsQueryParams } from './input-dto/get-blog-query-params.input-dto';
 import { PostQueryRepository } from '../../post/infrastructure/query/post.query-repository';
@@ -28,6 +29,7 @@ import { CreatePostCommand } from '../../post/application/usecases/create-post.u
 import { GetAllPostQuery } from '../../post/application/queries/get-all-post.query-handler';
 import { PostViewDto } from '../../post/api/view-dto/post.view-dto';
 import { GetPostByIdQuery } from '../../post/application/queries/get-post-by-id.query-handler';
+import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 
 @Controller('blogs')
 export class BlogController {
@@ -37,6 +39,7 @@ export class BlogController {
   ) {}
 
   @Post()
+  @UseGuards(BasicAuthGuard)
   async createBlog(@Body() dto: CreateBlogDto) {
     const blogId = await this.commandBus.execute<CreateBlogCommand, string>(
       new CreateBlogCommand(dto),
@@ -47,6 +50,7 @@ export class BlogController {
   }
 
   @Put(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(@Param('id') blogId: string, @Body() dto: UpdateBlogDto) {
     await this.commandBus.execute(new UpdateBlogCommand(blogId, dto));
@@ -68,6 +72,7 @@ export class BlogController {
   }
 
   @Delete(':id')
+  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBlog(@Param('id') blogId: string) {
     await this.commandBus.execute(new DeleteBlogCommand(blogId));
@@ -85,6 +90,7 @@ export class BlogController {
   }
 
   @Post(':id/posts')
+  @UseGuards(BasicAuthGuard)
   async createPostByIdBlog(
     @Param('id') blogId: string,
     @Body() dto: CreatePostDto,
