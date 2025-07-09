@@ -9,7 +9,6 @@ import {
   Put,
   UseGuards,
 } from '@nestjs/common';
-import { CommentsQueryRepository } from '../infrastructure/query/comments.query-repository';
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetCommentsByIdQuery } from '../application/queries/get-comments-by-id.query-handler';
 import { CommentViewDto } from './view-dto/comment.view-dto';
@@ -27,7 +26,6 @@ import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/de
 @Controller('comments')
 export class CommentController {
   constructor(
-    private commentsQueryRepository: CommentsQueryRepository,
     private readonly queryBus: QueryBus,
     private readonly commandBus: CommandBus,
   ) {}
@@ -36,10 +34,11 @@ export class CommentController {
   @UseGuards(JwtOptionalAuthGuard)
   async getCommentById(
     @Param('id') commentId: string,
-    @ExtractUserIfExistsFromRequest() user: UserContextDto,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ) {
+    const userId = user ? user.id?.toString() : undefined;
     return this.queryBus.execute<GetCommentsByIdQuery, CommentViewDto>(
-      new GetCommentsByIdQuery(commentId, user.id.toString()),
+      new GetCommentsByIdQuery(commentId, userId),
     );
   }
 

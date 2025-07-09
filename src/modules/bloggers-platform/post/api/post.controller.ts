@@ -96,12 +96,13 @@ export class PostController {
   async getCommentByPost(
     @Query() query: GetCommentQueryParams,
     @Param('id') postId: string,
-    @ExtractUserIfExistsFromRequest() user: UserContextDto,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ) {
+    const userId = user?.id?.toString();
     return this.queryBus.execute<
       GetAllCommentsQuery,
       PaginatedViewDto<CommentViewDto[]>
-    >(new GetAllCommentsQuery(query, postId, user.id.toString()));
+    >(new GetAllCommentsQuery(query, postId, userId));
   }
 
   @Post(':id/comments')
