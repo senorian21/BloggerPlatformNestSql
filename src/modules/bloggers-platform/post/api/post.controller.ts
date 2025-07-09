@@ -9,9 +9,9 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { CreatePostDto } from './input-dto/post.input-dto';
-import { PostQueryRepository } from '../infrastructure/query/post.query-repository';
 import { UpdatePostDto } from './input-dto/updats-post.input-dto';
 import { GetPostQueryParams } from './input-dto/get-post-query-params.input-dto';
 import { CommentsQueryRepository } from '../../comment/infrastructure/query/comments.query-repository';
@@ -26,11 +26,16 @@ import { GetAllPostQuery } from '../application/queries/get-all-post.query-handl
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { GetAllCommentsQuery } from '../../comment/application/queries/get-all-comments.query-handler';
 import { CommentViewDto } from '../../comment/api/view-dto/comment.view-dto';
+import { CreateCommentDto } from './input-dto/create-comment.input-dto';
+import { UserContextDto } from '../../../user-accounts/auth/dto/user-context.dto';
+import { CreateCommentCommand } from '../application/usecases/create-comment.usecase';
+import { GetCommentsByIdQuery } from '../../comment/application/queries/get-comments-by-id.query-handler';
+import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
+import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/param/user.decorator';
 
 @Controller('posts')
 export class PostController {
   constructor(
-    private commentsQueryRepository: CommentsQueryRepository,
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
   ) {}
@@ -83,5 +88,21 @@ export class PostController {
       GetAllCommentsQuery,
       PaginatedViewDto<CommentViewDto[]>
     >(new GetAllCommentsQuery(query, postId));
+  }
+
+  @Post(':id/comments')
+  @UseGuards(JwtAuthGuard)
+  async createComment(
+    @Param('id') postId: string,
+    @Body() dto: CreateCommentDto,
+    @ExtractUserFromRequest() user: UserContextDto,
+  ) {
+    const commentId = await this.commandBus.execute<
+      CreateCommentCommand,
+      string
+    >(new CreateCommentCommand(dto, user.id.toString(), postId));
+    return this.queryBus.execute<GetCommentsByIdQuery, CommentViewDto>(
+      new GetCommentsByIdQuery(commentId),
+    );
   }
 }

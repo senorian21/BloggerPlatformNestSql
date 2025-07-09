@@ -23,6 +23,11 @@ import { GetPostByIdQueryHandler } from './post/application/queries/get-post-by-
 import { GetAllPostQueryHandler } from './post/application/queries/get-all-post.query-handler';
 import { GetAllCommentsQueryHandler } from './comment/application/queries/get-all-comments.query-handler';
 import { GetCommentsByIdQueryHandler } from './comment/application/queries/get-comments-by-id.query-handler';
+import { UserAccountsModule } from '../user-accounts/user-accounts.module';
+import { CreateCommentUseCase } from './post/application/usecases/create-comment.usecase';
+import { CommentRepository } from './comment/infrastructure/comment.repository';
+import { DeleteCommentUseCase } from './comment/application/usecases/delete-comment.usecase';
+import { UpdateCommentUseCase } from './comment/application/usecases/update-comment.usecase';
 
 const commandHandlers = [
   CreateBlogUseCase,
@@ -31,6 +36,7 @@ const commandHandlers = [
   CreatePostUseCase,
   DeletePostUseCase,
   UpdatePostUseCase,
+  CreateCommentUseCase,
 ];
 
 const queryHandlers = [
@@ -40,6 +46,8 @@ const queryHandlers = [
   GetAllPostQueryHandler,
   GetAllCommentsQueryHandler,
   GetCommentsByIdQueryHandler,
+  DeleteCommentUseCase,
+  UpdateCommentUseCase,
 ];
 
 @Module({
@@ -47,6 +55,7 @@ const queryHandlers = [
     MongooseModule.forFeature([{ name: Blog.name, schema: BolgShema }]),
     MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
     MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema }]),
+    UserAccountsModule,
   ],
   controllers: [BlogController, PostController, CommentController],
   providers: [
@@ -55,6 +64,7 @@ const queryHandlers = [
     PostQueryRepository,
     PostRepository,
     CommentsQueryRepository,
+    CommentRepository,
     ...commandHandlers,
     ...queryHandlers,
   ],

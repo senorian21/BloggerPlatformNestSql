@@ -41,7 +41,7 @@ export class Comment {
       userLogin: userLogin,
     };
     newComment.createdAt = new Date();
-    return newComment;
+    return newComment as CommentDocument;
   }
   updateComment(dto: UpdateCommentDomainDto) {
     this.content = dto.content;

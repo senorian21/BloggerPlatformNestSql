@@ -32,6 +32,7 @@ import { RegisterUserUseCase } from './auth/application/usecases/register-user.u
 import { RegistrationConfirmationUserUseCase } from './auth/application/usecases/registration-confirmation-user.usecase';
 import { RegistrationEmailResendingUseCase } from './auth/application/usecases/registration-email-resending.usecase';
 import { AboutUserQueryHandler } from './auth/application/queries/me.query-handler';
+import { UsersExternalQueryRepository } from './user/infrastructure/external-query/users.external-query-repository';
 
 const commandHandlers = [
   CreateUserUseCase,
@@ -70,6 +71,7 @@ const queryHandlers = [
     JwtService,
     EmailService,
     AuthQueryRepository,
+    UsersExternalQueryRepository,
     ...commandHandlers,
     ...queryHandlers,
     JwtStrategy,
@@ -94,6 +96,6 @@ const queryHandlers = [
       inject: [],
     },
   ],
-  exports: [],
+  exports: [UsersExternalQueryRepository, JwtStrategy],
 })
 export class UserAccountsModule {}
