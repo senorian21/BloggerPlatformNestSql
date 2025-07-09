@@ -10,6 +10,7 @@ import { GetCommentQueryParams } from '../../api/input-dto/get-comment-query-par
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { CommentRepository } from '../comment.repository';
+import { PostRepository } from '../../../post/infrastructure/post.repository';
 
 @Injectable()
 export class CommentsQueryRepository {
@@ -17,6 +18,7 @@ export class CommentsQueryRepository {
     @InjectModel(Comment.name)
     private commentModel: CommentModelType,
     private commentRepository: CommentRepository,
+    private postRepository: PostRepository,
   ) {}
   async getByIdOrNotFoundFail(
     id: string,
@@ -61,7 +63,13 @@ export class CommentsQueryRepository {
     userId?: string,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
     const queryParams = plainToClass(GetCommentQueryParams, query);
-
+    const post = await this.postRepository.findById(postId);
+    if (!post) {
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: 'Post not found',
+      });
+    }
     const filter: FilterQuery<Comment> = {
       deletedAt: null,
       postId: postId,

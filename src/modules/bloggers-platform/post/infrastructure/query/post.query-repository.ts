@@ -54,6 +54,7 @@ export class PostQueryRepository {
   async getAll(
     query: GetPostQueryParams,
     blogId?: string,
+    userId?: string | null,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const queryParams = plainToClass(GetPostQueryParams, query);
 
@@ -73,7 +74,19 @@ export class PostQueryRepository {
 
     const totalCount = await this.PostModel.countDocuments(filter);
 
-    const myStatusArray = Array(rawPosts.length).fill(likeStatus.None);
+    let myStatusArray = Array(rawPosts.length).fill(likeStatus.None);
+    if (userId) {
+      myStatusArray = await Promise.all(
+        rawPosts.map(async (post) => {
+          const postId = post._id.toString();
+          const userLike = await this.postsRepository.findLikeByIdUser(
+            userId,
+            postId,
+          );
+          return userLike?.status ?? likeStatus.None;
+        }),
+      );
+    }
 
     const items = rawPosts.map((post, index) =>
       PostViewDto.mapToView(post, myStatusArray[index]),

@@ -30,6 +30,9 @@ import { GetAllPostQuery } from '../../post/application/queries/get-all-post.que
 import { PostViewDto } from '../../post/api/view-dto/post.view-dto';
 import { GetPostByIdQuery } from '../../post/application/queries/get-post-by-id.query-handler';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
+import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
+import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
+import { UserContextDto } from '../../../user-accounts/auth/dto/user-context.dto';
 
 @Controller('blogs')
 export class BlogController {
@@ -79,14 +82,17 @@ export class BlogController {
   }
 
   @Get(':id/posts')
+  @UseGuards(JwtOptionalAuthGuard)
   async getPostByBlog(
     @Param('id') blogId: string,
     @Query() query: GetPostQueryParams,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ) {
+    const userId = user?.id?.toString();
     return this.queryBus.execute<
       GetAllPostQuery,
       PaginatedViewDto<PostViewDto[]>
-    >(new GetAllPostQuery(query, blogId));
+    >(new GetAllPostQuery(query, blogId, userId));
   }
 
   @Post(':id/posts')

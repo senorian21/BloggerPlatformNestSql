@@ -77,11 +77,16 @@ export class PostController {
   }
 
   @Get()
-  async getAll(@Query() query: GetPostQueryParams) {
+  @UseGuards(JwtOptionalAuthGuard)
+  async getAll(
+    @Query() query: GetPostQueryParams,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+  ) {
+    const userId = user?.id?.toString();
     return this.queryBus.execute<
       GetAllPostQuery,
       PaginatedViewDto<PostViewDto[]>
-    >(new GetAllPostQuery(query));
+    >(new GetAllPostQuery(query, undefined, userId));
   }
 
   @Delete(':id')

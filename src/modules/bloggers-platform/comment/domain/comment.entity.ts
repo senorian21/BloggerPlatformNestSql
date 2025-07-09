@@ -10,6 +10,11 @@ import {
 import { likeStatus } from './dto/like-status.domain.dto';
 import { HydratedDocument, Model } from 'mongoose';
 
+export const contentConstraints = {
+  minLength: 20,
+  maxLength: 300,
+};
+
 @Schema()
 export class Comment {
   @Prop({ type: String, required: true })

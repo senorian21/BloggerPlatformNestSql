@@ -1,11 +1,13 @@
 import { BaseQueryParams } from '../../../../../core/dto/base.query-params.input-dto';
 import { BlogSortBy } from './blog-sort-by';
-import { IsEnum, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString } from 'class-validator';
 
 export class GetBlogsQueryParams extends BaseQueryParams {
-  @IsEnum(BlogSortBy)
-  sortBy = BlogSortBy.CreatedAt;
   @IsString()
+  @IsOptional()
+  sortBy = BlogSortBy.CreatedAt;
+
+  @IsString() // Разрешает строку или null
   @IsOptional()
   searchNameTerm: string | null = null;
 }
