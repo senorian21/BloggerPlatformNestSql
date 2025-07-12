@@ -33,6 +33,9 @@ import { RegistrationConfirmationUserUseCase } from './auth/application/usecases
 import { RegistrationEmailResendingUseCase } from './auth/application/usecases/registration-email-resending.usecase';
 import { AboutUserQueryHandler } from './auth/application/queries/me.query-handler';
 import { UsersExternalQueryRepository } from './user/infrastructure/external-query/users.external-query-repository';
+import { Session, SessionSchema } from './sessions/domain/session.entity';
+import { AuthRepository } from './auth/infrastructure/auth.repository';
+import { RefreshTokenUseCase } from './auth/application/usecases/refresh-token.usecase';
 
 const commandHandlers = [
   CreateUserUseCase,
@@ -43,6 +46,7 @@ const commandHandlers = [
   RegisterUserUseCase,
   RegistrationConfirmationUserUseCase,
   RegistrationEmailResendingUseCase,
+  RefreshTokenUseCase,
 ];
 
 const queryHandlers = [
@@ -60,6 +64,7 @@ const queryHandlers = [
     ConfigModule.forRoot({
       envFilePath: '.env',
     }),
+    MongooseModule.forFeature([{ name: Session.name, schema: SessionSchema }]),
   ],
   controllers: [UserController, AuthController],
   providers: [
@@ -71,6 +76,7 @@ const queryHandlers = [
     JwtService,
     EmailService,
     AuthQueryRepository,
+    AuthRepository,
     UsersExternalQueryRepository,
     ...commandHandlers,
     ...queryHandlers,

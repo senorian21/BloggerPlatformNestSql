@@ -5,6 +5,7 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  Req,
   Res,
   UseGuards,
 } from '@nestjs/common';
@@ -26,7 +27,12 @@ import { RegisterUserCommand } from '../application/usecases/register-user.useca
 import { RegistrationEmailResendingCommand } from '../application/usecases/registration-email-resending.usecase';
 import { AboutUserQuery } from '../application/queries/me.query-handler';
 import { AuthViewDto } from './view-dto/auth.view-dto';
-import { Response } from 'express';
+import { Response, Request } from 'express';
+import { RateLimitInterceptor } from '../../guards/rate/rate-limiter.guard';
+import { RefreshTokenFromRequest } from '../../guards/decorators/param/refresh-token.decorator';
+import { RefreshTokenContextDto } from '../dto/refreshToken.dto';
+import { RefreshTokenCommand } from '../application/usecases/refresh-token.usecase';
+import { RefreshAuthGuard } from '../../guards/refresh/refresh-token-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -36,6 +42,7 @@ export class AuthController {
   ) {}
 
   @Post('password-recovery')
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async passwordRecovery(@Body() dto: PasswordRecoveryInputDto) {
     await this.commandBus.execute<PasswordRecoveryCommand, void>(
@@ -44,19 +51,29 @@ export class AuthController {
   }
 
   @Post('login')
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() dto: loginInputDto,
     @Res({ passthrough: true }) res: Response,
+    @Req() req: Request,
   ) {
+    const ip: string =
+      req.socket.remoteAddress ||
+      (Array.isArray(req.headers['x-forwarded-for'])
+        ? req.headers['x-forwarded-for'][0]
+        : req.headers['x-forwarded-for']) ||
+      'unknown';
+
+    const userAgent = req.headers['user-agent'] || 'unknown';
     const { accessToken, refreshToken } = await this.commandBus.execute<
       LoginUserCommand,
       { accessToken: string; refreshToken: string }
-    >(new LoginUserCommand(dto));
+    >(new LoginUserCommand(dto, userAgent!, ip));
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: true, // Только для HTTPS (в продакшене)
+      secure: true,
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
     });
@@ -65,6 +82,7 @@ export class AuthController {
   }
 
   @Post('new-password')
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async newPassword(@Body() dto: newPasswordInputDto) {
     await this.commandBus.execute<NewPasswordCommand, void>(
@@ -72,6 +90,7 @@ export class AuthController {
     );
   }
   @Post('registration-confirmation')
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationConfirmation(@Body() dto: registrationConfirmationUser) {
     await this.commandBus.execute<RegistrationConfirmationUserCommand, void>(
@@ -79,6 +98,7 @@ export class AuthController {
     );
   }
   @Post('registration')
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async registration(@Body() dto: registrationInputDto) {
     await this.commandBus.execute<RegisterUserCommand, void>(
@@ -86,6 +106,7 @@ export class AuthController {
     );
   }
   @Post('registration-email-resending')
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationEmailResending(@Body() dto: RegistrationEmailResending) {
     await this.commandBus.execute<RegistrationEmailResendingCommand, void>(
@@ -101,5 +122,31 @@ export class AuthController {
       AuthViewDto | null
     >(new AboutUserQuery(user.id.toString()));
     return userEntity;
+  }
+
+  @Post('refresh-token')
+  @UseGuards(RefreshAuthGuard)
+  async refreshToken(
+    @RefreshTokenFromRequest() refreshTokenReq: RefreshTokenContextDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const { accessToken, refreshToken } = await this.commandBus.execute<
+      RefreshTokenCommand,
+      { accessToken; refreshToken }
+    >(
+      new RefreshTokenCommand(
+        refreshTokenReq.deviceName,
+        refreshTokenReq.ip,
+        refreshTokenReq.userId,
+        refreshTokenReq.deviceId,
+      ),
+    );
+    res.cookie('refreshToken', refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'strict',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
+    });
+    return { accessToken: accessToken };
   }
 }

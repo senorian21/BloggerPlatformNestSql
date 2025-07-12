@@ -18,6 +18,7 @@ export class RateLimiter {
     required: true,
   })
   date: Date;
+
   static createInstance(IP: string, URL: string, date: Date) {
     const limit = new this();
     limit.IP = IP;
