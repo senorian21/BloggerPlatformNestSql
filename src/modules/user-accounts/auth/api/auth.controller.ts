@@ -33,6 +33,7 @@ import { RefreshTokenFromRequest } from '../../guards/decorators/param/refresh-t
 import { RefreshTokenContextDto } from '../dto/refreshToken.dto';
 import { RefreshTokenCommand } from '../application/usecases/refresh-token.usecase';
 import { RefreshAuthGuard } from '../../guards/refresh/refresh-token-auth.guard';
+import { LogoutCommand } from '../application/usecases/logout.usecase';
 
 @Controller('auth')
 export class AuthController {
@@ -148,5 +149,15 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 дней
     });
     return { accessToken: accessToken };
+  }
+
+  @Post('logout')
+  @UseGuards(RefreshAuthGuard)
+  async logout(
+    @RefreshTokenFromRequest() refreshTokenReq: RefreshTokenContextDto,
+  ) {
+    await this.commandBus.execute<LogoutCommand, void>(
+      new LogoutCommand(refreshTokenReq.userId, refreshTokenReq.deviceId),
+    );
   }
 }

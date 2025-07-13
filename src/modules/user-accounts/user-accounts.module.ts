@@ -36,6 +36,12 @@ import { UsersExternalQueryRepository } from './user/infrastructure/external-que
 import { Session, SessionSchema } from './sessions/domain/session.entity';
 import { AuthRepository } from './auth/infrastructure/auth.repository';
 import { RefreshTokenUseCase } from './auth/application/usecases/refresh-token.usecase';
+import { DeleteDeviceByIdUseCase } from './security/application/usecases/delete-device-by-id.usecase';
+import { DeleteAllDeviceUseCase } from './security/application/usecases/delete-all-devices-except-the-active-one.usercase';
+import { DevicesController } from './security/api/security.controller';
+import { SessionsQueryRepository } from './security/infrastructure/query/security.query-repository';
+import { GetAllSessionsByUserQueryHandler } from './security/application/queries/sessions-list-by-user.query-handler';
+import { LogoutUseCase } from './auth/application/usecases/logout.usecase';
 
 const commandHandlers = [
   CreateUserUseCase,
@@ -47,12 +53,16 @@ const commandHandlers = [
   RegistrationConfirmationUserUseCase,
   RegistrationEmailResendingUseCase,
   RefreshTokenUseCase,
+  DeleteDeviceByIdUseCase,
+  DeleteAllDeviceUseCase,
+  LogoutUseCase,
 ];
 
 const queryHandlers = [
   GetAllUsersQueryHandler,
   GetUserByIdQueryHandler,
   AboutUserQueryHandler,
+  GetAllSessionsByUserQueryHandler,
 ];
 
 @Module({
@@ -66,18 +76,22 @@ const queryHandlers = [
     }),
     MongooseModule.forFeature([{ name: Session.name, schema: SessionSchema }]),
   ],
-  controllers: [UserController, AuthController],
+  controllers: [UserController, AuthController, DevicesController],
   providers: [
-    UserRepository,
+    SessionsQueryRepository,
     UserQueryRepository,
+    AuthQueryRepository,
+    UsersExternalQueryRepository,
+
     CryptoService,
-    NodemailerService,
     AuthService,
+    NodemailerService,
     JwtService,
     EmailService,
-    AuthQueryRepository,
+
+    UserRepository,
     AuthRepository,
-    UsersExternalQueryRepository,
+
     ...commandHandlers,
     ...queryHandlers,
     JwtStrategy,
