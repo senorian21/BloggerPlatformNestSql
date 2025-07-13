@@ -4,7 +4,7 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpStatus,
+  HttpStatus, Param,
   Post,
   Req,
   Res,
@@ -28,18 +28,21 @@ export class DevicesController {
 
   @Delete('devices/:deviceId')
   @UseGuards(RefreshAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
   async deleteDeviceById(
     @RefreshTokenFromRequest() refreshTokenReq: RefreshTokenContextDto,
+    @Param('deviceId') deviceId: string,
   ) {
     await this.commandBus.execute<DeleteDeviceByIdCommand, void>(
       new DeleteDeviceByIdCommand(
         refreshTokenReq.userId,
-        refreshTokenReq.deviceId,
+        deviceId,
       ),
     );
   }
 
   @Delete('devices')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(RefreshAuthGuard)
   async deleteAllDevice(
     @RefreshTokenFromRequest() refreshTokenReq: RefreshTokenContextDto,

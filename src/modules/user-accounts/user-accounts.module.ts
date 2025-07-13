@@ -100,7 +100,7 @@ const queryHandlers = [
       useFactory: (): JwtService => {
         return new JwtService({
           secret: 'access-token-secret',
-          signOptions: { expiresIn: '5m' },
+          signOptions: { expiresIn: '10s' },
         });
       },
       inject: [],
@@ -110,7 +110,7 @@ const queryHandlers = [
       useFactory: (): JwtService => {
         return new JwtService({
           secret: 'refresh-token-secret',
-          signOptions: { expiresIn: '10m' },
+          signOptions: { expiresIn: '20s' },
         });
       },
       inject: [],

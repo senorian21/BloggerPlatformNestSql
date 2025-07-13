@@ -42,7 +42,7 @@ export class RefreshAuthGuard implements CanActivate {
         message: 'unauthorised',
       });
     }
-
+    try{
     const cookies = cookieHeader.split(';').reduce(
       (acc, cookie) => {
         const [key, value] = cookie.trim().split('=');
@@ -88,5 +88,11 @@ export class RefreshAuthGuard implements CanActivate {
 
     request.user = payload;
     return true;
+    } catch (err) {
+      throw new DomainException({
+        code: DomainExceptionCode.Unauthorized,
+        message: 'unauthorised',
+      });
+    }
   }
 }

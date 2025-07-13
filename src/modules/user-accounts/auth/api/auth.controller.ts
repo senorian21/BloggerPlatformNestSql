@@ -127,6 +127,7 @@ export class AuthController {
 
   @Post('refresh-token')
   @UseGuards(RefreshAuthGuard)
+  @HttpCode(HttpStatus.OK)
   async refreshToken(
     @RefreshTokenFromRequest() refreshTokenReq: RefreshTokenContextDto,
     @Res({ passthrough: true }) res: Response,
@@ -152,6 +153,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(RefreshAuthGuard)
   async logout(
     @RefreshTokenFromRequest() refreshTokenReq: RefreshTokenContextDto,
