@@ -4,7 +4,8 @@ import {
   Delete,
   Get,
   HttpCode,
-  HttpStatus, Param,
+  HttpStatus,
+  Param,
   Post,
   Req,
   Res,
@@ -34,10 +35,7 @@ export class DevicesController {
     @Param('deviceId') deviceId: string,
   ) {
     await this.commandBus.execute<DeleteDeviceByIdCommand, void>(
-      new DeleteDeviceByIdCommand(
-        refreshTokenReq.userId,
-        deviceId,
-      ),
+      new DeleteDeviceByIdCommand(refreshTokenReq.userId, deviceId),
     );
   }
 

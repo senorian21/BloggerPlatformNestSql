@@ -42,52 +42,52 @@ export class RefreshAuthGuard implements CanActivate {
         message: 'unauthorised',
       });
     }
-    try{
-    const cookies = cookieHeader.split(';').reduce(
-      (acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
-        return acc;
-      },
-      {} as Record<string, string>,
-    );
+    try {
+      const cookies = cookieHeader.split(';').reduce(
+        (acc, cookie) => {
+          const [key, value] = cookie.trim().split('=');
+          acc[key] = value;
+          return acc;
+        },
+        {} as Record<string, string>,
+      );
 
-    const refreshToken = cookies['refreshToken'];
-    if (!refreshToken) {
-      throw new DomainException({
-        code: DomainExceptionCode.Unauthorized,
-        message: 'unauthorised ',
+      const refreshToken = cookies['refreshToken'];
+      if (!refreshToken) {
+        throw new DomainException({
+          code: DomainExceptionCode.Unauthorized,
+          message: 'unauthorised ',
+        });
+      }
+      const payload = await this.refreshTokenContext.verify(refreshToken);
+      if (!payload || !payload.userId || !payload.deviceName) {
+        throw new DomainException({
+          code: DomainExceptionCode.Unauthorized,
+          message: 'unauthorised ',
+        });
+      }
+      const foundSession = await this.authRepository.findSession({
+        deviceId: payload.deviceId,
+        userId: payload.userId,
       });
-    }
-    const payload = await this.refreshTokenContext.verify(refreshToken);
-    if (!payload || !payload.userId || !payload.deviceName) {
-      throw new DomainException({
-        code: DomainExceptionCode.Unauthorized,
-        message: 'unauthorised ',
-      });
-    }
-    const foundSession = await this.authRepository.findSession({
-      deviceId: payload.deviceId,
-      userId: payload.userId,
-    });
-    if (!foundSession) {
-      throw new DomainException({
-        code: DomainExceptionCode.Unauthorized,
-        message: 'unauthorised',
-      });
-    }
-    const tokenIat = new Date(payload.iat * 1000).getTime(); // если iat в секундах
-    const sessionCreatedAt = new Date(foundSession.createdAt).getTime();
+      if (!foundSession) {
+        throw new DomainException({
+          code: DomainExceptionCode.Unauthorized,
+          message: 'unauthorised',
+        });
+      }
+      const tokenIat = new Date(payload.iat * 1000).getTime(); // если iat в секундах
+      const sessionCreatedAt = new Date(foundSession.createdAt).getTime();
 
-    if (tokenIat !== sessionCreatedAt) {
-      throw new DomainException({
-        code: DomainExceptionCode.Unauthorized,
-        message: 'unauthorised',
-      });
-    }
+      if (tokenIat !== sessionCreatedAt) {
+        throw new DomainException({
+          code: DomainExceptionCode.Unauthorized,
+          message: 'unauthorised',
+        });
+      }
 
-    request.user = payload;
-    return true;
+      request.user = payload;
+      return true;
     } catch (err) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,

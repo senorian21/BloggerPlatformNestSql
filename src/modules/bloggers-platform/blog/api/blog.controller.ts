@@ -12,7 +12,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { GetBlogsQueryParams } from './input-dto/get-blog-query-params.input-dto';
-import { PostQueryRepository } from '../../post/infrastructure/query/post.query-repository';
 import { GetPostQueryParams } from '../../post/api/input-dto/get-post-query-params.input-dto';
 import { CreatePostDto } from '../../post/api/input-dto/post.input-dto';
 import { CreateBlogDto } from './input-dto/blog.input-dto';
