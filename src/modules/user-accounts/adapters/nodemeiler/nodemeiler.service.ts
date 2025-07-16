@@ -1,17 +1,17 @@
 import { Injectable } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import { ConfigService } from '@nestjs/config';
+import { UserAccountsConfig } from '../../config/user-accounts.config';
 
 @Injectable()
 export class NodemailerService {
   private transporter: nodemailer.Transporter;
 
-  constructor(private readonly configService: ConfigService) {
-    const host = this.configService.get<string>('SMTP_HOST', 'smtp.yandex.by');
-    const port = this.configService.get<number>('SMTP_PORT', 465);
-    const secure = this.configService.get<boolean>('SMTP_SECURE', true);
-    const user = this.configService.get<string>('EMAIL_USER');
-    const password = this.configService.get<string>('EMAIL_PASSWORD');
+  constructor(private readonly userAccountsConfig: UserAccountsConfig) {
+    const host = this.userAccountsConfig.smtpHost;
+    const port = this.userAccountsConfig.smtpPort;
+    const secure = this.userAccountsConfig.smtpSecure;
+    const user = this.userAccountsConfig.smtpUser;
+    const password = this.userAccountsConfig.smtpPassword;
 
     if (!user || !password) {
       throw new Error('Отсутствуют данные для аутентификации email');
@@ -37,7 +37,7 @@ export class NodemailerService {
 
     try {
       await this.transporter.sendMail({
-        from: `"BloggerPlatform" <${this.configService.get<string>('EMAIL_USER')}>`,
+        from: `"BloggerPlatform" <${this.userAccountsConfig.smtpUser}>`,
         to: email,
         subject,
         html,

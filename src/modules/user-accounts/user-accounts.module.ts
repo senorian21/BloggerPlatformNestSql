@@ -10,7 +10,6 @@ import {
 } from './guards/rate/domain/rate-limiter.entity';
 import { CryptoService } from './adapters/crypto.service';
 import { NodemailerService } from './adapters/nodemeiler/nodemeiler.service';
-import { ConfigModule } from '@nestjs/config';
 import { AuthService } from './auth/application/service/auth.service';
 import { AuthController } from './auth/api/auth.controller';
 import { EmailService } from './adapters/nodemeiler/ template/email-examples';
@@ -42,6 +41,7 @@ import { DevicesController } from './security/api/security.controller';
 import { SessionsQueryRepository } from './security/infrastructure/query/security.query-repository';
 import { GetAllSessionsByUserQueryHandler } from './security/application/queries/sessions-list-by-user.query-handler';
 import { LogoutUseCase } from './auth/application/usecases/logout.usecase';
+import { UserAccountsConfig } from './config/user-accounts.config';
 
 const commandHandlers = [
   CreateUserUseCase,
@@ -71,9 +71,6 @@ const queryHandlers = [
     MongooseModule.forFeature([
       { name: RateLimiter.name, schema: RateLimiterSchema },
     ]),
-    ConfigModule.forRoot({
-      envFilePath: '.env',
-    }),
     MongooseModule.forFeature([{ name: Session.name, schema: SessionSchema }]),
   ],
   controllers: [UserController, AuthController, DevicesController],
@@ -92,28 +89,30 @@ const queryHandlers = [
     UserRepository,
     AuthRepository,
 
+    UserAccountsConfig,
+
     ...commandHandlers,
     ...queryHandlers,
     JwtStrategy,
     {
       provide: ACCESS_TOKEN_STRATEGY_INJECT_TOKEN,
-      useFactory: (): JwtService => {
+      useFactory: (userAccountConfig: UserAccountsConfig): JwtService => {
         return new JwtService({
-          secret: 'access-token-secret',
-          signOptions: { expiresIn: '10s' },
+          secret: userAccountConfig.accessTokenSecret,
+          signOptions: { expiresIn: userAccountConfig.accessTokenExpireIn },
         });
       },
-      inject: [],
+      inject: [UserAccountsConfig],
     },
     {
       provide: REFRESH_TOKEN_STRATEGY_INJECT_TOKEN,
-      useFactory: (): JwtService => {
+      useFactory: (userAccountConfig: UserAccountsConfig): JwtService => {
         return new JwtService({
-          secret: 'refresh-token-secret',
-          signOptions: { expiresIn: '20s' },
+          secret: userAccountConfig.refreshTokenSecret,
+          signOptions: { expiresIn: userAccountConfig.refreshTokenExpireIn },
         });
       },
-      inject: [],
+      inject: [UserAccountsConfig],
     },
   ],
   exports: [UsersExternalQueryRepository, JwtStrategy],
