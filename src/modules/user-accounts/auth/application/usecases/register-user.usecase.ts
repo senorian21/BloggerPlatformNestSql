@@ -43,7 +43,7 @@ export class RegisterUserUseCase
       }
     }
 
-    const newUserId = await this.commandBus.execute<CreateUserCommand, string>(
+    const newUserId = await this.commandBus.execute<CreateUserCommand, number>(
       new CreateUserCommand(dto),
     );
 

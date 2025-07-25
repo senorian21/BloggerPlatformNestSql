@@ -11,6 +11,7 @@ import { DomainHttpExceptionsFilter } from './core/exceptions/filters/domain-exc
 import { APP_FILTER } from '@nestjs/core';
 import { AllHttpExceptionsFilter } from './core/exceptions/filters/all-exceptions.filter';
 import { CoreConfig } from './core/core.config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -24,6 +25,16 @@ import { CoreConfig } from './core/core.config';
         };
       },
       inject: [CoreConfig],
+    }),
+    TypeOrmModule.forRoot({
+      type: 'postgres',
+      host: 'localhost',
+      port: 5432,
+      username: 'postgres',
+      password: '8738378A',
+      database: 'bloggers-platform',
+      autoLoadEntities: true,
+      synchronize: true,
     }),
     CoreModule,
     BloggerPlatformModule,

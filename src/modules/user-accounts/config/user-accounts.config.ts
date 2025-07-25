@@ -52,7 +52,9 @@ export class UserAccountsConfig {
 
   constructor(private configService: ConfigService<any, true>) {
     this.accessTokenExpireIn = this.configService.get('ACCESS_TOKEN_EXPIRE_IN');
-    this.refreshTokenExpireIn = this.configService.get('REFRESH_TOKEN_EXPIRE_IN');
+    this.refreshTokenExpireIn = this.configService.get(
+      'REFRESH_TOKEN_EXPIRE_IN',
+    );
     this.refreshTokenSecret = this.configService.get('REFRESH_TOKEN_SECRET');
     this.accessTokenSecret = this.configService.get('ACCESS_TOKEN_SECRET');
 

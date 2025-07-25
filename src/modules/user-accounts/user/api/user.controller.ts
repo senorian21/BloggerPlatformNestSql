@@ -31,7 +31,7 @@ export class UserController {
 
   @Post()
   async createUser(@Body() dto: CreateUserDto) {
-    const userId = await this.commandBus.execute<CreateUserCommand, string>(
+    const userId = await this.commandBus.execute<CreateUserCommand, number>(
       new CreateUserCommand(dto),
     );
     return this.queryBus.execute<GetUserByIdQuery, UserViewDto>(
@@ -43,7 +43,7 @@ export class UserController {
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') userId: string) {
     await this.commandBus.execute<DeleteUserCommand, void>(
-      new DeleteUserCommand(userId),
+      new DeleteUserCommand(Number(userId)),
     );
   }
 

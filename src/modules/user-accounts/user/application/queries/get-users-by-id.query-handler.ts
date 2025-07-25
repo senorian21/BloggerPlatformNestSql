@@ -3,7 +3,7 @@ import { UserViewDto } from '../../api/view-dto/user.view-dto';
 import { UserQueryRepository } from '../../infrastructure/query/user.query-repository';
 
 export class GetUserByIdQuery {
-  constructor(public userId: string) {}
+  constructor(public userId: number) {}
 }
 
 @QueryHandler(GetUserByIdQuery)
