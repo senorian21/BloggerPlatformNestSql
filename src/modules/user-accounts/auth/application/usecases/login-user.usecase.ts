@@ -36,9 +36,6 @@ export class LoginUserUseCase
     @Inject(REFRESH_TOKEN_STRATEGY_INJECT_TOKEN)
     private refreshTokenContext: JwtService,
 
-    @InjectModel(Session.name)
-    private sessionModel: SessionModelType,
-
     private authService: AuthService,
     private authRepository: AuthRepository,
   ) {}
@@ -53,9 +50,8 @@ export class LoginUserUseCase
       dto.password,
     );
 
-    const userId = result._id.toString();
+    const userId = result.id;
 
-    // Ищем существующую сессию по userId и deviceName
     const existSession = await this.authRepository.findSession({
       userId,
       deviceName: deviceName,
@@ -64,15 +60,12 @@ export class LoginUserUseCase
     try {
       let deviceId: string;
 
-      // Если сессия существует и не удалена — используем её deviceId
       if (existSession && existSession.deletedAt === null) {
         deviceId = existSession.deviceId;
       } else {
-        // Иначе генерируем новый deviceId
         deviceId = randomUUID();
       }
 
-      // Генерируем refresh token с актуальным deviceId
       const refreshToken = this.refreshTokenContext.sign({
         userId: userId,
         deviceId: deviceId,
@@ -89,23 +82,19 @@ export class LoginUserUseCase
       }
 
       if (existSession) {
-        // Если сессия удалена — выбрасываем ошибку или создаем новую
         if (existSession.deletedAt !== null) {
           throw new DomainException({
             code: DomainExceptionCode.Unauthorized,
             message: 'Session deleted',
           });
         }
-
-        // Обновляем только iat и exp, оставляя deviceId и другие поля неизменными
-        existSession.updateSession(
-          refreshTokenVerify.iat,
-          refreshTokenVerify.exp,
+        await this.authRepository.updateSession(
+          new Date(refreshTokenVerify.iat * 1000),
+          new Date(refreshTokenVerify.exp * 1000),
+          existSession.id,
         );
-        await this.authRepository.save(existSession);
       } else {
-        // Создаем новую сессию с актуальным deviceId
-        const newSession = await this.sessionModel.createSession(
+        const newSession = await this.authRepository.createSession(
           userId,
           refreshTokenVerify.iat,
           refreshTokenVerify.exp,
@@ -113,10 +102,8 @@ export class LoginUserUseCase
           ip,
           deviceName,
         );
-        await this.authRepository.save(newSession);
       }
 
-      // Генерируем access token
       const accessToken = this.accessTokenContext.sign({
         userId: userId,
       });

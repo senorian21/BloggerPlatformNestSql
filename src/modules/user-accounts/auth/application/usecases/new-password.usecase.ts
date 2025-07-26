@@ -19,8 +19,11 @@ export class NewPasswordUseCase
   ) {}
 
   async execute({ dto }: NewPasswordCommand): Promise<void> {
-    const user = await this.userRepository.findByCode(dto.recoveryCode);
-    if (!user) {
+    const emailConfirmation =
+      await this.userRepository.findByCodeOrIdEmailConfirmation({
+        code: dto.recoveryCode,
+      });
+    if (!emailConfirmation) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         message: 'User does not exist',
@@ -29,7 +32,9 @@ export class NewPasswordUseCase
     const newPasswordHash = await this.cryptoService.createPasswordHash(
       dto.newPassword,
     );
-    user.updatePassword(newPasswordHash);
-    await this.userRepository.save(user);
+    await this.userRepository.updatePassword(
+      newPasswordHash,
+      emailConfirmation.userId,
+    );
   }
 }

@@ -8,6 +8,7 @@ import { DataSource } from 'typeorm';
 import { CreateUserDomainDto } from '../domain/dto/create-user.domain.dto';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
+import { EmailConfirmationDto } from '../dto/email-confirmation.dto';
 
 @Injectable()
 export class UserRepository {
@@ -44,16 +45,56 @@ export class UserRepository {
   }
 
   async findByLoginOrEmail(loginOrEmail: string): Promise<UserDocument | null> {
-    const user = await this.UserModel.findOne({
-      $or: [{ email: loginOrEmail }, { login: loginOrEmail }],
-    });
-    return user;
+    const query = `
+    SELECT * 
+    FROM "User"
+    WHERE "deletedAt" IS NULL 
+      AND (email = $1 OR login = $1)
+    LIMIT 1
+  `;
+
+    const result = await this.datasource.query(query, [loginOrEmail]);
+
+    return result.length > 0 ? result[0] : null;
   }
-  async findByCode(code: string): Promise<UserDocument | null> {
-    const user = await this.UserModel.findOne({
-      'emailConfirmation.confirmationCode': code,
-    });
-    return user;
+
+  async findByCodeOrIdEmailConfirmation({
+    code,
+    userId,
+  }: {
+    code?: string;
+    userId?: number;
+  }): Promise<EmailConfirmationDto | null> {
+    if (!code && !userId) {
+      return null;
+    }
+
+    let sql: string;
+    const params: (string | number)[] = [];
+
+    if (code) {
+      sql = `
+        SELECT *
+        FROM "emailConfirmation"
+        WHERE "confirmationCode" = $1
+        LIMIT 1
+    `;
+      params.push(code);
+    } else {
+      sql = `
+        SELECT *
+        FROM "emailConfirmation"
+        WHERE "userId" = $1
+        LIMIT 1
+      `;
+      params.push(userId!);
+    }
+
+    const result: EmailConfirmationDto[] = await this.datasource.query(
+      sql,
+      params,
+    );
+    return result.length > 0 ? result[0] : null;
   }
 
   async doesExistByLoginOrEmail(
@@ -61,13 +102,7 @@ export class UserRepository {
     email: string,
   ): Promise<UserDocument | null> {
     const result = await this.datasource.query(
-      `SELECT 
-        id::TEXT AS "id",
-        login,
-        email,
-        "passwordHash",
-        "createdAt",
-        "deletedAt"
+      `SELECT *
      FROM "User" 
      WHERE (login = $1 OR email = $2) 
        AND "deletedAt" IS NULL
@@ -86,7 +121,6 @@ export class UserRepository {
       [dto.login, dto.email, hashedPassword],
     );
 
-    // Добавлена проверка на случай ошибки вставки
     if (result.length === 0) {
       throw new Error('Failed to create user');
     }
@@ -114,4 +148,41 @@ export class UserRepository {
       [deleteAt, id],
     );
   }
+
+  async updateCodeAndExpirationDate(
+    newConfirmationCode: string,
+    newExpirationDate: Date,
+    userId: number,
+  ) {
+    await this.datasource.query(
+      `UPDATE "emailConfirmation"
+         SET "confirmationCode" = $1,
+             "expirationDate" = $2
+         WHERE "userId" = $3`,
+      [newConfirmationCode, newExpirationDate, userId],
+    );
+  }
+
+  async updatePassword(newPasswordHash: string, userId: number): Promise<void> {
+    await this.datasource.query(
+      `
+        UPDATE "User"
+        SET "passwordHash" = $1
+        WHERE "id" = $2
+    `,
+      [newPasswordHash, userId],
+    );
+  }
+
+  async registrationConfirmationUser(userId: number): Promise<void> {
+    await this.datasource.query(
+      `
+        UPDATE "emailConfirmation"
+        SET "isConfirmed" = true
+        WHERE "userId" = $1
+    `,
+      [userId],
+    );
+  }
+
 }

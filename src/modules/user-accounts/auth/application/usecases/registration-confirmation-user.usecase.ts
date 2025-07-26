@@ -15,8 +15,11 @@ export class RegistrationConfirmationUserUseCase
   constructor(private userRepository: UserRepository) {}
 
   async execute({ dto }: RegistrationConfirmationUserCommand): Promise<void> {
-    const user = await this.userRepository.findByCode(dto.code);
-    if (!user) {
+    const userEmailConfirmation =
+      await this.userRepository.findByCodeOrIdEmailConfirmation({
+        code: dto.code,
+      });
+    if (!userEmailConfirmation) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         field: 'code',
@@ -24,22 +27,23 @@ export class RegistrationConfirmationUserUseCase
       });
     }
 
-    if (user.emailConfirmation.isConfirmed) {
+    if (userEmailConfirmation?.isConfirmed) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
-        field: 'code', // ← Изменили на 'code'
+        field: 'code',
         message: 'Code is invalid or already used',
       });
     }
 
-    if (new Date(user.emailConfirmation.expirationDate) < new Date()) {
+    if (new Date(userEmailConfirmation!.expiryDate) < new Date()) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         field: 'expirationDate',
         message: 'User does not exist',
       });
     }
-    user.registrationConfirmationUser();
-    this.userRepository.save(user);
+    await this.userRepository.registrationConfirmationUser(
+      userEmailConfirmation.userId,
+    );
   }
 }

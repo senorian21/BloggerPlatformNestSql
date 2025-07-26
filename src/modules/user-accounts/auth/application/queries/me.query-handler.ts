@@ -3,7 +3,7 @@ import { AuthViewDto } from '../../api/view-dto/auth.view-dto';
 import { AuthQueryRepository } from '../../infrastructure/query/auth.query-repository';
 
 export class AboutUserQuery {
-  constructor(public id: string) {}
+  constructor(public id: number) {}
 }
 
 @QueryHandler(AboutUserQuery)

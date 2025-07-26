@@ -34,9 +34,11 @@ export class PasswordRecoveryUseCase
     const newConfirmationCode = randomUUID();
     const newExpirationDate = add(new Date(), { days: 7 });
 
-    user.updateCodeAndExpirationDate(newConfirmationCode, newExpirationDate);
-
-    await this.userRepository.save(user);
+    await this.userRepository.updateCodeAndExpirationDate(
+      newConfirmationCode,
+      newExpirationDate,
+      user.id,
+    );
 
     this.nodemailerService
       .sendEmail(

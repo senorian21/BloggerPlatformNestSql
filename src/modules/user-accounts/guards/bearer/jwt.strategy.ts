@@ -1,22 +1,22 @@
-import { Types } from 'mongoose';
-import { Injectable } from '@nestjs/common';
-import { UserContextDto } from '../../auth/dto/user-context.dto';
-import { PassportStrategy } from '@nestjs/passport';
-import { ExtractJwt, Strategy } from 'passport-jwt';
+// jwt.strategy.ts
+import { Injectable } from '@nestjs/common'
+import { PassportStrategy } from '@nestjs/passport'
+import { ExtractJwt, Strategy } from 'passport-jwt'
+import {UserContextDto} from "../../auth/dto/user-context.dto";
+import {UserAccountsConfig} from "../../config/user-accounts.config";
+
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor() {
+  constructor(private readonly config: UserAccountsConfig) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'access-token-secret',
-    });
+      secretOrKey: config.accessTokenSecret,
+    })
   }
 
-  async validate(payload: { userId: string }): Promise<UserContextDto> {
-    return {
-      id: new Types.ObjectId(payload.userId),
-    };
+  async validate(payload: { userId: number }): Promise<UserContextDto> {
+    return { id: payload.userId }
   }
 }

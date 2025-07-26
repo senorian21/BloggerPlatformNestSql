@@ -47,12 +47,21 @@ export class RegisterUserUseCase
       new CreateUserCommand(dto),
     );
 
-    const newUser = await this.userRepository.findById(newUserId);
+    const emailConfirmation =
+      await this.userRepository.findByCodeOrIdEmailConfirmation({
+        userId: newUserId,
+      });
+    if (!emailConfirmation) {
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: 'Email is already registered',
+      });
+    }
 
     this.nodemailerService
       .sendEmail(
-        newUser.email,
-        newUser.emailConfirmation.confirmationCode,
+        dto.email,
+        emailConfirmation.confirmationCode,
         this.emailService.registrationEmail.bind(this.emailService),
       )
       .catch((er) => console.error('error in send email:', er));

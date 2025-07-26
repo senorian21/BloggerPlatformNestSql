@@ -121,7 +121,7 @@ export class AuthController {
     const userEntity = await this.queryBus.execute<
       AboutUserQuery,
       AuthViewDto | null
-    >(new AboutUserQuery(user.id.toString()));
+    >(new AboutUserQuery(+user.id));
     return userEntity;
   }
 
@@ -159,7 +159,7 @@ export class AuthController {
     @RefreshTokenFromRequest() refreshTokenReq: RefreshTokenContextDto,
   ) {
     await this.commandBus.execute<LogoutCommand, void>(
-      new LogoutCommand(refreshTokenReq.userId, refreshTokenReq.deviceId),
+      new LogoutCommand(+refreshTokenReq.userId, refreshTokenReq.deviceId),
     );
   }
 }

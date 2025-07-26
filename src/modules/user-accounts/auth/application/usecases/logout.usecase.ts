@@ -5,7 +5,7 @@ import { AuthRepository } from '../../infrastructure/auth.repository';
 
 export class LogoutCommand {
   constructor(
-    public userId: string,
+    public userId: number,
     public deviceId: string,
   ) {}
 }

@@ -31,8 +31,17 @@ export class RegistrationEmailResendingUseCase
         message: 'User not found',
       });
     }
+    const userEmailConfirmation =
+      await this.userRepository.findByCodeOrIdEmailConfirmation({ userId: user.id });
 
-    if (user.emailConfirmation.isConfirmed) {
+    if (!userEmailConfirmation) {
+      throw new DomainException({
+        code: DomainExceptionCode.BadRequest,
+        field: 'email',
+        message: 'User not found',
+      });
+    }
+    if (userEmailConfirmation.isConfirmed) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         field: 'email',
@@ -40,7 +49,7 @@ export class RegistrationEmailResendingUseCase
       });
     }
 
-    if (new Date(user.emailConfirmation.expirationDate) < new Date()) {
+    if (userEmailConfirmation.expiryDate < new Date()) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         field: 'emailConfirmation.expirationDate',
@@ -50,9 +59,8 @@ export class RegistrationEmailResendingUseCase
 
     const newConfirmationCode = randomUUID();
     const newExpirationDate = add(new Date(), { days: 7 });
-    user.updateCodeAndExpirationDate(newConfirmationCode, newExpirationDate);
 
-    await this.userRepository.save(user);
+    await this.userRepository.updateCodeAndExpirationDate(newConfirmationCode, newExpirationDate, user.id)
 
     this.nodemailerService
       .sendEmail(

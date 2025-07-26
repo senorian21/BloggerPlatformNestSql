@@ -21,7 +21,7 @@ import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
 import { UserViewDto } from './view-dto/user.view-dto';
 import { GetUserByIdQuery } from '../application/queries/get-users-by-id.query-handler';
 
-@Controller('users')
+@Controller('sa')
 @UseGuards(BasicAuthGuard)
 export class UserController {
   constructor(
@@ -29,7 +29,7 @@ export class UserController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @Post()
+  @Post('/users')
   async createUser(@Body() dto: CreateUserDto) {
     const userId = await this.commandBus.execute<CreateUserCommand, number>(
       new CreateUserCommand(dto),
@@ -39,7 +39,7 @@ export class UserController {
     );
   }
 
-  @Delete(':id')
+  @Delete('/users/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteUser(@Param('id') userId: string) {
     await this.commandBus.execute<DeleteUserCommand, void>(
@@ -47,7 +47,7 @@ export class UserController {
     );
   }
 
-  @Get()
+  @Get('/users')
   async getAllUsers(@Query() query: GetUserQueryParams) {
     return this.queryBus.execute<
       GetAllUsersQuery,
