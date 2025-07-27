@@ -14,9 +14,9 @@ export class AuthQueryRepository {
   ) {}
   async me(id: number) {
     const user = await this.datasource.query(`
-    SELECT email, login, id as userId
-    FROM "User" 
-    WHERE id = $1`, [id])
+      SELECT email, login, id as userId
+      FROM "User" 
+      WHERE id = $1`, [id])
     return user
   }
 }

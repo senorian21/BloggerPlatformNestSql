@@ -1,5 +1,5 @@
 export class RefreshTokenContextDto {
-  userId: string;
+  userId: number;
   deviceId: string;
   deviceName: string;
   ip: string;

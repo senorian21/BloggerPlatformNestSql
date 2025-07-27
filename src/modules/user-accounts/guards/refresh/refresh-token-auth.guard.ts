@@ -76,7 +76,7 @@ export class RefreshAuthGuard implements CanActivate {
           message: 'unauthorised',
         });
       }
-      const tokenIat = new Date(payload.iat * 1000).getTime(); // если iat в секундах
+      const tokenIat = new Date(payload.iat * 1000).getTime();
       const sessionCreatedAt = new Date(foundSession.createdAt).getTime();
 
       if (tokenIat !== sessionCreatedAt) {
@@ -87,6 +87,7 @@ export class RefreshAuthGuard implements CanActivate {
       }
 
       request.user = payload;
+      console.log(request.user)
       return true;
     } catch (err) {
       throw new DomainException({

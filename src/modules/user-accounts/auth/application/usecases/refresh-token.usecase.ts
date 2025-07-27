@@ -13,7 +13,7 @@ export class RefreshTokenCommand {
   constructor(
     public deviceName: string,
     public ip: string,
-    public userId: string,
+    public userId: number,
     public deviceId: string,
   ) {}
 }
@@ -73,9 +73,11 @@ export class RefreshTokenUseCase
         message: 'Refresh token not verified',
       });
     }
-    sessionExists.updateSession(refreshTokenVerify.iat, refreshTokenVerify.exp);
 
-    await this.authRepository.save(sessionExists);
+    const iatDate = new Date(refreshTokenVerify.iat * 1000);
+    const expDate = new Date(refreshTokenVerify.exp * 1000);
+
+    await this.authRepository.updateSession(iatDate, expDate, userId)
 
     const accessToken = this.accessTokenContext.sign({
       userId: userId,

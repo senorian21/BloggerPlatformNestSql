@@ -35,7 +35,7 @@ export class DevicesController {
     @Param('deviceId') deviceId: string,
   ) {
     await this.commandBus.execute<DeleteDeviceByIdCommand, void>(
-      new DeleteDeviceByIdCommand(refreshTokenReq.userId, deviceId),
+      new DeleteDeviceByIdCommand(refreshTokenReq.userId.toString(), deviceId),
     );
   }
 
@@ -50,7 +50,7 @@ export class DevicesController {
       void
     >(
       new DeleteAllDeviceExceptTheActiveOneCommand(
-        refreshTokenReq.userId,
+        refreshTokenReq.userId.toString(),
         refreshTokenReq.deviceId,
       ),
     );
@@ -64,7 +64,7 @@ export class DevicesController {
     const sessions = await this.queryBus.execute<
       GetAllSessionsByUserQuery,
       SessionViewDto[] | null
-    >(new GetAllSessionsByUserQuery(refreshTokenReq.userId));
+    >(new GetAllSessionsByUserQuery(refreshTokenReq.userId.toString()));
     return sessions;
   }
 }
