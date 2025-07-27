@@ -19,13 +19,13 @@ export class LogoutUseCase implements ICommandHandler<LogoutCommand, void> {
       userId,
       deviceId,
     });
-    if (!sessionExists || !sessionExists._id) {
+    if (!sessionExists || !sessionExists.id) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,
         message: 'Unauthorized',
       });
     }
-    sessionExists.deleteSession();
-    await this.authRepository.save(sessionExists);
+
+    await this.authRepository.deleteSession(sessionExists.id)
   }
 }

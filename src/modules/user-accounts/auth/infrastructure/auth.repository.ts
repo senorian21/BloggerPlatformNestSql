@@ -11,34 +11,34 @@ import { DataSource } from 'typeorm';
 @Injectable()
 export class AuthRepository {
   constructor(
-    @InjectModel(Session.name)
-    private sessionModel: SessionModelType,
     @InjectDataSource()
     protected datasource: DataSource,
   ) {}
   async deleteOtherDevices(
-    userId: string,
-    currentDeviceId: string,
+      userId: number,
+      currentDeviceId: string,
   ): Promise<void> {
-    await this.sessionModel.updateMany(
-      {
-        $and: [
-          { userId },
-          { deviceId: { $ne: currentDeviceId } },
-          { deletedAt: null },
-        ],
-      },
-      { deletedAt: new Date() },
+    await this.datasource.query(
+        `
+    UPDATE "Sessions"
+    SET "deletedAt" = NOW()
+    WHERE 
+      "userId" = $1
+      AND "deviceId" != $2
+      AND "deletedAt" IS NULL
+    `,
+        [userId, currentDeviceId]
     );
   }
 
   async findSession(filters: {
-    userId?: number | string;
+    userId?: number ;
     deviceId?: string;
     deviceName?: string;
   }) {
     const conditions: string[] = [];
     const params: any[] = [];
+
 
     conditions.push(`"deletedAt" IS NULL`);
 
@@ -54,26 +54,26 @@ export class AuthRepository {
 
     if (filters.deviceName) {
       conditions.push(
-        `TRIM(LOWER("deviceName")) = TRIM(LOWER($${params.length + 1}))`,
+          `TRIM(LOWER("deviceName")) = TRIM(LOWER($${params.length + 1}))`
       );
       params.push(filters.deviceName.trim());
     }
 
-    const whereClause = conditions.length
-      ? `WHERE ${conditions.join(' AND ')}`
-      : '';
+    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
 
     const query = `
-      SELECT  * 
-      FROM "Sessions"
-      ${whereClause}
-      LIMIT 1
+        SELECT * 
+        FROM "Sessions"
+        ${whereClause}
+        LIMIT 1
     `;
 
     const result = await this.datasource.query(query, params);
 
     return result.length > 0 ? result[0] : null;
   }
+
+
 
   async save(session: SessionDocument) {
     await session.save();
@@ -112,5 +112,13 @@ export class AuthRepository {
         ) VALUES ($1, $2, $3, $4, $5, $6)`,
       [userId, createdAt, expiresAt, deviceId, deviceName, ip],
     );
+  }
+
+  async deleteSession(sessionId: number) {
+    const dateNow = new Date();
+    await this.datasource.query(`
+      UPDATE "Sessions"
+      SET "deletedAt" = $1
+      WHERE "id" = $2`, [dateNow ,sessionId]);
   }
 }

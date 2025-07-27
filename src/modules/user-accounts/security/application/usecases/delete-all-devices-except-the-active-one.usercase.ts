@@ -5,7 +5,7 @@ import { AuthRepository } from '../../../auth/infrastructure/auth.repository';
 
 export class DeleteAllDeviceExceptTheActiveOneCommand {
   constructor(
-    public userId: string,
+    public userId: number,
     public deviceId: string,
   ) {}
 }

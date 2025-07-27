@@ -3,7 +3,7 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { SessionViewDto } from '../../api/view-dto/session.view-dto';
 
 export class GetAllSessionsByUserQuery {
-  constructor(public userId: string) {}
+  constructor(public userId: number) {}
 }
 
 @QueryHandler(GetAllSessionsByUserQuery)

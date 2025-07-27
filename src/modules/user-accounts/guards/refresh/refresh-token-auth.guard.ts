@@ -87,7 +87,6 @@ export class RefreshAuthGuard implements CanActivate {
       }
 
       request.user = payload;
-      console.log(request.user)
       return true;
     } catch (err) {
       throw new DomainException({

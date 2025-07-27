@@ -5,7 +5,7 @@ import { AuthRepository } from '../../../auth/infrastructure/auth.repository';
 
 export class DeleteDeviceByIdCommand {
   constructor(
-    public userId: string,
+    public userId: number,
     public deviceId: string,
   ) {}
 }
@@ -19,7 +19,7 @@ export class DeleteDeviceByIdUseCase
     const foundSession = await this.authRepository.findSession({
       deviceId: deviceId,
     });
-
+    console.log(deviceId);
     if (!foundSession || foundSession.deletedAt !== null) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -34,7 +34,6 @@ export class DeleteDeviceByIdUseCase
       });
     }
 
-    foundSession.deleteSession();
-    await this.authRepository.save(foundSession);
+    await this.authRepository.deleteSession(foundSession.id);
   }
 }
