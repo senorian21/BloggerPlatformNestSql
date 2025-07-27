@@ -12,69 +12,76 @@ import { DomainExceptionCode } from '../../../../../core/exceptions/domain-excep
 export class UserQueryRepository {
   constructor(@InjectDataSource() protected datasource: DataSource) {}
   async getAll(
-    query: GetUserQueryParams,
+      query: GetUserQueryParams,
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
     const queryParams = plainToClass(GetUserQueryParams, query);
 
     const pageNumber = Math.max(1, Number(queryParams.pageNumber) || 1);
     const pageSize = Math.min(
-      100,
-      Math.max(1, Number(queryParams.pageSize) || 10),
+        100,
+        Math.max(1, Number(queryParams.pageSize) || 10),
     );
     const skip = (pageNumber - 1) * pageSize;
 
-    const allowedSortFields = ['createdAt'];
+    // ИСПРАВЛЕНИЕ 1: Добавлено 'login' в разрешённые поля для сортировки
+    const allowedSortFields = ['createdAt', 'login'];
     const sortBy = allowedSortFields.includes(queryParams.sortBy)
-      ? queryParams.sortBy
-      : 'createdAt';
+        ? queryParams.sortBy
+        : 'createdAt';
 
     const sortDirection = queryParams.sortDirection === 'asc' ? 'ASC' : 'DESC';
 
-    const conditions: string[] = [`"deletedAt" IS NULL`];
+    // ИСПРАВЛЕНИЕ 2: Правильная логика условий поиска
+    const baseConditions = [`"deletedAt" IS NULL`];
+    const searchConditions: string[] = [];
     const params: any[] = [];
 
     if (queryParams.searchEmailTerm?.trim()) {
-      conditions.push(`LOWER(email) LIKE LOWER($${params.length + 1})`);
+      searchConditions.push(`LOWER(email) LIKE LOWER($${params.length + 1})`);
       params.push(`%${queryParams.searchEmailTerm.trim()}%`);
     }
 
     if (queryParams.searchLoginTerm?.trim()) {
-      conditions.push(`LOWER(login) LIKE LOWER($${params.length + 1})`);
+      searchConditions.push(`LOWER(login) LIKE LOWER($${params.length + 1})`);
       params.push(`%${queryParams.searchLoginTerm.trim()}%`);
     }
 
-    const whereClause = conditions.length
-      ? `WHERE ${conditions.join(' AND ')}`
-      : '';
+    let whereClause = baseConditions.join(' AND ');
+
+    if (searchConditions.length > 0) {
+      whereClause += ` AND (${searchConditions.join(' OR ')})`;
+    }
 
     const dataQuery = `
-            SELECT id, login, email, "createdAt" 
-            FROM "User"
-            ${whereClause}
-            ORDER BY "${sortBy}" ${sortDirection}
-            LIMIT $${params.length + 1}
-            OFFSET $${params.length + 2}
-        `;
+    SELECT 
+      id::text AS id,
+      login, 
+      email, 
+      "createdAt" 
+    FROM "User"
+    ${whereClause ? `WHERE ${whereClause}` : ''}
+    ORDER BY "${sortBy}" ${sortDirection}
+    LIMIT $${params.length + 1}
+    OFFSET $${params.length + 2}
+  `;
 
     params.push(pageSize, skip);
 
     const users = await this.datasource.query(dataQuery, params);
 
     const countQuery = `
-            SELECT COUNT(*)::int AS total_count 
-            FROM "User" 
-            ${whereClause}
-        `;
+    SELECT COUNT(*)::int AS total_count 
+    FROM "User" 
+    ${whereClause ? `WHERE ${whereClause}` : ''}
+  `;
     const countResult = await this.datasource.query(
-      countQuery,
-      params.slice(0, -2),
+        countQuery,
+        params.slice(0, -2),
     );
     const totalCount = countResult[0]?.total_count || 0;
 
-    const items = users;
-
     return PaginatedViewDto.mapToView({
-      items,
+      items: users,
       totalCount,
       page: pageNumber,
       size: pageSize,

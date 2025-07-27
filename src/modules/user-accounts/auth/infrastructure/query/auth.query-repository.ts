@@ -12,11 +12,16 @@ export class AuthQueryRepository {
       @InjectDataSource()
       protected datasource: DataSource,
   ) {}
+
   async me(id: number) {
-    const user = await this.datasource.query(`
-      SELECT email, login, id as userId
+    const users = await this.datasource.query(`
+      SELECT 
+        email, 
+        login, 
+        id::text AS "userId"  -- Преобразуем в строку И сохраняем регистр через кавычки
       FROM "User" 
-      WHERE id = $1`, [id])
-    return user
+      WHERE id = $1`, [id]);
+
+    return users.length > 0 ? users[0] : null;
   }
 }
