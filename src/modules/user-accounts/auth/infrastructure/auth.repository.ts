@@ -1,9 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import {
-  SessionDocument,
-} from '../../sessions/domain/session.entity';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import {SessionDto} from "../dto/session.dto";
 
 @Injectable()
 export class AuthRepository {
@@ -32,7 +30,7 @@ export class AuthRepository {
     userId?: number ;
     deviceId?: string;
     deviceName?: string;
-  }) {
+  }): Promise<SessionDto | null> {
     const conditions: string[] = [];
     const params: any[] = [];
 
@@ -70,13 +68,7 @@ export class AuthRepository {
     return result.length > 0 ? result[0] : null;
   }
 
-
-
-  async save(session: SessionDocument) {
-    await session.save();
-  }
-
-  async updateSession(iat: Date, exp: Date, sessionId: number) {
+  async updateSession(iat: Date, exp: Date, sessionId: number): Promise<void> {
     const query = `
         UPDATE "Sessions"
         SET "createdAt" = $1,
@@ -94,7 +86,7 @@ export class AuthRepository {
     deviceId: string,
     ip: string,
     deviceName: string,
-  ) {
+  ): Promise<void> {
     const createdAt = new Date(iat * 1000);
     const expiresAt = new Date(exp * 1000);
 
@@ -111,7 +103,7 @@ export class AuthRepository {
     );
   }
 
-  async deleteSession(sessionId: number) {
+  async deleteSession(sessionId: number): Promise<void> {
     const dateNow = new Date();
     await this.datasource.query(`
       UPDATE "Sessions"

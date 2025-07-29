@@ -32,7 +32,6 @@ import { RegistrationConfirmationUserUseCase } from './auth/application/usecases
 import { RegistrationEmailResendingUseCase } from './auth/application/usecases/registration-email-resending.usecase';
 import { AboutUserQueryHandler } from './auth/application/queries/me.query-handler';
 import { UsersExternalQueryRepository } from './user/infrastructure/external-query/users.external-query-repository';
-import { Session, SessionSchema } from './sessions/domain/session.entity';
 import { AuthRepository } from './auth/infrastructure/auth.repository';
 import { RefreshTokenUseCase } from './auth/application/usecases/refresh-token.usecase';
 import { DeleteDeviceByIdUseCase } from './security/application/usecases/delete-device-by-id.usecase';
@@ -71,7 +70,6 @@ const queryHandlers = [
     MongooseModule.forFeature([
       { name: RateLimiter.name, schema: RateLimiterSchema },
     ]),
-    MongooseModule.forFeature([{ name: Session.name, schema: SessionSchema }]),
   ],
   controllers: [UserController, AuthController, DevicesController],
   providers: [

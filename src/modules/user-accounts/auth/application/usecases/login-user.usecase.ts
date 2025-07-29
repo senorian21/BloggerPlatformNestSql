@@ -11,11 +11,6 @@ import { AuthRepository } from '../../infrastructure/auth.repository';
 import { randomUUID } from 'crypto';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  Session,
-  SessionModelType,
-} from '../../../sessions/domain/session.entity';
 
 export class LoginUserCommand {
   constructor(

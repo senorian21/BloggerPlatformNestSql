@@ -1,6 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocument, UserModelType } from '../domain/user.entity';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 import { InjectDataSource } from '@nestjs/typeorm';
@@ -9,19 +7,15 @@ import { CreateUserDomainDto } from '../domain/dto/create-user.domain.dto';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
 import { EmailConfirmationDto } from '../dto/email-confirmation.dto';
+import {UserDto} from "../dto/user.dto";
 
 @Injectable()
 export class UserRepository {
   constructor(
-    @InjectModel(User.name)
-    private UserModel: UserModelType,
     @InjectDataSource()
     protected datasource: DataSource,
   ) {}
-  async save(user: UserDocument): Promise<void> {
-    await user.save();
-  }
-  async findById(userId: number): Promise<UserDocument> {
+  async findById(userId: number): Promise<UserDto> {
     const result = await this.datasource.query(
       `SELECT * FROM "User" WHERE id = $1`,
       [userId],
@@ -44,7 +38,7 @@ export class UserRepository {
     return result;
   }
 
-  async findByLoginOrEmail(loginOrEmail: string): Promise<UserDocument | null> {
+  async findByLoginOrEmail(loginOrEmail: string): Promise<UserDto | null> {
     const query = `
     SELECT * 
     FROM "User"
@@ -100,7 +94,7 @@ export class UserRepository {
   async doesExistByLoginOrEmail(
     login: string,
     email: string,
-  ): Promise<UserDocument | null> {
+  ): Promise<UserDto | null> {
     const result = await this.datasource.query(
       `SELECT *
      FROM "User" 
@@ -113,7 +107,7 @@ export class UserRepository {
     return result.length > 0 ? result[0] : null;
   }
 
-  async createUser(dto: CreateUserDomainDto, hashedPassword: string) {
+  async createUser(dto: CreateUserDomainDto, hashedPassword: string): Promise<number> {
     const result = await this.datasource.query(
       `INSERT INTO "User" (login, email, "passwordHash")
          VALUES ($1, $2, $3)
@@ -153,7 +147,7 @@ export class UserRepository {
     newConfirmationCode: string,
     newExpirationDate: Date,
     userId: number,
-  ) {
+  ): Promise<void> {
     await this.datasource.query(
       `UPDATE "emailConfirmation"
          SET "confirmationCode" = $1,

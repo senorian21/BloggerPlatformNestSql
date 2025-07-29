@@ -1,9 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  Session,
-  SessionModelType,
-} from '../../../sessions/domain/session.entity';
 import { SessionViewDto } from '../../api/view-dto/session.view-dto';
 import {InjectDataSource} from "@nestjs/typeorm";
 import {DataSource} from "typeorm";
@@ -11,9 +6,6 @@ import {DataSource} from "typeorm";
 @Injectable()
 export class SessionsQueryRepository {
   constructor(
-    @InjectModel(Session.name)
-    private SessionModel: SessionModelType,
-
     @InjectDataSource()
     protected datasource: DataSource,
   ) {}

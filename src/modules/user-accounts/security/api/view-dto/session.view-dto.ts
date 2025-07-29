@@ -1,4 +1,5 @@
-import { SessionDocument } from '../../../sessions/domain/session.entity';
+import {SessionDto} from "../../../auth/dto/session.dto";
+
 
 export class SessionViewDto {
   ip: string;
@@ -6,7 +7,7 @@ export class SessionViewDto {
   lastActiveDate: Date;
   deviceId: string;
 
-  static mapToView = (session: SessionDocument): SessionViewDto => {
+  static mapToView = (session: SessionDto): SessionViewDto => {
     const dto = new SessionViewDto();
     dto.ip = session.ip;
     dto.title = session.deviceName;
