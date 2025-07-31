@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import {SessionDto} from "../dto/session.dto";
+import { SessionDto } from '../dto/session.dto';
 
 @Injectable()
 export class AuthRepository {
@@ -10,11 +10,11 @@ export class AuthRepository {
     protected datasource: DataSource,
   ) {}
   async deleteOtherDevices(
-      userId: number,
-      currentDeviceId: string,
+    userId: number,
+    currentDeviceId: string,
   ): Promise<void> {
     await this.datasource.query(
-        `
+      `
     UPDATE "Sessions"
     SET "deletedAt" = NOW()
     WHERE 
@@ -22,18 +22,17 @@ export class AuthRepository {
       AND "deviceId" != $2
       AND "deletedAt" IS NULL
     `,
-        [userId, currentDeviceId]
+      [userId, currentDeviceId],
     );
   }
 
   async findSession(filters: {
-    userId?: number ;
+    userId?: number;
     deviceId?: string;
     deviceName?: string;
   }): Promise<SessionDto | null> {
     const conditions: string[] = [];
     const params: any[] = [];
-
 
     conditions.push(`"deletedAt" IS NULL`);
 
@@ -49,12 +48,14 @@ export class AuthRepository {
 
     if (filters.deviceName) {
       conditions.push(
-          `TRIM(LOWER("deviceName")) = TRIM(LOWER($${params.length + 1}))`
+        `TRIM(LOWER("deviceName")) = TRIM(LOWER($${params.length + 1}))`,
       );
       params.push(filters.deviceName.trim());
     }
 
-    const whereClause = conditions.length ? `WHERE ${conditions.join(' AND ')}` : '';
+    const whereClause = conditions.length
+      ? `WHERE ${conditions.join(' AND ')}`
+      : '';
 
     const query = `
         SELECT * 
@@ -105,9 +106,12 @@ export class AuthRepository {
 
   async deleteSession(sessionId: number): Promise<void> {
     const dateNow = new Date();
-    await this.datasource.query(`
+    await this.datasource.query(
+      `
       UPDATE "Sessions"
       SET "deletedAt" = $1
-      WHERE "id" = $2`, [dateNow ,sessionId]);
+      WHERE "id" = $2`,
+      [dateNow, sessionId],
+    );
   }
 }

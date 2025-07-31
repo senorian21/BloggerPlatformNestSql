@@ -6,7 +6,7 @@ import { DomainExceptionCode } from '../../../../../core/exceptions/domain-excep
 
 export class UpdateBlogCommand {
   constructor(
-    public blogId: string,
+    public blogId: number,
     public dto: UpdateBlogDto,
   ) {}
 }
@@ -25,7 +25,6 @@ export class UpdateBlogUseCase
         message: 'blog not found',
       });
     }
-    blog.updateBlog(dto);
-    await this.blogsRepository.save(blog);
+    await this.blogsRepository.updateBlog(blogId, dto);
   }
 }

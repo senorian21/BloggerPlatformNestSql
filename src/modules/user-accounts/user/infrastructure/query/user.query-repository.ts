@@ -12,26 +12,25 @@ import { DomainExceptionCode } from '../../../../../core/exceptions/domain-excep
 export class UserQueryRepository {
   constructor(@InjectDataSource() protected datasource: DataSource) {}
   async getAll(
-      query: GetUserQueryParams,
+    query: GetUserQueryParams,
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
     const queryParams = plainToClass(GetUserQueryParams, query);
 
     const pageNumber = Math.max(1, Number(queryParams.pageNumber) || 1);
     const pageSize = Math.min(
-        100,
-        Math.max(1, Number(queryParams.pageSize) || 10),
+      100,
+      Math.max(1, Number(queryParams.pageSize) || 10),
     );
     const skip = (pageNumber - 1) * pageSize;
 
-    // ИСПРАВЛЕНИЕ 1: Добавлено 'login' в разрешённые поля для сортировки
-    const allowedSortFields = ['createdAt', 'login'];
+    const allowedSortFields = ['createdAt'];
+
     const sortBy = allowedSortFields.includes(queryParams.sortBy)
-        ? queryParams.sortBy
-        : 'createdAt';
+      ? queryParams.sortBy
+      : 'createdAt';
 
     const sortDirection = queryParams.sortDirection === 'asc' ? 'ASC' : 'DESC';
 
-    // ИСПРАВЛЕНИЕ 2: Правильная логика условий поиска
     const baseConditions = [`"deletedAt" IS NULL`];
     const searchConditions: string[] = [];
     const params: any[] = [];
@@ -75,8 +74,8 @@ export class UserQueryRepository {
     ${whereClause ? `WHERE ${whereClause}` : ''}
   `;
     const countResult = await this.datasource.query(
-        countQuery,
-        params.slice(0, -2),
+      countQuery,
+      params.slice(0, -2),
     );
     const totalCount = countResult[0]?.total_count || 0;
 

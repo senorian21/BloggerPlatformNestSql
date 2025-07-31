@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { SessionViewDto } from '../../api/view-dto/session.view-dto';
-import {InjectDataSource} from "@nestjs/typeorm";
-import {DataSource} from "typeorm";
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class SessionsQueryRepository {
@@ -10,7 +10,8 @@ export class SessionsQueryRepository {
     protected datasource: DataSource,
   ) {}
   async getAllSessionByUser(userId: number): Promise<SessionViewDto[]> {
-    const sessions = await this.datasource.query(`
+    const sessions = await this.datasource.query(
+      `
     SELECT 
       ip, 
       "deviceName" AS title, 
@@ -19,7 +20,9 @@ export class SessionsQueryRepository {
     FROM "Sessions" 
     WHERE "userId" = $1
       AND "deletedAt" IS NULL
-  `, [userId]);
+  `,
+      [userId],
+    );
 
     return sessions;
   }

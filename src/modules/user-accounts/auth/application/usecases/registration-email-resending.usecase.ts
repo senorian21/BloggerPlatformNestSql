@@ -32,7 +32,9 @@ export class RegistrationEmailResendingUseCase
       });
     }
     const userEmailConfirmation =
-      await this.userRepository.findByCodeOrIdEmailConfirmation({ userId: user.id });
+      await this.userRepository.findByCodeOrIdEmailConfirmation({
+        userId: user.id,
+      });
 
     if (!userEmailConfirmation) {
       throw new DomainException({
@@ -60,7 +62,11 @@ export class RegistrationEmailResendingUseCase
     const newConfirmationCode = randomUUID();
     const newExpirationDate = add(new Date(), { days: 7 });
 
-    await this.userRepository.updateCodeAndExpirationDate(newConfirmationCode, newExpirationDate, user.id)
+    await this.userRepository.updateCodeAndExpirationDate(
+      newConfirmationCode,
+      newExpirationDate,
+      user.id,
+    );
 
     this.nodemailerService
       .sendEmail(

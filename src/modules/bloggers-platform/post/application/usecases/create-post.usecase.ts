@@ -28,7 +28,7 @@ export class CreatePostUseCase
     if (blogId) {
       dto.blogId = blogId;
     }
-    const blog = await this.blogsRepository.findById(dto.blogId);
+    const blog = await this.blogsRepository.findById(+dto.blogId);
     if (!blog) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,

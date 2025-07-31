@@ -7,7 +7,7 @@ import { CreateUserDomainDto } from '../domain/dto/create-user.domain.dto';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
 import { EmailConfirmationDto } from '../dto/email-confirmation.dto';
-import {UserDto} from "../dto/user.dto";
+import { UserDto } from '../dto/user.dto';
 
 @Injectable()
 export class UserRepository {
@@ -107,7 +107,10 @@ export class UserRepository {
     return result.length > 0 ? result[0] : null;
   }
 
-  async createUser(dto: CreateUserDomainDto, hashedPassword: string): Promise<number> {
+  async createUser(
+    dto: CreateUserDomainDto,
+    hashedPassword: string,
+  ): Promise<number> {
     const result = await this.datasource.query(
       `INSERT INTO "User" (login, email, "passwordHash")
          VALUES ($1, $2, $3)
@@ -178,5 +181,4 @@ export class UserRepository {
       [userId],
     );
   }
-
 }

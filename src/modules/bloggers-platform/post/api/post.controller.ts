@@ -44,98 +44,98 @@ export class PostController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  @Post()
-  @UseGuards(BasicAuthGuard)
-  async createPost(@Body() postDto: CreatePostDto) {
-    const postId = await this.commandBus.execute<CreatePostCommand, string>(
-      new CreatePostCommand(postDto),
-    );
-    return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(
-      new GetPostByIdQuery(postId),
-    );
-  }
-
-  @Put(':id')
-  @UseGuards(BasicAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async updatePost(@Param('id') postId: string, @Body() dto: UpdatePostDto) {
-    await this.commandBus.execute<UpdatePostCommand, void>(
-      new UpdatePostCommand(dto, postId),
-    );
-  }
-
-  @Get(':id')
-  @UseGuards(JwtOptionalAuthGuard)
-  async getPost(
-    @Param('id') postId: string,
-    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  ) {
-    const userId = user?.id?.toString();
-    return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(
-      new GetPostByIdQuery(postId, userId),
-    );
-  }
-
-  @Get()
-  @UseGuards(JwtOptionalAuthGuard)
-  async getAll(
-    @Query() query: GetPostQueryParams,
-    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  ) {
-    const userId = user?.id?.toString();
-    return this.queryBus.execute<
-      GetAllPostQuery,
-      PaginatedViewDto<PostViewDto[]>
-    >(new GetAllPostQuery(query, undefined, userId));
-  }
-
-  @Delete(':id')
-  @UseGuards(BasicAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async deletePost(@Param('id') postId: string) {
-    await this.commandBus.execute(new DeletePostCommand(postId));
-  }
-
-  @Get(':id/comments')
-  @UseGuards(JwtOptionalAuthGuard)
-  async getCommentByPost(
-    @Query() query: GetCommentQueryParams,
-    @Param('id') postId: string,
-    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  ) {
-    const userId = user?.id?.toString();
-    return this.queryBus.execute<
-      GetAllCommentsQuery,
-      PaginatedViewDto<CommentViewDto[]>
-    >(new GetAllCommentsQuery(query, postId, userId));
-  }
-
-  @Post(':id/comments')
-  @UseGuards(JwtAuthGuard)
-  async createComment(
-    @Param('id') postId: string,
-    @Body() dto: CreateCommentDto,
-    @ExtractUserFromRequest() user: UserContextDto,
-  ) {
-    const commentId = await this.commandBus.execute<
-      CreateCommentCommand,
-      string
-    >(new CreateCommentCommand(dto, user.id.toString(), postId));
-    return this.queryBus.execute<GetCommentsByIdQuery, CommentViewDto>(
-      new GetCommentsByIdQuery(commentId),
-    );
-  }
-
-  @Put(':id/like-status')
-  @UseGuards(JwtAuthGuard)
-  @HttpCode(HttpStatus.NO_CONTENT)
-  async likeStatus(
-    @Param('id') postId: string,
-    @ExtractUserFromRequest() user: UserContextDto,
-    @Body() dto: LikeStatusInputDto,
-  ) {
-    await this.commandBus.execute<LikeStatusPostCommand, void>(
-      new LikeStatusPostCommand(postId, user.id.toString(), dto.likeStatus),
-    );
-  }
+  // @Post()
+  // @UseGuards(BasicAuthGuard)
+  // async createPost(@Body() postDto: CreatePostDto) {
+  //   const postId = await this.commandBus.execute<CreatePostCommand, string>(
+  //     new CreatePostCommand(postDto),
+  //   );
+  //   return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(
+  //     new GetPostByIdQuery(postId),
+  //   );
+  // }
+  //
+  // @Put(':id')
+  // @UseGuards(BasicAuthGuard)
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async updatePost(@Param('id') postId: string, @Body() dto: UpdatePostDto) {
+  //   await this.commandBus.execute<UpdatePostCommand, void>(
+  //     new UpdatePostCommand(dto, postId),
+  //   );
+  // }
+  //
+  // @Get(':id')
+  // @UseGuards(JwtOptionalAuthGuard)
+  // async getPost(
+  //   @Param('id') postId: string,
+  //   @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+  // ) {
+  //   const userId = user?.id?.toString();
+  //   return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(
+  //     new GetPostByIdQuery(postId, userId),
+  //   );
+  // }
+  //
+  // @Get()
+  // @UseGuards(JwtOptionalAuthGuard)
+  // async getAll(
+  //   @Query() query: GetPostQueryParams,
+  //   @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+  // ) {
+  //   const userId = user?.id?.toString();
+  //   return this.queryBus.execute<
+  //     GetAllPostQuery,
+  //     PaginatedViewDto<PostViewDto[]>
+  //   >(new GetAllPostQuery(query, undefined, userId));
+  // }
+  //
+  // @Delete(':id')
+  // @UseGuards(BasicAuthGuard)
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async deletePost(@Param('id') postId: string) {
+  //   await this.commandBus.execute(new DeletePostCommand(postId));
+  // }
+  //
+  // @Get(':id/comments')
+  // @UseGuards(JwtOptionalAuthGuard)
+  // async getCommentByPost(
+  //   @Query() query: GetCommentQueryParams,
+  //   @Param('id') postId: string,
+  //   @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+  // ) {
+  //   const userId = user?.id?.toString();
+  //   return this.queryBus.execute<
+  //     GetAllCommentsQuery,
+  //     PaginatedViewDto<CommentViewDto[]>
+  //   >(new GetAllCommentsQuery(query, postId, userId));
+  // }
+  //
+  // @Post(':id/comments')
+  // @UseGuards(JwtAuthGuard)
+  // async createComment(
+  //   @Param('id') postId: string,
+  //   @Body() dto: CreateCommentDto,
+  //   @ExtractUserFromRequest() user: UserContextDto,
+  // ) {
+  //   const commentId = await this.commandBus.execute<
+  //     CreateCommentCommand,
+  //     string
+  //   >(new CreateCommentCommand(dto, user.id.toString(), postId));
+  //   return this.queryBus.execute<GetCommentsByIdQuery, CommentViewDto>(
+  //     new GetCommentsByIdQuery(commentId),
+  //   );
+  // }
+  //
+  // @Put(':id/like-status')
+  // @UseGuards(JwtAuthGuard)
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // async likeStatus(
+  //   @Param('id') postId: string,
+  //   @ExtractUserFromRequest() user: UserContextDto,
+  //   @Body() dto: LikeStatusInputDto,
+  // ) {
+  //   await this.commandBus.execute<LikeStatusPostCommand, void>(
+  //     new LikeStatusPostCommand(postId, user.id.toString(), dto.likeStatus),
+  //   );
+  // }
 }

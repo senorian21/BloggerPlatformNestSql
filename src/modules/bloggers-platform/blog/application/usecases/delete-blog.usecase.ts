@@ -4,7 +4,7 @@ import { DomainException } from '../../../../../core/exceptions/domain-exception
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 
 export class DeleteBlogCommand {
-  constructor(public blogId: string) {}
+  constructor(public blogId: number) {}
 }
 
 @CommandHandler(DeleteBlogCommand)
@@ -21,7 +21,6 @@ export class DeleteBlogUseCase
         message: 'blog not found',
       });
     }
-    blog.softDeleteBlog();
-    await this.blogsRepository.save(blog);
+    await this.blogsRepository.deleteBlog(blogId);
   }
 }

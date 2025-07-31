@@ -35,6 +35,7 @@ import {
 import { LikeStatusCommentUseCase } from './comment/application/usecases/create-like-or-dislike-comment.usecase';
 import { LikeStatusPostUseCase } from './post/application/usecases/post-like-status.usecase';
 import { LikePost, likePostShema } from './like/domain/like-post.entity';
+import { SaBlogController } from './blog/api/sa-blog.controller';
 
 const commandHandlers = [
   CreateBlogUseCase,
@@ -70,7 +71,12 @@ const queryHandlers = [
     MongooseModule.forFeature([{ name: LikePost.name, schema: likePostShema }]),
     UserAccountsModule,
   ],
-  controllers: [BlogController, PostController, CommentController],
+  controllers: [
+    BlogController,
+    SaBlogController,
+    PostController,
+    CommentController,
+  ],
   providers: [
     BlogsRepository,
     BlogQueryRepository,

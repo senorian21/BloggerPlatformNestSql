@@ -63,7 +63,7 @@ export class PostQueryRepository {
     };
 
     if (blogId) {
-      await this.blogQueryRepository.getByIdOrNotFoundFail(blogId);
+      await this.blogQueryRepository.getByIdOrNotFoundFail(+blogId);
       filter.blogId = blogId;
     }
 

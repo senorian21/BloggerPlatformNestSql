@@ -21,7 +21,7 @@ export class UpdatePostUseCase
     private blogsRepository: BlogsRepository,
   ) {}
   async execute({ dto, postId }: UpdatePostCommand): Promise<void> {
-    const blog = await this.blogsRepository.findById(dto.blogId);
+    const blog = await this.blogsRepository.findById(+dto.blogId);
     if (!blog) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,

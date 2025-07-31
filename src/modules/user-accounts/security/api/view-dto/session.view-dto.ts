@@ -1,5 +1,4 @@
-import {SessionDto} from "../../../auth/dto/session.dto";
-
+import { SessionDto } from '../../../auth/dto/session.dto';
 
 export class SessionViewDto {
   ip: string;

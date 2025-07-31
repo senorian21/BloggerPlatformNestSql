@@ -3,7 +3,7 @@ import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
 import { BlogQueryRepository } from '../../infrastructure/query/blog.query-repository';
 
 export class GetBlogByIdQuery {
-  constructor(public id: string) {}
+  constructor(public id: number) {}
 }
 
 @QueryHandler(GetBlogByIdQuery)

@@ -8,33 +8,43 @@ import { GetBlogsQueryParams } from '../../api/input-dto/get-blog-query-params.i
 import { plainToClass } from 'class-transformer';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class BlogQueryRepository {
   constructor(
     @InjectModel(Blog.name)
     private BlogModel: BlogModelType,
+
+    @InjectDataSource()
+    private dataSource: DataSource,
   ) {}
 
-  async getByIdOrNotFoundFail(id: string): Promise<BlogViewDto> {
-    if (!Types.ObjectId.isValid(id)) {
-      throw new DomainException({
-        code: DomainExceptionCode.NotFound,
-        message: 'BLOG ID NOT_FOUND',
-      });
-    }
-    const blog = await this.BlogModel.findOne({
-      _id: id,
-      deletedAt: null,
-    });
-    if (!blog) {
+  async getByIdOrNotFoundFail(id: number): Promise<BlogViewDto> {
+    const blog = await this.dataSource.query(
+      `
+      SELECT 
+         id,
+         name,
+         description,
+         "websiteUrl",
+         "createdAt",
+         "isMembership"
+      FROM "Blog"
+      WHERE id = $1 and 
+        "deletedAt" IS NULL`,
+      [id],
+    );
+
+    if (blog.length === 0) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
         message: 'BLOG NOT_FOUND',
       });
     }
 
-    return BlogViewDto.mapToView(blog);
+    return blog[0];
   }
 
   async getAll(
@@ -42,28 +52,73 @@ export class BlogQueryRepository {
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
     const queryParams = plainToClass(GetBlogsQueryParams, query);
 
+    const pageNumber = Math.max(1, Number(queryParams.pageNumber) || 1);
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number(queryParams.pageSize) || 10),
+    );
+    const skip = (pageNumber - 1) * pageSize;
+
+    const allowedSortFields = ['createdAt'];
+    const sortBy = allowedSortFields.includes(queryParams.sortBy)
+      ? queryParams.sortBy
+      : 'createdAt';
+
     const filter: FilterQuery<Blog> = {
       deletedAt: null,
     };
 
-    if (queryParams.searchNameTerm) {
-      filter.name = { $regex: queryParams.searchNameTerm, $options: 'i' };
+    const sortDirection = queryParams.sortDirection === 'asc' ? 'ASC' : 'DESC';
+
+    const baseConditions = [`"deletedAt" IS NULL`];
+    const searchConditions: string[] = [];
+    const params: any[] = [];
+
+    if (queryParams.searchNameTerm?.trim()) {
+      searchConditions.push(`LOWER(name) LIKE LOWER($${params.length + 1})`);
+      params.push(`%${queryParams.searchNameTerm.trim()}%`);
     }
 
-    const blogs = await this.BlogModel.find(filter)
-      .sort({ [queryParams.sortBy]: queryParams.sortDirection })
-      .skip(queryParams.calculateSkip())
-      .limit(queryParams.pageSize);
+    let whereClause = baseConditions.join(' AND ');
 
-    const totalCount = await this.BlogModel.countDocuments(filter);
+    if (searchConditions.length > 0) {
+      whereClause += ` AND (${searchConditions.join(' OR ')})`;
+    }
 
-    const items = blogs.map(BlogViewDto.mapToView);
+    const dataQuery = `
+    SELECT 
+      id :: text as id,
+      name,
+      description,
+      "websiteUrl",
+      "createdAt",
+      "isMembership"
+    FROM "Blog"
+    ${whereClause ? `WHERE ${whereClause}` : ''}
+    ORDER BY "${sortBy}" ${sortDirection}
+    LIMIT $${params.length + 1}
+    OFFSET $${params.length + 2}
+  `;
 
+    params.push(pageSize, skip);
+
+    const blogs = await this.dataSource.query(dataQuery, params);
+
+    const countQuery = `
+    SELECT COUNT(*)::int AS total_count 
+    FROM "Blog" 
+    ${whereClause ? `WHERE ${whereClause}` : ''}
+  `;
+    const countResult = await this.dataSource.query(
+      countQuery,
+      params.slice(0, -2),
+    );
+    const totalCount = countResult[0]?.total_count || 0;
     return PaginatedViewDto.mapToView({
-      items,
+      items: blogs,
       totalCount,
-      page: queryParams.pageNumber,
-      size: queryParams.pageSize,
+      page: pageNumber,
+      size: pageSize,
     });
   }
 }
