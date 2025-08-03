@@ -97,7 +97,7 @@ export class PostQueryRepository {
       blogId?: number,
       userId?: number | null,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    // Валидация и подготовка параметров пагинации
+
     const pageNumber = Math.max(1, Number(query.pageNumber) || 1);
     const pageSize = Math.min(
         100,
@@ -106,7 +106,7 @@ export class PostQueryRepository {
     const skip = (pageNumber - 1) * pageSize;
 
     // Разрешенные поля для сортировки
-    const allowedSortFields = ['createdAt'];
+    const allowedSortFields = ['createdAt', 'blogName', 'title'];
     const sortBy = allowedSortFields.includes(query.sortBy)
         ? query.sortBy
         : 'createdAt';

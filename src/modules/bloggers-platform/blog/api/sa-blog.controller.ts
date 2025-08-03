@@ -38,6 +38,7 @@ import {UpdatePostDto} from "../../post/api/input-dto/updats-post.input-dto";
 import {UpdatePostCommand} from "../../post/application/usecases/update-post.usecase";
 
 @Controller('sa/blogs')
+@UseGuards(BasicAuthGuard)
 export class SaBlogController {
   constructor(
     private readonly commandBus: CommandBus,
@@ -45,7 +46,6 @@ export class SaBlogController {
   ) {}
 
   @Post()
-  @UseGuards(BasicAuthGuard)
   async createBlog(@Body() dto: CreateBlogDto) {
     const blogId = await this.commandBus.execute<CreateBlogCommand, number>(
       new CreateBlogCommand(dto),
@@ -56,7 +56,6 @@ export class SaBlogController {
   }
 
   @Put(':id')
-  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updateBlog(
     @Param('id', ParseIntPipe) blogId: number,
@@ -66,7 +65,6 @@ export class SaBlogController {
   }
 
   @Delete(':id')
-  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deleteBlog(@Param('id', ParseIntPipe) blogId: number): Promise<void> {
     await this.commandBus.execute(new DeleteBlogCommand(blogId));
@@ -81,7 +79,6 @@ export class SaBlogController {
   }
 
   @Post(':id/posts')
-  @UseGuards(BasicAuthGuard)
   async createPostByIdBlog(
     @Param('id') blogId: number,
     @Body() dto: CreatePostDto,
@@ -95,7 +92,6 @@ export class SaBlogController {
   }
 
   @Delete(':id/posts/:postId')
-  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(
       @Param('id') blogId: number,
@@ -104,7 +100,6 @@ export class SaBlogController {
   }
 
   @Put(':id/posts/:postId')
-  @UseGuards(BasicAuthGuard)
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(
       @Param('id') blogId: number,
@@ -116,7 +111,6 @@ export class SaBlogController {
   }
 
   @Get("/:blogId/posts")
-  @UseGuards(JwtOptionalAuthGuard)
   async getAllPost(
       @Query() query: GetPostQueryParams,
       @Param('blogId', ParseIntPipe) blogId: number,

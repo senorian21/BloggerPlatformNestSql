@@ -25,7 +25,7 @@ export class BlogQueryRepository {
     const blog = await this.dataSource.query(
       `
       SELECT 
-         id,
+         id::text as id,
          name,
          description,
          "websiteUrl",
@@ -59,7 +59,10 @@ export class BlogQueryRepository {
     );
     const skip = (pageNumber - 1) * pageSize;
 
-    const allowedSortFields = ['createdAt'];
+    const allowedSortFields = [
+      'name',
+      'createdAt'
+    ];
     const sortBy = allowedSortFields.includes(queryParams.sortBy)
       ? queryParams.sortBy
       : 'createdAt';
@@ -99,6 +102,7 @@ export class BlogQueryRepository {
     LIMIT $${params.length + 1}
     OFFSET $${params.length + 2}
   `;
+
 
     params.push(pageSize, skip);
 
