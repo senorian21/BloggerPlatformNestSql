@@ -1,14 +1,15 @@
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
-import { CreatePostDto } from '../../api/input-dto/post.input-dto';
 import { BlogsRepository } from '../../../blog/infrastructure/blog.repository';
 import { PostRepository } from '../../infrastructure/post.repository';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import {UpdatePostDto} from "../../dto/create-post.dto";
 
 export class UpdatePostCommand {
   constructor(
-    public dto: CreatePostDto,
-    public postId: string,
+    public dto: UpdatePostDto,
+    public postId: number,
+    public blogId: number,
   ) {}
 }
 
@@ -20,8 +21,8 @@ export class UpdatePostUseCase
     private postsRepository: PostRepository,
     private blogsRepository: BlogsRepository,
   ) {}
-  async execute({ dto, postId }: UpdatePostCommand): Promise<void> {
-    const blog = await this.blogsRepository.findById(+dto.blogId);
+  async execute({ dto, postId, blogId }: UpdatePostCommand): Promise<void> {
+    const blog = await this.blogsRepository.findById(blogId);
     if (!blog) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -35,7 +36,18 @@ export class UpdatePostUseCase
         message: 'Post not found.',
       });
     }
-    post.updatePost(dto, blog.name);
-    await this.postsRepository.save(post);
-  }
+
+    if (post.blogId !== blogId) {
+      throw new DomainException({
+        code: DomainExceptionCode.Forbidden,
+        message: 'Post does not belong to this blog',
+      });
+    }
+
+    await this.postsRepository.updatePost(
+        postId,
+        dto,
+        blogId,
+        blog.name)
+    }
 }

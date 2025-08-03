@@ -63,7 +63,7 @@ export class CommentsQueryRepository {
     userId?: string,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
     const queryParams = plainToClass(GetCommentQueryParams, query);
-    const post = await this.postRepository.findById(postId);
+    const post = await this.postRepository.findById(+postId);
     if (!post) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,

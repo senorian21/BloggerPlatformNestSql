@@ -4,8 +4,8 @@ import { PostQueryRepository } from '../../infrastructure/query/post.query-repos
 
 export class GetPostByIdQuery {
   constructor(
-    public id: string,
-    public userId?: string,
+    public id: number,
+    public userId?: number,
   ) {}
 }
 

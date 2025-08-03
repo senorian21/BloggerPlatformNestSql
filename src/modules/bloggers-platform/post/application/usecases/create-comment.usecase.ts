@@ -45,7 +45,7 @@ export class CreateCommentUseCase
       });
     }
 
-    const post = await this.postsRepository.findById(postId);
+    const post = await this.postsRepository.findById(+postId);
     if (!post) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,

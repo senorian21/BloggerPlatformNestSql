@@ -44,57 +44,33 @@ export class PostController {
     private readonly queryBus: QueryBus,
   ) {}
 
-  // @Post()
-  // @UseGuards(BasicAuthGuard)
-  // async createPost(@Body() postDto: CreatePostDto) {
-  //   const postId = await this.commandBus.execute<CreatePostCommand, string>(
-  //     new CreatePostCommand(postDto),
-  //   );
-  //   return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(
-  //     new GetPostByIdQuery(postId),
-  //   );
-  // }
-  //
-  // @Put(':id')
-  // @UseGuards(BasicAuthGuard)
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async updatePost(@Param('id') postId: string, @Body() dto: UpdatePostDto) {
-  //   await this.commandBus.execute<UpdatePostCommand, void>(
-  //     new UpdatePostCommand(dto, postId),
-  //   );
-  // }
-  //
-  // @Get(':id')
-  // @UseGuards(JwtOptionalAuthGuard)
-  // async getPost(
-  //   @Param('id') postId: string,
-  //   @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  // ) {
-  //   const userId = user?.id?.toString();
-  //   return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(
-  //     new GetPostByIdQuery(postId, userId),
-  //   );
-  // }
-  //
-  // @Get()
-  // @UseGuards(JwtOptionalAuthGuard)
-  // async getAll(
-  //   @Query() query: GetPostQueryParams,
-  //   @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  // ) {
-  //   const userId = user?.id?.toString();
-  //   return this.queryBus.execute<
-  //     GetAllPostQuery,
-  //     PaginatedViewDto<PostViewDto[]>
-  //   >(new GetAllPostQuery(query, undefined, userId));
-  // }
-  //
-  // @Delete(':id')
-  // @UseGuards(BasicAuthGuard)
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async deletePost(@Param('id') postId: string) {
-  //   await this.commandBus.execute(new DeletePostCommand(postId));
-  // }
+  @Get(':id')
+  @UseGuards(JwtOptionalAuthGuard)
+  async getPost(
+    @Param('id') postId: number,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+  ) {
+    const userId = user?.id;
+    return this.queryBus.execute<GetPostByIdQuery, PostViewDto>(
+      new GetPostByIdQuery(postId, userId),
+    );
+  }
+
+
+  @Get()
+  @UseGuards(JwtOptionalAuthGuard)
+  async getAll(
+    @Query() query: GetPostQueryParams,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+  ) {
+    const userId = user?.id
+    return this.queryBus.execute<
+      GetAllPostQuery,
+      PaginatedViewDto<PostViewDto[]>
+    >(new GetAllPostQuery(query, undefined, userId));
+  }
+
+
   //
   // @Get(':id/comments')
   // @UseGuards(JwtOptionalAuthGuard)

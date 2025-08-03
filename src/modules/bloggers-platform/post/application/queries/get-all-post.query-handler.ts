@@ -7,8 +7,8 @@ import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dt
 export class GetAllPostQuery {
   constructor(
     public params: GetPostQueryParams,
-    public blogId?: string,
-    public userId?: string | null,
+    public blogId?: number,
+    public userId?: number | null,
   ) {}
 }
 
@@ -21,7 +21,7 @@ export class GetAllPostQueryHandler
   async execute(
     query: GetAllPostQuery,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-    return this.postQueryRepository.getAll(
+    return this.postQueryRepository.getAllPosts(
       query.params,
       query.blogId,
       query.userId,

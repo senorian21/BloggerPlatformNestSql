@@ -33,7 +33,7 @@ export class LikeStatusPostUseCase
     userId,
     likeStatusReq,
   }: LikeStatusPostCommand): Promise<void> {
-    const post = await this.postsRepository.findById(postId);
+    const post = await this.postsRepository.findById(+postId);
     if (!post) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -50,27 +50,27 @@ export class LikeStatusPostUseCase
       });
     }
 
-    const like = await this.postsRepository.findLikeByIdUser(userId, postId);
-    const previousStatus = like?.status || likeStatus.None;
-
-    if (!like) {
-      const newLike = this.likePostModel.createLikePost(
-        postId,
-        userId,
-        likeStatusReq,
-      );
-
-      await this.postsRepository.saveLike(newLike);
-
-      post.setLikeStatus(userId, user.login, likeStatusReq, previousStatus);
-    } else {
-      like.updateLikePost(likeStatusReq);
-
-      await this.postsRepository.saveLike(like);
-
-      post.setLikeStatus(userId, user.login, likeStatusReq, previousStatus);
-    }
-
-    await this.postsRepository.save(post);
+    // const like = await this.postsRepository.findLikeByIdUser(userId, postId);
+    // const previousStatus = like?.status || likeStatus.None;
+    //
+    // if (!like) {
+    //   const newLike = this.likePostModel.createLikePost(
+    //     postId,
+    //     userId,
+    //     likeStatusReq,
+    //   );
+    //
+    //   await this.postsRepository.saveLike(newLike);
+    //
+    //   post.setLikeStatus(userId, user.login, likeStatusReq, previousStatus);
+    // } else {
+    //   like.updateLikePost(likeStatusReq);
+    //
+    //   await this.postsRepository.saveLike(like);
+    //
+    //   post.setLikeStatus(userId, user.login, likeStatusReq, previousStatus);
+    // }
+    //
+    // await this.postsRepository.save(post);
   }
 }

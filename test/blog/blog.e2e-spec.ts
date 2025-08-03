@@ -22,7 +22,6 @@ describe('AppController (e2e)', () => {
 
     connection = moduleFixture.get<Connection>(getConnectionToken());
 
-    // Добавлено безопасное обращение к `db` через `?.`
     if (connection?.db) {
       const collections = await connection.db.listCollections().toArray();
       for (const collection of collections) {
