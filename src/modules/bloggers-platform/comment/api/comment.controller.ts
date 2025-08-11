@@ -67,20 +67,16 @@ export class CommentController {
     );
   }
 
-  // @Put(':id/like-status')
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // @UseGuards(JwtAuthGuard)
-  // async likeStatus(
-  //   @Param('id') commentId: string,
-  //   @ExtractUserFromRequest() user: UserContextDto,
-  //   @Body() dto: CommentLikeStatusInputDto,
-  // ) {
-  //   await this.commandBus.execute<LikeStatusCommentCommand, void>(
-  //     new LikeStatusCommentCommand(
-  //       commentId,
-  //       user.id.toString(),
-  //       dto.likeStatus,
-  //     ),
-  //   );
-  // }
+  @Put(':id/like-status')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(JwtAuthGuard)
+  async likeStatus(
+    @Param('id') commentId: number,
+    @ExtractUserFromRequest() user: UserContextDto,
+    @Body() dto: CommentLikeStatusInputDto,
+  ) {
+    await this.commandBus.execute<LikeStatusCommentCommand, void>(
+      new LikeStatusCommentCommand(commentId, user.id, dto.likeStatus),
+    );
+  }
 }

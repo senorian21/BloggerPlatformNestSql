@@ -15,18 +15,12 @@ import { UpdatePostDto } from '../dto/create-post.dto';
 @Injectable()
 export class PostRepository {
   constructor(
-    @InjectModel(Post.name)
-    private PostModel: PostModelType,
-
     @InjectModel(LikePost.name)
     private likePostModel: likePostModelType,
 
     @InjectDataSource()
     private dataSource: DataSource,
   ) {}
-  async save(post: PostDocument) {
-    await post.save();
-  }
 
   async findById(id: number): Promise<PostDto | null> {
     const post = await this.dataSource.query(
