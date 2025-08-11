@@ -14,14 +14,14 @@ import { CommentRepository } from '../../../comment/infrastructure/comment.repos
 export class CreateCommentCommand {
   constructor(
     public dto: CreateCommentDto,
-    public userId: string,
-    public postId: string,
+    public userId: number,
+    public postId: number,
   ) {}
 }
 
 @CommandHandler(CreateCommentCommand)
 export class CreateCommentUseCase
-  implements ICommandHandler<CreateCommentCommand, string>
+  implements ICommandHandler<CreateCommentCommand, number>
 {
   constructor(
     @InjectModel(Comment.name)
@@ -34,7 +34,7 @@ export class CreateCommentUseCase
     dto,
     userId,
     postId,
-  }: CreateCommentCommand): Promise<string> {
+  }: CreateCommentCommand): Promise<number> {
     const user =
       await this.usersExternalQueryRepository.getByIdOrNotFoundFail(userId);
     if (!user) {
@@ -45,7 +45,7 @@ export class CreateCommentUseCase
       });
     }
 
-    const post = await this.postsRepository.findById(+postId);
+    const post = await this.postsRepository.findById(postId);
     if (!post) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -54,14 +54,13 @@ export class CreateCommentUseCase
       });
     }
 
-    const newComment = this.commentModel.createComment(
+    const commentId = await this.commentRepository.createNewComment(
       dto,
       postId,
       userId,
       user.login,
     );
 
-    await this.commentRepository.save(newComment);
-    return newComment._id.toString();
+    return commentId;
   }
 }

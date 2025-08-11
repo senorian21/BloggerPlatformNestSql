@@ -33,7 +33,7 @@ export class LikeStatusCommentUseCase
     userId,
     likeStatusReq,
   }: LikeStatusCommentCommand): Promise<void> {
-    const comment = await this.commentRepository.findById(commentId);
+    const comment = await this.commentRepository.findById(+commentId);
     if (!comment) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -42,7 +42,7 @@ export class LikeStatusCommentUseCase
     }
 
     const user =
-      await this.usersExternalQueryRepository.getByIdOrNotFoundFail(userId);
+      await this.usersExternalQueryRepository.getByIdOrNotFoundFail(+userId);
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -64,8 +64,8 @@ export class LikeStatusCommentUseCase
 
       await this.commentRepository.saveLike(newLike);
 
-      comment.setLikeStatus(likeStatusReq, likeStatus.None);
-      await this.commentRepository.save(comment);
+      //comment.setLikeStatus(likeStatusReq, likeStatus.None);
+      //await this.commentRepository.save(comment);
     } else {
       const prevStatus = like.status;
 
@@ -73,8 +73,8 @@ export class LikeStatusCommentUseCase
 
       await this.commentRepository.saveLike(like);
 
-      comment.setLikeStatus(likeStatusReq, prevStatus);
-      await this.commentRepository.save(comment);
+      //comment.setLikeStatus(likeStatusReq, prevStatus);
+      //await this.commentRepository.save(comment);
     }
   }
 }

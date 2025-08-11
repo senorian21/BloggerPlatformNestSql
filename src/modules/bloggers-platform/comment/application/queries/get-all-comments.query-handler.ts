@@ -7,8 +7,8 @@ import { CommentsQueryRepository } from '../../infrastructure/query/comments.que
 export class GetAllCommentsQuery {
   constructor(
     public params: GetCommentQueryParams,
-    public postId: string,
-    public userId?: string,
+    public postId: number,
+    public userId?: number,
   ) {}
 }
 

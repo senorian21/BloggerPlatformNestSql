@@ -6,8 +6,8 @@ import { UpdateCommentDto } from '../../dto/create-comment.dto';
 
 export class UpdateCommentCommand {
   constructor(
-    public commentId: string,
-    public userId: string,
+    public commentId: number,
+    public userId: number,
     public dto: UpdateCommentDto,
   ) {}
 }
@@ -32,14 +32,16 @@ export class UpdateCommentUseCase
       });
     }
 
-    if (comment.commentatorInfo.userId !== userId) {
+    if (comment.userId !== userId) {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,
         message: 'Unauthorized to update this comment',
         field: 'user',
       });
     }
-    comment.updateComment(dto);
-    await this.commentRepository.save(comment);
+
+    await this.commentRepository.updateComment(dto, commentId);
+    // comment.updateComment(dto);
+    //await this.commentRepository.save(comment);
   }
 }

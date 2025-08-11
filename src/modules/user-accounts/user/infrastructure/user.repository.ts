@@ -35,7 +35,7 @@ export class UserRepository {
         message: `User with id ${userId} is already deleted`,
       });
     }
-    return result;
+    return result[0];
   }
 
   async findByLoginOrEmail(loginOrEmail: string): Promise<UserDto | null> {

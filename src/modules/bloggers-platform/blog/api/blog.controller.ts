@@ -5,7 +5,8 @@ import {
   Get,
   HttpCode,
   HttpStatus,
-  Param, ParseIntPipe,
+  Param,
+  ParseIntPipe,
   Post,
   Put,
   Query,
@@ -49,16 +50,16 @@ export class BlogController {
     >(new GetAllBlogsQuery(query));
   }
 
-  @Get("/:blogId/posts")
+  @Get('/:blogId/posts')
   async getAllPost(
-      @Query() query: GetPostQueryParams,
-      @Param('blogId', ParseIntPipe) blogId: number,
-      @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+    @Query() query: GetPostQueryParams,
+    @Param('blogId', ParseIntPipe) blogId: number,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ) {
-    const userId = user?.id
+    const userId = user?.id;
     return this.queryBus.execute<
-        GetAllPostQuery,
-        PaginatedViewDto<PostViewDto[]>
+      GetAllPostQuery,
+      PaginatedViewDto<PostViewDto[]>
     >(new GetAllPostQuery(query, blogId, userId));
   }
 

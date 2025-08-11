@@ -32,7 +32,7 @@ export class CreatePostUseCase
       });
     }
 
-    const postId = await this.postsRepository.createPost(dto, blog.name)
+    const postId = await this.postsRepository.createPost(dto, blog.name);
     return postId;
   }
 }

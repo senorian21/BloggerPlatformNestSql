@@ -11,8 +11,8 @@ import { BlogQueryRepository } from '../../../blog/infrastructure/query/blog.que
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { PostRepository } from '../post.repository';
-import {InjectDataSource} from "@nestjs/typeorm";
-import {DataSource} from "typeorm";
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class PostQueryRepository {
@@ -26,13 +26,13 @@ export class PostQueryRepository {
     private postsRepository: PostRepository,
   ) {}
   async getByIdOrNotFoundFail(
-      id: number,
-      userId?: number,
+    id: number,
+    userId?: number,
   ): Promise<PostViewDto> {
-
     const params = [id, userId ?? null];
 
-    const [post] = await this.dataSource.query(`
+    const [post] = await this.dataSource.query(
+      `
     SELECT 
       p.id::TEXT AS "id",
       p.title,
@@ -80,9 +80,11 @@ export class PostQueryRepository {
     WHERE 
       p.id = $1 
       AND p."deletedAt" IS NULL
-  `, params);
+  `,
+      params,
+    );
 
-    if (!post) {
+    if (post.length === 0) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
         message: 'Post not found',
@@ -93,23 +95,19 @@ export class PostQueryRepository {
   }
 
   async getAllPosts(
-      query: GetPostQueryParams,
-      blogId?: number,
-      userId?: number | null,
+    query: GetPostQueryParams,
+    blogId?: number,
+    userId?: number | null,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
-
     const pageNumber = Math.max(1, Number(query.pageNumber) || 1);
-    const pageSize = Math.min(
-        100,
-        Math.max(1, Number(query.pageSize) || 10),
-    );
+    const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 10));
     const skip = (pageNumber - 1) * pageSize;
 
     // Разрешенные поля для сортировки
     const allowedSortFields = ['createdAt', 'blogName', 'title'];
     const sortBy = allowedSortFields.includes(query.sortBy)
-        ? query.sortBy
-        : 'createdAt';
+      ? query.sortBy
+      : 'createdAt';
 
     const sortDirection = query.sortDirection === 'asc' ? 'ASC' : 'DESC';
 
@@ -202,10 +200,7 @@ export class PostQueryRepository {
 
     // Выполняем запрос на подсчет
     const countParams = blogId !== undefined ? [blogId] : [];
-    const countResult = await this.dataSource.query(
-        countQuery,
-        countParams
-    );
+    const countResult = await this.dataSource.query(countQuery, countParams);
 
     const totalCount = countResult[0]?.total_count || 0;
 

@@ -42,7 +42,7 @@ export class LikeStatusPostUseCase
     }
 
     const user =
-      await this.usersExternalQueryRepository.getByIdOrNotFoundFail(userId);
+      await this.usersExternalQueryRepository.getByIdOrNotFoundFail(+userId);
     if (!user) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,

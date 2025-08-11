@@ -56,51 +56,49 @@ export class PostController {
     );
   }
 
-
   @Get()
   @UseGuards(JwtOptionalAuthGuard)
   async getAll(
     @Query() query: GetPostQueryParams,
     @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ) {
-    const userId = user?.id
+    const userId = user?.id;
     return this.queryBus.execute<
       GetAllPostQuery,
       PaginatedViewDto<PostViewDto[]>
     >(new GetAllPostQuery(query, undefined, userId));
   }
 
+  @Get('/:id/comments')
+  @UseGuards(JwtOptionalAuthGuard)
+  async getCommentByPost(
+    @Query() query: GetCommentQueryParams,
+    @Param('id') postId: number,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+  ) {
+    const userId = user?.id;
+    return this.queryBus.execute<
+      GetAllCommentsQuery,
+      PaginatedViewDto<CommentViewDto[]>
+    >(new GetAllCommentsQuery(query, postId, userId));
+  }
 
-  //
-  // @Get(':id/comments')
-  // @UseGuards(JwtOptionalAuthGuard)
-  // async getCommentByPost(
-  //   @Query() query: GetCommentQueryParams,
-  //   @Param('id') postId: string,
-  //   @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  // ) {
-  //   const userId = user?.id?.toString();
-  //   return this.queryBus.execute<
-  //     GetAllCommentsQuery,
-  //     PaginatedViewDto<CommentViewDto[]>
-  //   >(new GetAllCommentsQuery(query, postId, userId));
-  // }
-  //
-  // @Post(':id/comments')
-  // @UseGuards(JwtAuthGuard)
-  // async createComment(
-  //   @Param('id') postId: string,
-  //   @Body() dto: CreateCommentDto,
-  //   @ExtractUserFromRequest() user: UserContextDto,
-  // ) {
-  //   const commentId = await this.commandBus.execute<
-  //     CreateCommentCommand,
-  //     string
-  //   >(new CreateCommentCommand(dto, user.id.toString(), postId));
-  //   return this.queryBus.execute<GetCommentsByIdQuery, CommentViewDto>(
-  //     new GetCommentsByIdQuery(commentId),
-  //   );
-  // }
+  @Post(':id/comments')
+  @UseGuards(JwtAuthGuard)
+  async createComment(
+    @Param('id') postId: number,
+    @Body() dto: CreateCommentDto,
+    @ExtractUserFromRequest() user: UserContextDto,
+  ) {
+    const commentId = await this.commandBus.execute<
+      CreateCommentCommand,
+      number
+    >(new CreateCommentCommand(dto, user.id, postId));
+    return this.queryBus.execute<GetCommentsByIdQuery, CommentViewDto>(
+      new GetCommentsByIdQuery(commentId),
+    );
+  }
+
   //
   // @Put(':id/like-status')
   // @UseGuards(JwtAuthGuard)

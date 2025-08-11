@@ -5,8 +5,8 @@ import { CommentRepository } from '../../../comment/infrastructure/comment.repos
 
 export class DeleteCommentCommand {
   constructor(
-    public commentId: string,
-    public userId: string,
+    public commentId: number,
+    public userId: number,
   ) {}
 }
 
@@ -24,7 +24,8 @@ export class DeleteCommentUseCase
         field: 'commentId',
       });
     }
-    if (comment.commentatorInfo.userId !== userId) {
+
+    if (comment.userId !== userId) {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,
         message: 'Unauthorized to update this comment',
@@ -32,7 +33,6 @@ export class DeleteCommentUseCase
       });
     }
 
-    comment.softDeletedComment();
-    await this.commentRepository.save(comment);
+    await this.commentRepository.softDeletedComment(commentId);
   }
 }

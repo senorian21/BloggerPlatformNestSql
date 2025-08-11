@@ -33,10 +33,10 @@ export class CommentController {
   @Get(':id')
   @UseGuards(JwtOptionalAuthGuard)
   async getCommentById(
-    @Param('id') commentId: string,
+    @Param('id') commentId: number,
     @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ) {
-    const userId = user ? user.id?.toString() : undefined;
+    const userId = user ? user.id : undefined;
     return this.queryBus.execute<GetCommentsByIdQuery, CommentViewDto>(
       new GetCommentsByIdQuery(commentId, userId),
     );
@@ -46,11 +46,11 @@ export class CommentController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard)
   async deleteCommentById(
-    @Param('id') commentId: string,
+    @Param('id') commentId: number,
     @ExtractUserFromRequest() user: UserContextDto,
   ) {
     await this.commandBus.execute<DeleteCommentCommand, void>(
-      new DeleteCommentCommand(commentId, user.id.toString()),
+      new DeleteCommentCommand(commentId, user.id),
     );
   }
 
@@ -58,29 +58,29 @@ export class CommentController {
   @HttpCode(HttpStatus.NO_CONTENT)
   @UseGuards(JwtAuthGuard)
   async updateComment(
-    @Param('id') commentId: string,
+    @Param('id') commentId: number,
     @ExtractUserFromRequest() user: UserContextDto,
     @Body() dto: UpdateCommentDto,
   ) {
     await this.commandBus.execute<UpdateCommentCommand, void>(
-      new UpdateCommentCommand(commentId, user.id.toString(), dto),
+      new UpdateCommentCommand(commentId, user.id, dto),
     );
   }
 
-  @Put(':id/like-status')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @UseGuards(JwtAuthGuard)
-  async likeStatus(
-    @Param('id') commentId: string,
-    @ExtractUserFromRequest() user: UserContextDto,
-    @Body() dto: CommentLikeStatusInputDto,
-  ) {
-    await this.commandBus.execute<LikeStatusCommentCommand, void>(
-      new LikeStatusCommentCommand(
-        commentId,
-        user.id.toString(),
-        dto.likeStatus,
-      ),
-    );
-  }
+  // @Put(':id/like-status')
+  // @HttpCode(HttpStatus.NO_CONTENT)
+  // @UseGuards(JwtAuthGuard)
+  // async likeStatus(
+  //   @Param('id') commentId: string,
+  //   @ExtractUserFromRequest() user: UserContextDto,
+  //   @Body() dto: CommentLikeStatusInputDto,
+  // ) {
+  //   await this.commandBus.execute<LikeStatusCommentCommand, void>(
+  //     new LikeStatusCommentCommand(
+  //       commentId,
+  //       user.id.toString(),
+  //       dto.likeStatus,
+  //     ),
+  //   );
+  // }
 }

@@ -33,9 +33,9 @@ import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.g
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { UserContextDto } from '../../../user-accounts/auth/dto/user-context.dto';
-import {DeletePostCommand} from "../../post/application/usecases/delete-post.usecase";
-import {UpdatePostDto} from "../../post/api/input-dto/updats-post.input-dto";
-import {UpdatePostCommand} from "../../post/application/usecases/update-post.usecase";
+import { DeletePostCommand } from '../../post/application/usecases/delete-post.usecase';
+import { UpdatePostDto } from '../../post/api/input-dto/updats-post.input-dto';
+import { UpdatePostCommand } from '../../post/application/usecases/update-post.usecase';
 
 @Controller('sa/blogs')
 @UseGuards(BasicAuthGuard)
@@ -94,33 +94,34 @@ export class SaBlogController {
   @Delete(':id/posts/:postId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async deletePost(
-      @Param('id') blogId: number,
-      @Param('postId') postId: number) {
+    @Param('id') blogId: number,
+    @Param('postId') postId: number,
+  ) {
     await this.commandBus.execute(new DeletePostCommand(postId, blogId));
   }
 
   @Put(':id/posts/:postId')
   @HttpCode(HttpStatus.NO_CONTENT)
   async updatePost(
-      @Param('id') blogId: number,
-      @Param('postId') postId: number,
-      @Body() dto: UpdatePostDto):Promise<void> {
+    @Param('id') blogId: number,
+    @Param('postId') postId: number,
+    @Body() dto: UpdatePostDto,
+  ): Promise<void> {
     await this.commandBus.execute<UpdatePostCommand, void>(
       new UpdatePostCommand(dto, postId, blogId),
     );
   }
 
-  @Get("/:blogId/posts")
+  @Get('/:blogId/posts')
   async getAllPost(
-      @Query() query: GetPostQueryParams,
-      @Param('blogId', ParseIntPipe) blogId: number,
-      @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
+    @Query() query: GetPostQueryParams,
+    @Param('blogId', ParseIntPipe) blogId: number,
+    @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
   ) {
-    const userId = user?.id
+    const userId = user?.id;
     return this.queryBus.execute<
-        GetAllPostQuery,
-        PaginatedViewDto<PostViewDto[]>
+      GetAllPostQuery,
+      PaginatedViewDto<PostViewDto[]>
     >(new GetAllPostQuery(query, blogId, userId));
   }
-
 }

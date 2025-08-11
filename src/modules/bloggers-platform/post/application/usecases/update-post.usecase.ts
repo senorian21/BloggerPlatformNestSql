@@ -3,7 +3,7 @@ import { DomainExceptionCode } from '../../../../../core/exceptions/domain-excep
 import { BlogsRepository } from '../../../blog/infrastructure/blog.repository';
 import { PostRepository } from '../../infrastructure/post.repository';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import {UpdatePostDto} from "../../dto/create-post.dto";
+import { UpdatePostDto } from '../../dto/create-post.dto';
 
 export class UpdatePostCommand {
   constructor(
@@ -44,10 +44,6 @@ export class UpdatePostUseCase
       });
     }
 
-    await this.postsRepository.updatePost(
-        postId,
-        dto,
-        blogId,
-        blog.name)
-    }
+    await this.postsRepository.updatePost(postId, dto, blogId, blog.name);
+  }
 }
