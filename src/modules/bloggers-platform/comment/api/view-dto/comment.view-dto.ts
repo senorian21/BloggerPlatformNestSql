@@ -1,5 +1,4 @@
-import {CommentDto} from "../../dto/comment.dto";
-
+import { CommentDto } from '../../dto/comment.dto';
 
 export class CommentViewDto {
   id: number;

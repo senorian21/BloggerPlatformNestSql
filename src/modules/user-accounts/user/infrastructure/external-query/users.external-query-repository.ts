@@ -4,9 +4,7 @@ import { UserDto } from '../../dto/user.dto';
 
 @Injectable()
 export class UsersExternalQueryRepository {
-  constructor(
-    private userRepository: UserRepository,
-  ) {}
+  constructor(private userRepository: UserRepository) {}
 
   async getByIdOrNotFoundFail(id: number): Promise<UserDto> {
     return await this.userRepository.findById(id);

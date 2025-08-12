@@ -19,5 +19,3 @@ export const websiteUrlConstraints = {
   minLength: 3,
   maxLength: 100,
 };
-
-

@@ -12,5 +12,3 @@ export const contentConstraints = {
   minLength: 3,
   maxLength: 1000,
 };
-
-

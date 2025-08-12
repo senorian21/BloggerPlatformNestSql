@@ -14,13 +14,13 @@ export class PostQueryRepository {
     private dataSource: DataSource,
   ) {}
   async getByIdOrNotFoundFail(
-      id: number,
-      userId?: number,
+    id: number,
+    userId?: number,
   ): Promise<PostViewDto> {
     const params = [id, userId ?? null];
 
     const [post] = await this.dataSource.query(
-        `
+      `
     SELECT 
       p.id::TEXT AS "id",
       p.title,
@@ -66,7 +66,7 @@ export class PostQueryRepository {
       p.id = $1 
       AND p."deletedAt" IS NULL
   `,
-        params,
+      params,
     );
 
     if (!post) {
@@ -80,16 +80,18 @@ export class PostQueryRepository {
   }
 
   async getAllPosts(
-      query: GetPostQueryParams,
-      blogId?: number,
-      userId?: number | null,
+    query: GetPostQueryParams,
+    blogId?: number,
+    userId?: number | null,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const pageNumber = Math.max(1, Number(query.pageNumber) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 10));
     const skip = (pageNumber - 1) * pageSize;
 
     const allowedSortFields = ['createdAt', 'blogName', 'title'];
-    const sortBy = allowedSortFields.includes(query.sortBy) ? query.sortBy : 'createdAt';
+    const sortBy = allowedSortFields.includes(query.sortBy)
+      ? query.sortBy
+      : 'createdAt';
     const sortDirection = query.sortDirection === 'asc' ? 'ASC' : 'DESC';
 
     const baseConditions = [`p."deletedAt" IS NULL`];
@@ -177,5 +179,4 @@ export class PostQueryRepository {
       size: pageSize,
     });
   }
-
 }

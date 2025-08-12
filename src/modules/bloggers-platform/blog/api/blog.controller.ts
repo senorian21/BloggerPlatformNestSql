@@ -63,6 +63,4 @@ export class BlogController {
       PaginatedViewDto<PostViewDto[]>
     >(new GetAllPostQuery(query, blogId, userId));
   }
-
-
 }

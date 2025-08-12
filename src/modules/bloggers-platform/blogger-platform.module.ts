@@ -52,9 +52,7 @@ const queryHandlers = [
 ];
 
 @Module({
-  imports: [
-    UserAccountsModule,
-  ],
+  imports: [UserAccountsModule],
   controllers: [
     BlogController,
     SaBlogController,

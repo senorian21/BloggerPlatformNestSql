@@ -14,13 +14,13 @@ export class CommentsQueryRepository {
     private dataSource: DataSource,
   ) {}
   async getByIdOrNotFoundFail(
-      id: number,
-      userId?: number,
+    id: number,
+    userId?: number,
   ): Promise<CommentViewDto> {
     const params = [id, userId ?? null];
 
     const [comment] = await this.dataSource.query(
-        `
+      `
     SELECT 
       c.id::TEXT AS "id",
       c.content,
@@ -49,7 +49,7 @@ export class CommentsQueryRepository {
       c.id = $1 
       AND c."deletedAt" IS NULL
     `,
-        params,
+      params,
     );
 
     if (!comment) {
@@ -61,11 +61,10 @@ export class CommentsQueryRepository {
     return comment;
   }
 
-
   async getAll(
-      query: GetCommentQueryParams,
-      postId: number,
-      userId?: number | null,
+    query: GetCommentQueryParams,
+    postId: number,
+    userId?: number | null,
   ): Promise<PaginatedViewDto<CommentViewDto[]>> {
     const pageNumber = Math.max(1, Number(query.pageNumber) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 10));
@@ -73,8 +72,8 @@ export class CommentsQueryRepository {
 
     const allowedSortFields = ['createdAt', 'content'];
     const sortBy = allowedSortFields.includes(query.sortBy)
-        ? query.sortBy
-        : 'createdAt';
+      ? query.sortBy
+      : 'createdAt';
 
     const sortDirection = query.sortDirection === 'asc' ? 'ASC' : 'DESC';
 

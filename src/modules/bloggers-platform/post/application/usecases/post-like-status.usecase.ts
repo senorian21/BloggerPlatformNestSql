@@ -6,7 +6,6 @@ import { DomainException } from '../../../../../core/exceptions/domain-exception
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { UsersExternalQueryRepository } from '../../../../user-accounts/user/infrastructure/external-query/users.external-query-repository';
 
-
 export class LikeStatusPostCommand {
   constructor(
     public postId: number,
@@ -28,7 +27,6 @@ export class LikeStatusPostUseCase
     userId,
     likeStatusReq,
   }: LikeStatusPostCommand): Promise<void> {
-
     const post = await this.postsRepository.findById(postId);
     if (!post) {
       throw new DomainException({

@@ -7,8 +7,8 @@ import { DomainException } from '../../../../../core/exceptions/domain-exception
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import {FilterQuery} from "mongoose";
-import {BlogDto} from "../../dto/blog.dto";
+import { FilterQuery } from 'mongoose';
+import { BlogDto } from '../../dto/blog.dto';
 
 @Injectable()
 export class BlogQueryRepository {

@@ -8,7 +8,6 @@ import { UpdatePostDto } from '../dto/create-post.dto';
 @Injectable()
 export class PostRepository {
   constructor(
-
     @InjectDataSource()
     private dataSource: DataSource,
   ) {}
@@ -77,19 +76,19 @@ export class PostRepository {
     );
   }
 
-    async createLikePost(
-        postId: number,
-        userId: number,
-        likeStatusReq: string,  // 'like' | 'dislike' | 'none'
-        userLogin: string,
-    ): Promise<void> {
-        const status = likeStatusReq.toLowerCase().trim();
-        if (!['like', 'dislike', 'none'].includes(status)) {
-            throw new Error(`Invalid like status: ${likeStatusReq}`);
-        }
+  async createLikePost(
+    postId: number,
+    userId: number,
+    likeStatusReq: string, // 'like' | 'dislike' | 'none'
+    userLogin: string,
+  ): Promise<void> {
+    const status = likeStatusReq.toLowerCase().trim();
+    if (!['like', 'dislike', 'none'].includes(status)) {
+      throw new Error(`Invalid like status: ${likeStatusReq}`);
+    }
 
-        await this.dataSource.query(
-            `
+    await this.dataSource.query(
+      `
                 WITH
                     old AS (
                         SELECT status AS old_status
@@ -153,7 +152,7 @@ export class PostRepository {
                     FROM calc
                 WHERE p.id = $1;
             `,
-            [postId, userId, status, userLogin],
-        );
-    }
+      [postId, userId, status, userLogin],
+    );
+  }
 }

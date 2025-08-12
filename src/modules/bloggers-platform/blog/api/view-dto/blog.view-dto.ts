@@ -1,5 +1,4 @@
-import {BlogDto} from "../../dto/blog.dto";
-
+import { BlogDto } from '../../dto/blog.dto';
 
 export class BlogViewDto {
   id: number;

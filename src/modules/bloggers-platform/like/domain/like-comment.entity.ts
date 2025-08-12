@@ -3,5 +3,3 @@ export enum likeStatus {
   Like = 'Like',
   Dislike = 'Dislike',
 }
-
-
