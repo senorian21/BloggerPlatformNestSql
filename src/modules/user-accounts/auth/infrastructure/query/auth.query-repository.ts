@@ -1,8 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserModelType } from '../../../user/domain/user.entity';
-import { AuthViewDto } from '../../api/view-dto/auth.view-dto';
-import { Types } from 'mongoose';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 

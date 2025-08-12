@@ -51,6 +51,7 @@ export class BlogController {
   }
 
   @Get('/:blogId/posts')
+  @UseGuards(JwtOptionalAuthGuard)
   async getAllPost(
     @Query() query: GetPostQueryParams,
     @Param('blogId', ParseIntPipe) blogId: number,
@@ -63,31 +64,5 @@ export class BlogController {
     >(new GetAllPostQuery(query, blogId, userId));
   }
 
-  // @Get(':id/posts')
-  // @UseGuards(JwtOptionalAuthGuard)
-  // async getPostByBlog(
-  //   @Param('id') blogId: string,
-  //   @Query() query: GetPostQueryParams,
-  //   @ExtractUserIfExistsFromRequest() user: UserContextDto | null,
-  // ) {
-  //   const userId = user?.id?.toString();
-  //   return this.queryBus.execute<
-  //     GetAllPostQuery,
-  //     PaginatedViewDto<PostViewDto[]>
-  //   >(new GetAllPostQuery(query, blogId, userId));
-  // }
-  //
-  // @Post(':id/posts')
-  // @UseGuards(BasicAuthGuard)
-  // async createPostByIdBlog(
-  //   @Param('id') blogId: string,
-  //   @Body() dto: CreatePostDto,
-  // ) {
-  //   const postId = await this.commandBus.execute<CreatePostCommand, string>(
-  //     new CreatePostCommand(dto, blogId),
-  //   );
-  //   return this.queryBus.execute<GetPostByIdQuery, string>(
-  //     new GetPostByIdQuery(+postId),
-  //   );
-  // }
+
 }

@@ -1,29 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Post, PostModelType } from '../../domain/post.entity';
-import { FilterQuery, Types } from 'mongoose';
 import { PostViewDto } from '../../api/view-dto/post.view-dto';
-import { likeStatus } from '../../domain/dto/like-status.domain.dto';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
-import { plainToClass } from 'class-transformer';
 import { GetPostQueryParams } from '../../api/input-dto/get-post-query-params.input-dto';
-import { BlogQueryRepository } from '../../../blog/infrastructure/query/blog.query-repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
-import { PostRepository } from '../post.repository';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 
 @Injectable()
 export class PostQueryRepository {
   constructor(
-    @InjectModel(Post.name)
-    private PostModel: PostModelType,
-
     @InjectDataSource()
     private dataSource: DataSource,
-    private blogQueryRepository: BlogQueryRepository,
-    private postsRepository: PostRepository,
   ) {}
   async getByIdOrNotFoundFail(
       id: number,

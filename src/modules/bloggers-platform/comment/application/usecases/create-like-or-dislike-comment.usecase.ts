@@ -1,14 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CommentRepository } from '../../../comment/infrastructure/comment.repository';
 import {
-  LikeComment,
-  likeCommentModelType,
   likeStatus,
-} from '../../../like/domain/like=comment.entity';
+} from '../../../like/domain/like-comment.entity';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { UsersExternalQueryRepository } from '../../../../user-accounts/user/infrastructure/external-query/users.external-query-repository';
-import { InjectModel } from '@nestjs/mongoose';
 
 export class LikeStatusCommentCommand {
   constructor(
@@ -25,8 +22,6 @@ export class LikeStatusCommentUseCase
   constructor(
     private commentRepository: CommentRepository,
     private usersExternalQueryRepository: UsersExternalQueryRepository,
-    @InjectModel(LikeComment.name)
-    private likeCommentModel: likeCommentModelType,
   ) {}
   async execute({
     commentId,

@@ -7,7 +7,6 @@ import { DataSource } from 'typeorm';
 @Controller('testing')
 export class TestingController {
   constructor(
-    @InjectConnection() private readonly databaseConnection: Connection,
     @InjectDataSource()
     protected datasource: DataSource,
   ) {}

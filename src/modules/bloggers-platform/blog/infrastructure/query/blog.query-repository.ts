@@ -1,8 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import { Blog, BlogModelType } from '../../domain/blog.entity';
 import { BlogViewDto } from '../../api/view-dto/blog.view-dto';
-import { FilterQuery, Types } from 'mongoose';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 import { GetBlogsQueryParams } from '../../api/input-dto/get-blog-query-params.input-dto';
 import { plainToClass } from 'class-transformer';
@@ -10,13 +7,12 @@ import { DomainException } from '../../../../../core/exceptions/domain-exception
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
+import {FilterQuery} from "mongoose";
+import {BlogDto} from "../../dto/blog.dto";
 
 @Injectable()
 export class BlogQueryRepository {
   constructor(
-    @InjectModel(Blog.name)
-    private BlogModel: BlogModelType,
-
     @InjectDataSource()
     private dataSource: DataSource,
   ) {}
@@ -64,7 +60,7 @@ export class BlogQueryRepository {
       ? queryParams.sortBy
       : 'createdAt';
 
-    const filter: FilterQuery<Blog> = {
+    const filter: FilterQuery<BlogDto> = {
       deletedAt: null,
     };
 

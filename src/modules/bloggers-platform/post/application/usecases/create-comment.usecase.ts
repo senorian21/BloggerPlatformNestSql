@@ -1,10 +1,6 @@
 import { InjectModel } from '@nestjs/mongoose';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CreateCommentDto } from '../../../comment/dto/create-comment.dto';
-import {
-  Comment,
-  CommentModelType,
-} from '../../../comment/domain/comment.entity';
 import { PostRepository } from '../../infrastructure/post.repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
@@ -24,8 +20,6 @@ export class CreateCommentUseCase
   implements ICommandHandler<CreateCommentCommand, number>
 {
   constructor(
-    @InjectModel(Comment.name)
-    private commentModel: CommentModelType,
     private postsRepository: PostRepository,
     private commentRepository: CommentRepository,
     private usersExternalQueryRepository: UsersExternalQueryRepository,

@@ -1,10 +1,11 @@
-import { CommentDocument } from '../../domain/comment.entity';
+import {CommentDto} from "../../dto/comment.dto";
+
 
 export class CommentViewDto {
-  id: string;
+  id: number;
   content: string;
   commentatorInfo: {
-    userId: string;
+    userId: number;
     userLogin: string;
   };
   createdAt: Date;
@@ -15,20 +16,20 @@ export class CommentViewDto {
   };
 
   static mapToView = (
-    comment: CommentDocument,
+    comment: CommentDto,
     myStatus: string,
   ): CommentViewDto => {
     const dto = new CommentViewDto();
-    dto.id = comment._id.toString();
+    dto.id = comment.id;
     dto.content = comment.content;
     dto.commentatorInfo = {
-      userId: comment.commentatorInfo.userId,
-      userLogin: comment.commentatorInfo.userLogin,
+      userId: comment.userId,
+      userLogin: comment.userLogin,
     };
     dto.createdAt = comment.createdAt;
     dto.likesInfo = {
-      likesCount: comment.likeCount,
-      dislikesCount: comment.dislikeCount,
+      likesCount: comment.likesCount,
+      dislikesCount: comment.dislikesCount,
       myStatus: myStatus,
     };
     return dto;

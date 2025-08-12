@@ -1,14 +1,10 @@
 import { Module } from '@nestjs/common';
-import { Blog, BolgShema } from './blog/domain/blog.entity';
-import { MongooseModule } from '@nestjs/mongoose';
 import { BlogController } from './blog/api/blog.controller';
 import { BlogsRepository } from './blog/infrastructure/blog.repository';
 import { BlogQueryRepository } from './blog/infrastructure/query/blog.query-repository';
 import { PostQueryRepository } from './post/infrastructure/query/post.query-repository';
 import { PostRepository } from './post/infrastructure/post.repository';
-import { Post, PostSchema } from './post/domain/post.entity';
 import { PostController } from './post/api/post.controller';
-import { Comment, CommentSchema } from './comment/domain/comment.entity';
 import { CommentsQueryRepository } from './comment/infrastructure/query/comments.query-repository';
 import { CommentController } from './comment/api/comment.controller';
 import { CreateBlogUseCase } from './blog/application/usecases/create-blog.usecase';
@@ -28,13 +24,8 @@ import { CreateCommentUseCase } from './post/application/usecases/create-comment
 import { CommentRepository } from './comment/infrastructure/comment.repository';
 import { DeleteCommentUseCase } from './comment/application/usecases/delete-comment.usecase';
 import { UpdateCommentUseCase } from './comment/application/usecases/update-comment.usecase';
-import {
-  LikeComment,
-  likeCommentShema,
-} from './like/domain/like=comment.entity';
 import { LikeStatusCommentUseCase } from './comment/application/usecases/create-like-or-dislike-comment.usecase';
 import { LikeStatusPostUseCase } from './post/application/usecases/post-like-status.usecase';
-import { LikePost, likePostShema } from './like/domain/like-post.entity';
 import { SaBlogController } from './blog/api/sa-blog.controller';
 
 const commandHandlers = [
@@ -62,13 +53,6 @@ const queryHandlers = [
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Blog.name, schema: BolgShema }]),
-    MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
-    MongooseModule.forFeature([{ name: Comment.name, schema: CommentSchema }]),
-    MongooseModule.forFeature([
-      { name: LikeComment.name, schema: likeCommentShema },
-    ]),
-    MongooseModule.forFeature([{ name: LikePost.name, schema: likePostShema }]),
     UserAccountsModule,
   ],
   controllers: [

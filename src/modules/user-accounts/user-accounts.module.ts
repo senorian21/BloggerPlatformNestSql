@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './user/domain/user.entity';
 import { UserRepository } from './user/infrastructure/user.repository';
 import { UserQueryRepository } from './user/infrastructure/query/user.query-repository';
 import { UserController } from './user/api/user.controller';
@@ -65,12 +64,7 @@ const queryHandlers = [
 ];
 
 @Module({
-  imports: [
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    MongooseModule.forFeature([
-      { name: RateLimiter.name, schema: RateLimiterSchema },
-    ]),
-  ],
+  imports: [],
   controllers: [UserController, AuthController, DevicesController],
   providers: [
     SessionsQueryRepository,
