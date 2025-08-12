@@ -1,15 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
-import {
-  Comment,
-  CommentDocument,
-  CommentModelType,
-} from '../domain/comment.entity';
-import {
-  LikeComment,
-  likeCommentDocument,
-  likeCommentModelType,
-} from '../../like/domain/like=comment.entity';
 import { CreateCommentDto, UpdateCommentDto } from '../dto/create-comment.dto';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
@@ -18,19 +7,9 @@ import { CommentDto } from '../dto/comment.dto';
 @Injectable()
 export class CommentRepository {
   constructor(
-    @InjectModel(Comment.name)
-    private commentModel: CommentModelType,
-
-    @InjectModel(LikeComment.name)
-    private likeCommentModel: likeCommentModelType,
-
     @InjectDataSource()
     private dataSource: DataSource,
   ) {}
-
-  async saveLike(like: likeCommentDocument) {
-    await like.save();
-  }
 
   async findById(id: number): Promise<CommentDto | null> {
     const result = await this.dataSource.query(
@@ -44,20 +23,6 @@ export class CommentRepository {
     );
 
     return result[0];
-  }
-
-  async findLikeByIdUser(
-    userId: number,
-    commentId: number | number[],
-  ): Promise<likeCommentDocument | null> {
-    const userLike = await this.dataSource.query(
-      `
-      SELECT *
-      FROM "CommentLike"
-      WHERE commentId = $1 AND "userId" = $2`,
-      [commentId, userId],
-    );
-    return userLike[0];
   }
 
   async createNewComment(

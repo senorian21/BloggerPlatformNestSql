@@ -99,17 +99,16 @@ export class PostController {
     );
   }
 
-  //
-  // @Put(':id/like-status')
-  // @UseGuards(JwtAuthGuard)
-  // @HttpCode(HttpStatus.NO_CONTENT)
-  // async likeStatus(
-  //   @Param('id') postId: string,
-  //   @ExtractUserFromRequest() user: UserContextDto,
-  //   @Body() dto: LikeStatusInputDto,
-  // ) {
-  //   await this.commandBus.execute<LikeStatusPostCommand, void>(
-  //     new LikeStatusPostCommand(postId, user.id.toString(), dto.likeStatus),
-  //   );
-  // }
+  @Put(':id/like-status')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async likeStatus(
+    @Param('id') postId: number,
+    @ExtractUserFromRequest() user: UserContextDto,
+    @Body() dto: LikeStatusInputDto,
+  ) {
+    await this.commandBus.execute<LikeStatusPostCommand, void>(
+      new LikeStatusPostCommand(postId, user.id, dto.likeStatus),
+    );
+  }
 }

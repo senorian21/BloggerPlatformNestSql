@@ -26,13 +26,13 @@ export class PostQueryRepository {
     private postsRepository: PostRepository,
   ) {}
   async getByIdOrNotFoundFail(
-    id: number,
-    userId?: number,
+      id: number,
+      userId?: number,
   ): Promise<PostViewDto> {
     const params = [id, userId ?? null];
 
     const [post] = await this.dataSource.query(
-      `
+        `
     SELECT 
       p.id::TEXT AS "id",
       p.title,
@@ -44,34 +44,31 @@ export class PostQueryRepository {
       json_build_object(
         'likesCount', p."likeCount",
         'dislikesCount', p."dislikeCount",
-        'myStatus', COALESCE(
-          (SELECT status 
-           FROM "PostLike" 
-           WHERE "postId" = p.id 
-             AND "userId" = $2 
-             AND $2 IS NOT NULL 
-          ), 
-          'None'
-        ),
+        'myStatus', 
+        CASE 
+          WHEN $2::INTEGER IS NOT NULL THEN COALESCE(
+            (SELECT INITCAP(status) 
+             FROM "PostLike" 
+             WHERE "postId" = p.id 
+               AND "userId" = $2::INTEGER),
+            'None'
+          )
+          ELSE 'None'
+        END,
         'newestLikes', COALESCE(
-          (SELECT jsonb_agg(jsonb_build_object(
-              'addedAt', "addedAt",
-              'userId', "userId"::TEXT,
-              'login', login
-            ) ORDER BY "addedAt" DESC)
-           FROM (
-             SELECT 
-               pl."addedAt", 
-               pl."userId", 
-               u.login
-             FROM "PostLike" pl
-             JOIN "User" u ON pl."userId" = u.id
-             WHERE 
-               pl."postId" = p.id 
-               AND pl.status = 'Like'
-             ORDER BY pl."addedAt" DESC
-             LIMIT 3
-           ) AS latest_likes
+          (
+            SELECT jsonb_agg(jsonb_build_object(
+              'addedAt', nl."addedAt",
+              'userId', nl.userid::TEXT,
+              'login', nl.login
+            ) ORDER BY nl."addedAt" DESC)
+            FROM (
+              SELECT nl."addedAt", nl.userid, nl.login
+              FROM "newestLikes" nl
+              WHERE nl."postId" = p.id
+              ORDER BY nl."addedAt" DESC
+              LIMIT 3
+            ) AS nl
           ),
           '[]'::jsonb
         )
@@ -81,10 +78,10 @@ export class PostQueryRepository {
       p.id = $1 
       AND p."deletedAt" IS NULL
   `,
-      params,
+        params,
     );
 
-    if (post.length === 0) {
+    if (!post) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
         message: 'Post not found',
@@ -95,30 +92,23 @@ export class PostQueryRepository {
   }
 
   async getAllPosts(
-    query: GetPostQueryParams,
-    blogId?: number,
-    userId?: number | null,
+      query: GetPostQueryParams,
+      blogId?: number,
+      userId?: number | null,
   ): Promise<PaginatedViewDto<PostViewDto[]>> {
     const pageNumber = Math.max(1, Number(query.pageNumber) || 1);
     const pageSize = Math.min(100, Math.max(1, Number(query.pageSize) || 10));
     const skip = (pageNumber - 1) * pageSize;
 
-    // Разрешенные поля для сортировки
     const allowedSortFields = ['createdAt', 'blogName', 'title'];
-    const sortBy = allowedSortFields.includes(query.sortBy)
-      ? query.sortBy
-      : 'createdAt';
-
+    const sortBy = allowedSortFields.includes(query.sortBy) ? query.sortBy : 'createdAt';
     const sortDirection = query.sortDirection === 'asc' ? 'ASC' : 'DESC';
 
-    // Базовые условия (только активные посты)
     const baseConditions = [`p."deletedAt" IS NULL`];
 
-    // Подготовка параметров для запроса
     const params: any[] = [];
     let paramIndex = 1;
 
-    // Добавляем blogId в условия, если передан
     if (blogId !== undefined) {
       baseConditions.push(`p."blogId" = $${paramIndex}`);
       params.push(blogId);
@@ -127,7 +117,6 @@ export class PostQueryRepository {
 
     const whereClause = baseConditions.join(' AND ');
 
-    // Основной запрос для получения данных
     const dataQuery = `
     SELECT 
       p.id::TEXT AS "id",
@@ -142,35 +131,29 @@ export class PostQueryRepository {
         'dislikesCount', p."dislikeCount",
         'myStatus', 
         CASE 
-          -- КЛЮЧЕВОЕ ИЗМЕНЕНИЕ: явное приведение типа для параметра в условии
           WHEN $${paramIndex}::INTEGER IS NOT NULL THEN COALESCE(
-            (SELECT status 
-             FROM "PostLike" 
-             WHERE "postId" = p.id 
-               AND "userId" = $${paramIndex}::INTEGER), 
+            (SELECT INITCAP(pl.status)
+             FROM "PostLike" pl
+             WHERE pl."postId" = p.id
+               AND pl."userId" = $${paramIndex}::INTEGER),
             'None'
           )
           ELSE 'None'
         END,
         'newestLikes', COALESCE(
-          (SELECT jsonb_agg(jsonb_build_object(
-              'addedAt', "addedAt",
-              'userId', "userId"::TEXT,
-              'login', login
-            ) ORDER BY "addedAt" DESC)
-           FROM (
-             SELECT 
-               pl."addedAt", 
-               pl."userId", 
-               u.login
-             FROM "PostLike" pl
-             JOIN "User" u ON pl."userId" = u.id
-             WHERE 
-               pl."postId" = p.id 
-               AND pl.status = 'Like'
-             ORDER BY pl."addedAt" DESC
-             LIMIT 3
-           ) AS latest_likes
+          (
+            SELECT jsonb_agg(jsonb_build_object(
+                     'addedAt', sub."addedAt",
+                     'userId',  sub.userid::TEXT,
+                     'login',   sub.login
+                   ) ORDER BY sub."addedAt" DESC)
+            FROM (
+              SELECT nl."addedAt", nl.userid, nl.login
+              FROM "newestLikes" nl
+              WHERE nl."postId" = p.id
+              ORDER BY nl."addedAt" DESC
+              LIMIT 3
+            ) AS sub
           ),
           '[]'::jsonb
         )
@@ -182,29 +165,23 @@ export class PostQueryRepository {
     OFFSET $${paramIndex + 2}
   `;
 
-    // Добавляем userId как последний параметр перед пагинацией
+    // userId параметр для myStatus
     params.push(userId ?? null);
-
-    // Добавляем параметры пагинации
+    // пагинация
     params.push(pageSize, skip);
 
-    // Выполняем запрос на получение данных
     const posts = await this.dataSource.query(dataQuery, params);
 
-    // Запрос для подсчета общего количества записей
     const countQuery = `
     SELECT COUNT(*)::int AS total_count 
     FROM "Post" p
     ${whereClause ? `WHERE ${whereClause}` : ''}
   `;
-
-    // Выполняем запрос на подсчет
     const countParams = blogId !== undefined ? [blogId] : [];
     const countResult = await this.dataSource.query(countQuery, countParams);
 
     const totalCount = countResult[0]?.total_count || 0;
 
-    // Возвращаем результат в формате пагинации
     return PaginatedViewDto.mapToView({
       items: posts,
       totalCount,
@@ -212,4 +189,5 @@ export class PostQueryRepository {
       size: pageSize,
     });
   }
+
 }
