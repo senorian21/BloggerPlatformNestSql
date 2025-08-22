@@ -1,4 +1,5 @@
 import { configModule } from './dynamic-config.module';
+import {ConfigModule, ConfigService} from "@nestjs/config";
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -13,21 +14,25 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '8738378A',
-      database: 'bloggers-platform',
-      autoLoadEntities: true,
-      synchronize: true,
+    configModule,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        type: 'postgres',
+        host: config.get('HOST'),
+        port: config.get('DB_PORT'),
+        username: config.get('USER_NAME'),
+        password: config.get('USER_PASSWORD'),
+        database: config.get('DB_NAME'),
+        autoLoadEntities: true,
+        synchronize: true,
+      }),
+      inject: [ConfigService],
     }),
     CoreModule,
     BloggerPlatformModule,
     TestingModule,
     UserAccountsModule,
-    configModule,
   ],
   controllers: [AppController],
   providers: [

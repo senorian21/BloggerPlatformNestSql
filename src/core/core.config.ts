@@ -12,19 +12,46 @@ export enum Environments {
 
 @Injectable()
 export class CoreConfig {
+
+  @IsNotEmpty({
+    message:
+        'Set Env variable HOST, example: localhost',
+  })
+  host!: string;
+
   @IsNumber(
-    {},
-    {
-      message: 'Set Env variable PORT, example: 3000',
-    },
+      {},
+      {
+        message: 'Set Env variable PORT, example: 3000',
+      },
+  )
+  dbPort!: number;
+
+  @IsNumber(
+      {},
+      {
+        message: 'Set Env variable PORT, example: 3000',
+      },
   )
   port!: number;
 
   @IsNotEmpty({
     message:
-      'Set Env variable MONGO_URI, example: mongodb://localhost:27017/my-app-local-db',
+        'Set Env variable USER_NAME, example: postgres',
   })
-  mongoURI!: string;
+  username!: string;
+
+  @IsNotEmpty({
+    message:
+        'Set Env variable USER_PASSWORD, example: 1111111',
+  })
+  userPassword!: string;
+
+  @IsNotEmpty({
+    message:
+        'Set Env variable DB_NAME, example: bloggers-platform',
+  })
+  database!: string;
 
   @IsEnum(Environments, {
     message:
@@ -34,9 +61,14 @@ export class CoreConfig {
   env!: string;
 
   constructor(private configService: ConfigService<any, true>) {
-    this.port = Number(this.configService.get('PORT'));
-    this.mongoURI = this.configService.get('MONGO_URI');
+    this.host = this.configService.get('HOST');
+    this.dbPort = Number(this.configService.get('DB_PORT'));
+    this.username = this.configService.get('USER_NAME');
+    this.userPassword = this.configService.get('USER_PASSWORD');
+    this.database = this.configService.get('DB_NAME');
     this.env = this.configService.get('NODE_ENV');
+
+    this.port = Number(this.configService.get('PORT'));
 
     configValidationUtility.validateConfig(this);
   }
