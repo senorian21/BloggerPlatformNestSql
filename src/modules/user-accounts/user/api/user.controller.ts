@@ -41,9 +41,9 @@ export class UserController {
 
   @Delete('/users/:id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  async deleteUser(@Param('id') userId: string) {
+  async deleteUser(@Param('id') userId: number) {
     await this.commandBus.execute<DeleteUserCommand, void>(
-      new DeleteUserCommand(Number(userId)),
+      new DeleteUserCommand(userId),
     );
   }
 

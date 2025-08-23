@@ -40,6 +40,9 @@ import { SessionsQueryRepository } from './security/infrastructure/query/securit
 import { GetAllSessionsByUserQueryHandler } from './security/application/queries/sessions-list-by-user.query-handler';
 import { LogoutUseCase } from './auth/application/usecases/logout.usecase';
 import { UserAccountsConfig } from './config/user-accounts.config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { User } from './user/domain/user.entity';
+import { EmailConfirmation } from './user/domain/email-confirmation.entity';
 
 const commandHandlers = [
   CreateUserUseCase,
@@ -64,7 +67,7 @@ const queryHandlers = [
 ];
 
 @Module({
-  imports: [],
+  imports: [TypeOrmModule.forFeature([User, EmailConfirmation])],
   controllers: [UserController, AuthController, DevicesController],
   providers: [
     SessionsQueryRepository,

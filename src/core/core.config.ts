@@ -12,44 +12,39 @@ export enum Environments {
 
 @Injectable()
 export class CoreConfig {
-
   @IsNotEmpty({
-    message:
-        'Set Env variable HOST, example: localhost',
+    message: 'Set Env variable HOST, example: localhost',
   })
   host!: string;
 
   @IsNumber(
-      {},
-      {
-        message: 'Set Env variable PORT, example: 3000',
-      },
+    {},
+    {
+      message: 'Set Env variable PORT, example: 3000',
+    },
   )
   dbPort!: number;
 
   @IsNumber(
-      {},
-      {
-        message: 'Set Env variable PORT, example: 3000',
-      },
+    {},
+    {
+      message: 'Set Env variable PORT, example: 3000',
+    },
   )
   port!: number;
 
   @IsNotEmpty({
-    message:
-        'Set Env variable USER_NAME, example: postgres',
+    message: 'Set Env variable USER_NAME, example: postgres',
   })
   username!: string;
 
   @IsNotEmpty({
-    message:
-        'Set Env variable USER_PASSWORD, example: 1111111',
+    message: 'Set Env variable USER_PASSWORD, example: 1111111',
   })
   userPassword!: string;
 
   @IsNotEmpty({
-    message:
-        'Set Env variable DB_NAME, example: bloggers-platform',
+    message: 'Set Env variable DB_NAME, example: bloggers-platform',
   })
   database!: string;
 

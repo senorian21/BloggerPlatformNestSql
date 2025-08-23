@@ -1,41 +1,37 @@
 import { Injectable } from '@nestjs/common';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import {DataSource, IsNull, Repository} from 'typeorm';
 import { CreateUserDomainDto } from '../domain/dto/create-user.domain.dto';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
 import { EmailConfirmationDto } from '../dto/email-confirmation.dto';
 import { UserDto } from '../dto/user.dto';
+import { User } from '../domain/user.entity';
 
 @Injectable()
 export class UserRepository {
   constructor(
     @InjectDataSource()
     protected datasource: DataSource,
+
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
-  async findById(userId: number): Promise<UserDto> {
-    const result = await this.datasource.query(
-      `SELECT * FROM "User" WHERE id = $1`,
-      [userId],
-    );
-    if (result.length === 0) {
+
+  async findById(userId: number): Promise<User> {
+    const result = await this.userRepository.findOne({
+      where: { id: userId, deletedAt: IsNull() },
+    });
+    if (result === null) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
         message: 'User does not exist',
       });
     }
 
-    const user = result[0];
-
-    if (user.deletedAt != null) {
-      throw new DomainException({
-        code: DomainExceptionCode.NotFound,
-        message: `User with id ${userId} is already deleted`,
-      });
-    }
-    return result[0];
+    return result;
   }
 
   async findByLoginOrEmail(loginOrEmail: string): Promise<UserDto | null> {
@@ -92,58 +88,17 @@ export class UserRepository {
   }
 
   async doesExistByLoginOrEmail(
-    login: string,
-    email: string,
-  ): Promise<UserDto | null> {
-    const result = await this.datasource.query(
-      `SELECT *
-     FROM "User" 
-     WHERE (login = $1 OR email = $2) 
-       AND "deletedAt" IS NULL
-     LIMIT 1`,
-      [login, email],
-    );
+      login: string,
+      email: string,
+  ): Promise<User | null> {
+    const user = await this.userRepository.findOne({
+      where: [
+        { login, deletedAt: IsNull() },
+        { email, deletedAt: IsNull() },
+      ],
+    });
 
-    return result.length > 0 ? result[0] : null;
-  }
-
-  async createUser(
-    dto: CreateUserDomainDto,
-    hashedPassword: string,
-  ): Promise<number> {
-    const result = await this.datasource.query(
-      `INSERT INTO "User" (login, email, "passwordHash")
-         VALUES ($1, $2, $3)
-           RETURNING id, login, email, "createdAt"`,
-      [dto.login, dto.email, hashedPassword],
-    );
-
-    if (result.length === 0) {
-      throw new Error('Failed to create user');
-    }
-
-    const userId = result[0].id;
-    const confirmationCode = randomUUID();
-    const expirationDate = add(new Date(), { days: 7 });
-
-    await this.datasource.query(
-      `INSERT INTO "emailConfirmation" ("userId", "confirmationCode", "expirationDate")
-         VALUES ($1, $2, $3)`,
-      [userId, confirmationCode, expirationDate],
-    );
-
-    return userId;
-  }
-
-  async softDeleteUser(id: number): Promise<void> {
-    const deleteAt = new Date();
-    const result = await this.datasource.query(
-      `UPDATE "User"
-         SET "deletedAt" = $1
-         WHERE id = $2
-           AND "deletedAt" IS NULL`,
-      [deleteAt, id],
-    );
+    return user ?  user : null;
   }
 
   async updateCodeAndExpirationDate(
@@ -180,5 +135,13 @@ export class UserRepository {
     `,
       [userId],
     );
+  }
+
+  async save(user: User): Promise<void> {
+    await this.userRepository.save(user);
+  }
+
+  async softDelete(id: number): Promise<void> {
+    await this.userRepository.softDelete(id);
   }
 }

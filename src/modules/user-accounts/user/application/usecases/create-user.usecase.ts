@@ -6,6 +6,7 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
+import { User } from '../../domain/user.entity';
 
 export class CreateUserCommand {
   constructor(public dto: CreateUserDto) {}
@@ -34,7 +35,8 @@ export class CreateUserUseCase
     const hashedPassword = await this.cryptoService.createPasswordHash(
       dto.password,
     );
-    const userId = await this.userRepository.createUser(dto, hashedPassword);
-    return userId;
+    const newUser = User.create(dto, hashedPassword);
+    await this.userRepository.save(newUser);
+    return newUser.id;
   }
 }

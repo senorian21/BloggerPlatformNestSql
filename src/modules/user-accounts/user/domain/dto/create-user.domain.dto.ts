@@ -3,3 +3,5 @@ export class CreateUserDomainDto {
   password: string;
   email: string;
 }
+
+export class UpdateUserDomainDto extends CreateUserDomainDto{}

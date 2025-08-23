@@ -11,7 +11,7 @@ export class DeleteUserUseCase
 {
   constructor(private userRepository: UserRepository) {}
   async execute({ userId }: DeleteUserCommand): Promise<void> {
-    await this.userRepository.findById(userId);
-    await this.userRepository.softDeleteUser(userId);
+    const user = await this.userRepository.findById(userId);
+    await this.userRepository.softDelete(user.id);
   }
 }

@@ -3,81 +3,82 @@ import { GetUserQueryParams } from '../../api/input-dto/get-user-query-params.in
 import { plainToClass } from 'class-transformer';
 import { UserViewDto } from '../../api/view-dto/user.view-dto';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import {InjectDataSource, InjectRepository} from '@nestjs/typeorm';
+import {DataSource, Repository} from 'typeorm';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
+import {User} from "../../domain/user.entity";
 
 @Injectable()
 export class UserQueryRepository {
-  constructor(@InjectDataSource() protected datasource: DataSource) {}
+  constructor(
+      @InjectDataSource()
+      protected datasource: DataSource,
+
+      @InjectRepository(User)
+      private usersRepo: Repository<User>,
+  ) {}
   async getAll(
-    query: GetUserQueryParams,
+      query: GetUserQueryParams,
   ): Promise<PaginatedViewDto<UserViewDto[]>> {
     const queryParams = plainToClass(GetUserQueryParams, query);
 
     const pageNumber = Math.max(1, Number(queryParams.pageNumber) || 1);
-    const pageSize = Math.min(
-      100,
-      Math.max(1, Number(queryParams.pageSize) || 10),
-    );
+    const pageSize =
+        Math.min(100, Math.max(1, Number(queryParams.pageSize) || 10));
     const skip = (pageNumber - 1) * pageSize;
 
     const allowedSortFields = ['createdAt'];
-
     const sortBy = allowedSortFields.includes(queryParams.sortBy)
-      ? queryParams.sortBy
-      : 'createdAt';
-
+        ? queryParams.sortBy
+        : 'createdAt';
     const sortDirection = queryParams.sortDirection === 'asc' ? 'ASC' : 'DESC';
 
-    const baseConditions = [`"deletedAt" IS NULL`];
-    const searchConditions: string[] = [];
-    const params: any[] = [];
+    const qb = this.usersRepo
+        .createQueryBuilder('u')
+        .select([
+          'u.id::TEXT AS id',
+          'u.login AS login',
+          'u.email AS email',
+          'u.createdAt AS createdAt',
+        ])
+        .where('u.deletedAt IS NULL');
 
     if (queryParams.searchEmailTerm?.trim()) {
-      searchConditions.push(`LOWER(email) LIKE LOWER($${params.length + 1})`);
-      params.push(`%${queryParams.searchEmailTerm.trim()}%`);
+      qb.andWhere('LOWER(u.email) LIKE LOWER(:email)', {
+        email: `%${queryParams.searchEmailTerm.trim()}%`,
+      });
     }
 
     if (queryParams.searchLoginTerm?.trim()) {
-      searchConditions.push(`LOWER(login) LIKE LOWER($${params.length + 1})`);
-      params.push(`%${queryParams.searchLoginTerm.trim()}%`);
+      qb.andWhere('LOWER(u.login) LIKE LOWER(:login)', {
+        login: `%${queryParams.searchLoginTerm.trim()}%`,
+      });
     }
 
-    let whereClause = baseConditions.join(' AND ');
+    qb.orderBy(`u.${sortBy}`, sortDirection as 'ASC' | 'DESC')
+        .skip(skip)
+        .take(pageSize);
 
-    if (searchConditions.length > 0) {
-      whereClause += ` AND (${searchConditions.join(' OR ')})`;
+    const users = await qb.getRawMany();
+
+    const countQb = this.usersRepo
+        .createQueryBuilder('u')
+        .where('u.deletedAt IS NULL');
+
+    if (queryParams.searchEmailTerm?.trim()) {
+      countQb.andWhere('LOWER(u.email) LIKE LOWER(:email)', {
+        email: `%${queryParams.searchEmailTerm.trim()}%`,
+      });
     }
 
-    const dataQuery = `
-    SELECT 
-      id::text AS id,
-      login, 
-      email, 
-      "createdAt" 
-    FROM "User"
-    ${whereClause ? `WHERE ${whereClause}` : ''}
-    ORDER BY "${sortBy}" ${sortDirection}
-    LIMIT $${params.length + 1}
-    OFFSET $${params.length + 2}
-  `;
+    if (queryParams.searchLoginTerm?.trim()) {
+      countQb.andWhere('LOWER(u.login) LIKE LOWER(:login)', {
+        login: `%${queryParams.searchLoginTerm.trim()}%`,
+      });
+    }
 
-    params.push(pageSize, skip);
-
-    const users = await this.datasource.query(dataQuery, params);
-
-    const countQuery = `
-    SELECT COUNT(*)::int AS total_count 
-    FROM "User" 
-    ${whereClause ? `WHERE ${whereClause}` : ''}
-  `;
-    const countResult = await this.datasource.query(
-      countQuery,
-      params.slice(0, -2),
-    );
-    const totalCount = countResult[0]?.total_count || 0;
+    const totalCount = await countQb.getCount();
 
     return PaginatedViewDto.mapToView({
       items: users,
@@ -88,24 +89,25 @@ export class UserQueryRepository {
   }
 
   async getByIdOrNotFoundFail(id: number) {
-    const result = await this.datasource.query(
-      `SELECT
-           id::TEXT AS "id",
-           login,
-           email,
-           "createdAt"
-         FROM "User"
-         WHERE id = $1 AND "deletedAt" IS NULL`,
-      [id],
-    );
+    const result = await this.usersRepo
+        .createQueryBuilder('u')
+        .select([
+          'u.id::TEXT AS id',
+          'u.login AS login',
+          'u.email AS email',
+          'u.createdAt AS createdAt',
+        ])
+        .where('u.id = :id', { id })
+        .andWhere('u.deletedAt IS NULL')
+        .getRawOne();
 
-    if (result.length === 0) {
+    if (!result) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
         message: 'User not found',
       });
     }
 
-    return result[0];
+    return result;
   }
 }
