@@ -3,10 +3,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { UserRepository } from './user/infrastructure/user.repository';
 import { UserQueryRepository } from './user/infrastructure/query/user.query-repository';
 import { UserController } from './user/api/user.controller';
-import {
-  RateLimiter,
-  RateLimiterSchema,
-} from './guards/rate/domain/rate-limiter.entity';
+import { RateLimiter } from './guards/rate/domain/rate-limiter.entity';
 import { CryptoService } from './adapters/crypto.service';
 import { NodemailerService } from './adapters/nodemeiler/nodemeiler.service';
 import { AuthService } from './auth/application/service/auth.service';
@@ -67,7 +64,7 @@ const queryHandlers = [
 ];
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, EmailConfirmation])],
+  imports: [TypeOrmModule.forFeature([User, EmailConfirmation, RateLimiter])],
   controllers: [UserController, AuthController, DevicesController],
   providers: [
     SessionsQueryRepository,

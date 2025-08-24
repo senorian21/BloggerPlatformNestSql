@@ -9,7 +9,10 @@ import {
 import { EmailConfirmation } from './email-confirmation.entity';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
-import {CreateUserDomainDto, UpdateUserDomainDto} from "./dto/create-user.domain.dto";
+import {
+  CreateUserDomainDto,
+  UpdateUserDomainDto,
+} from './dto/create-user.domain.dto';
 
 export const loginConstraints = {
   minLength: 3,
@@ -81,5 +84,22 @@ export class User {
     newUser.emailConfirmation = confirmation;
 
     return newUser;
+  }
+  updateCodeAndExpirationDate(
+    newConfirmationCode: string,
+    newExpirationDate: Date,
+  ): void {
+    if (!this.emailConfirmation) {
+      this.emailConfirmation = new EmailConfirmation();
+      this.emailConfirmation.users = this;
+    }
+
+    this.emailConfirmation.confirmationCode = newConfirmationCode;
+    this.emailConfirmation.expirationDate = newExpirationDate;
+    this.emailConfirmation.isConfirmed = false;
+  }
+
+  updatePassword(newPasswordHash: string){
+    this.passwordHash = newPasswordHash;
   }
 }

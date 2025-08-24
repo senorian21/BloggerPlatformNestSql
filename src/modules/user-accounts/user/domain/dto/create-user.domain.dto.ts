@@ -4,4 +4,4 @@ export class CreateUserDomainDto {
   email: string;
 }
 
-export class UpdateUserDomainDto extends CreateUserDomainDto{}
+export class UpdateUserDomainDto extends CreateUserDomainDto {}

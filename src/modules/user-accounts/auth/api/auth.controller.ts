@@ -43,7 +43,7 @@ export class AuthController {
   ) {}
 
   @Post('password-recovery')
-  //@UseGuards(RateLimitInterceptor)
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async passwordRecovery(@Body() dto: PasswordRecoveryInputDto) {
     await this.commandBus.execute<PasswordRecoveryCommand, void>(
@@ -52,7 +52,7 @@ export class AuthController {
   }
 
   @Post('login')
-  //@UseGuards(RateLimitInterceptor)
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.OK)
   async login(
     @Body() dto: loginInputDto,
@@ -83,7 +83,7 @@ export class AuthController {
   }
 
   @Post('new-password')
-  //@UseGuards(RateLimitInterceptor)
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async newPassword(@Body() dto: newPasswordInputDto) {
     await this.commandBus.execute<NewPasswordCommand, void>(
@@ -91,7 +91,7 @@ export class AuthController {
     );
   }
   @Post('registration-confirmation')
-  //@UseGuards(RateLimitInterceptor)
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationConfirmation(@Body() dto: registrationConfirmationUser) {
     await this.commandBus.execute<RegistrationConfirmationUserCommand, void>(
@@ -99,7 +99,7 @@ export class AuthController {
     );
   }
   @Post('registration')
-  //@UseGuards(RateLimitInterceptor)
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async registration(@Body() dto: registrationInputDto) {
     await this.commandBus.execute<RegisterUserCommand, void>(
@@ -107,7 +107,7 @@ export class AuthController {
     );
   }
   @Post('registration-email-resending')
-  //@UseGuards(RateLimitInterceptor)
+  @UseGuards(RateLimitInterceptor)
   @HttpCode(HttpStatus.NO_CONTENT)
   async registrationEmailResending(@Body() dto: RegistrationEmailResending) {
     await this.commandBus.execute<RegistrationEmailResendingCommand, void>(

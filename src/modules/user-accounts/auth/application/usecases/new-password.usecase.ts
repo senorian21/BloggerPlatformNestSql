@@ -23,6 +23,7 @@ export class NewPasswordUseCase
       await this.userRepository.findByCodeOrIdEmailConfirmation({
         code: dto.recoveryCode,
       });
+    console.log(emailConfirmation);
     if (!emailConfirmation) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
@@ -32,9 +33,8 @@ export class NewPasswordUseCase
     const newPasswordHash = await this.cryptoService.createPasswordHash(
       dto.newPassword,
     );
-    await this.userRepository.updatePassword(
-      newPasswordHash,
-      emailConfirmation.userId,
-    );
+
+    emailConfirmation.users.updatePassword(newPasswordHash);
+    await this.userRepository.save(emailConfirmation.users)
   }
 }

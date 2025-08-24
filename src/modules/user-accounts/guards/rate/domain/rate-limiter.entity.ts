@@ -1,37 +1,30 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  Repository,
+} from 'typeorm';
 
-@Schema()
+@Entity({ name: 'rateLimiter' })
 export class RateLimiter {
-  @Prop({
-    type: String,
-    required: true,
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: false,
   })
   IP: string;
-  @Prop({
-    type: String,
-    required: true,
+
+  @Column({
+    type: 'varchar',
+    length: 100,
+    nullable: false,
   })
   URL: string;
-  @Prop({
-    type: Date,
-    required: true,
-  })
+
+  @CreateDateColumn()
   date: Date;
-
-  static createInstance(IP: string, URL: string, date: Date) {
-    const limit = new this();
-    limit.IP = IP;
-    limit.URL = URL;
-    limit.date = date;
-    return limit;
-  }
 }
-export const RateLimiterSchema = SchemaFactory.createForClass(RateLimiter);
-
-RateLimiterSchema.loadClass(RateLimiter);
-
-export type RateLimiterDocument = HydratedDocument<RateLimiter>;
-
-export type RateLimiterModelType = Model<RateLimiterDocument> &
-  typeof RateLimiter;

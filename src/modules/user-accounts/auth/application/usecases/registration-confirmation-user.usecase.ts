@@ -26,7 +26,6 @@ export class RegistrationConfirmationUserUseCase
         message: 'User does not exist',
       });
     }
-
     if (userEmailConfirmation?.isConfirmed) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
@@ -35,15 +34,14 @@ export class RegistrationConfirmationUserUseCase
       });
     }
 
-    if (new Date(userEmailConfirmation!.expiryDate) < new Date()) {
+    if (new Date(userEmailConfirmation!.expirationDate) < new Date()) {
       throw new DomainException({
         code: DomainExceptionCode.BadRequest,
         field: 'expirationDate',
         message: 'User does not exist',
       });
     }
-    await this.userRepository.registrationConfirmationUser(
-      userEmailConfirmation.userId,
-    );
+    userEmailConfirmation.registrationConfirmationUser()
+    await this.userRepository.saveEmailConfirmation(userEmailConfirmation)
   }
 }

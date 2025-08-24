@@ -2,8 +2,9 @@ import { Injectable, ExecutionContext, CanActivate } from '@nestjs/common';
 import { Request } from 'express';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import { RateLimiter } from './domain/rate-limiter.entity';
 
 @Injectable()
 export class RateLimitInterceptor implements CanActivate {
@@ -11,9 +12,10 @@ export class RateLimitInterceptor implements CanActivate {
   private readonly TIME_WINDOW_MS = 10 * 1000;
 
   constructor(
-    @InjectDataSource()
-    protected dataSource: DataSource,
+    @InjectRepository(RateLimiter)
+    private readonly rateLimiterRepo: Repository<RateLimiter>,
   ) {}
+
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     const ip =
@@ -25,15 +27,12 @@ export class RateLimitInterceptor implements CanActivate {
     const now = new Date();
     const timeAgo = new Date(now.getTime() - this.TIME_WINDOW_MS);
 
-    const countResult = await this.dataSource.query(
-      `
-      SELECT COUNT(*)::int AS count 
-      FROM "rateLimiters" 
-      WHERE "ip" = $1 AND "url" = $2 AND "createdAt" >= $3
-      `,
-      [ip, url, timeAgo],
-    );
-    const count = parseInt(countResult[0].count);
+    const count = await this.rateLimiterRepo
+      .createQueryBuilder('rl')
+      .where('rl.IP = :ip', { ip })
+      .andWhere('rl.URL = :url', { url })
+      .andWhere('rl.date >= :timeAgo', { timeAgo })
+      .getCount();
 
     if (count >= this.MAX_REQUESTS) {
       throw new DomainException({
@@ -42,12 +41,11 @@ export class RateLimitInterceptor implements CanActivate {
       });
     }
 
-    await this.dataSource.query(
-      `
-      INSERT INTO "rateLimiters" ("ip", "url", "createdAt") 
-      VALUES ($1, $2, $3)
-      `,
-      [ip, url, now],
+    await this.rateLimiterRepo.save(
+      this.rateLimiterRepo.create({
+        IP: ip,
+        URL: url,
+      }),
     );
 
     return true;

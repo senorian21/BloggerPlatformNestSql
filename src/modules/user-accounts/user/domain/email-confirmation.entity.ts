@@ -1,4 +1,10 @@
-import {Column, Entity, JoinColumn, OneToOne, PrimaryGeneratedColumn} from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { User } from './user.entity';
 
 @Entity({ name: 'emailConfirmation' })
@@ -32,4 +38,8 @@ export class EmailConfirmation {
 
   @Column()
   userId: number;
+
+  registrationConfirmationUser() {
+    this.isConfirmed = true;
+  }
 }

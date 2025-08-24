@@ -2,13 +2,14 @@ import { Injectable } from '@nestjs/common';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import {DataSource, IsNull, Repository} from 'typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { CreateUserDomainDto } from '../domain/dto/create-user.domain.dto';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
 import { EmailConfirmationDto } from '../dto/email-confirmation.dto';
 import { UserDto } from '../dto/user.dto';
 import { User } from '../domain/user.entity';
+import { EmailConfirmation } from '../domain/email-confirmation.entity';
 
 @Injectable()
 export class UserRepository {
@@ -18,6 +19,9 @@ export class UserRepository {
 
     @InjectRepository(User)
     private userRepository: Repository<User>,
+
+    @InjectRepository(EmailConfirmation)
+    private emailConfirmationRepository: Repository<EmailConfirmation>,
   ) {}
 
   async findById(userId: number): Promise<User> {
@@ -34,18 +38,14 @@ export class UserRepository {
     return result;
   }
 
-  async findByLoginOrEmail(loginOrEmail: string): Promise<UserDto | null> {
-    const query = `
-    SELECT * 
-    FROM "User"
-    WHERE "deletedAt" IS NULL 
-      AND (email = $1 OR login = $1)
-    LIMIT 1
-  `;
-
-    const result = await this.datasource.query(query, [loginOrEmail]);
-
-    return result.length > 0 ? result[0] : null;
+  async findByLoginOrEmail(loginOrEmail: string): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: [
+        { email: loginOrEmail, deletedAt: IsNull() },
+        { login: loginOrEmail, deletedAt: IsNull() },
+      ],
+      relations: ['users', 'users.emailConfirmation'],
+    });
   }
 
   async findByCodeOrIdEmailConfirmation({
@@ -54,42 +54,20 @@ export class UserRepository {
   }: {
     code?: string;
     userId?: number;
-  }): Promise<EmailConfirmationDto | null> {
+  }): Promise<EmailConfirmation | null> {
     if (!code && !userId) {
       return null;
     }
 
-    let sql: string;
-    const params: (string | number)[] = [];
-
-    if (code) {
-      sql = `
-        SELECT *
-        FROM "emailConfirmation"
-        WHERE "confirmationCode" = $1
-        LIMIT 1
-    `;
-      params.push(code);
-    } else {
-      sql = `
-        SELECT *
-        FROM "emailConfirmation"
-        WHERE "userId" = $1
-        LIMIT 1
-      `;
-      params.push(userId!);
-    }
-
-    const result: EmailConfirmationDto[] = await this.datasource.query(
-      sql,
-      params,
-    );
-    return result.length > 0 ? result[0] : null;
+    return this.emailConfirmationRepository.findOne({
+      where: code ? { confirmationCode: code } : { users: { id: userId! } },
+      relations: ['users'],
+    });
   }
 
   async doesExistByLoginOrEmail(
-      login: string,
-      email: string,
+    login: string,
+    email: string,
   ): Promise<User | null> {
     const user = await this.userRepository.findOne({
       where: [
@@ -98,7 +76,7 @@ export class UserRepository {
       ],
     });
 
-    return user ?  user : null;
+    return user ? user : null;
   }
 
   async updateCodeAndExpirationDate(
@@ -115,30 +93,14 @@ export class UserRepository {
     );
   }
 
-  async updatePassword(newPasswordHash: string, userId: number): Promise<void> {
-    await this.datasource.query(
-      `
-        UPDATE "User"
-        SET "passwordHash" = $1
-        WHERE "id" = $2
-    `,
-      [newPasswordHash, userId],
-    );
-  }
 
-  async registrationConfirmationUser(userId: number): Promise<void> {
-    await this.datasource.query(
-      `
-        UPDATE "emailConfirmation"
-        SET "isConfirmed" = true
-        WHERE "userId" = $1
-    `,
-      [userId],
-    );
-  }
 
   async save(user: User): Promise<void> {
     await this.userRepository.save(user);
+  }
+
+  async saveEmailConfirmation(emailConfirmation: EmailConfirmation): Promise<void> {
+    await this.emailConfirmationRepository.save(emailConfirmation);
   }
 
   async softDelete(id: number): Promise<void> {
