@@ -44,7 +44,7 @@ export class UserRepository {
         { email: loginOrEmail, deletedAt: IsNull() },
         { login: loginOrEmail, deletedAt: IsNull() },
       ],
-      relations: ['users', 'users.emailConfirmation'],
+      relations: ['emailConfirmation'],
     });
   }
 
@@ -78,22 +78,6 @@ export class UserRepository {
 
     return user ? user : null;
   }
-
-  async updateCodeAndExpirationDate(
-    newConfirmationCode: string,
-    newExpirationDate: Date,
-    userId: number,
-  ): Promise<void> {
-    await this.datasource.query(
-      `UPDATE "emailConfirmation"
-         SET "confirmationCode" = $1,
-             "expirationDate" = $2
-         WHERE "userId" = $3`,
-      [newConfirmationCode, newExpirationDate, userId],
-    );
-  }
-
-
 
   async save(user: User): Promise<void> {
     await this.userRepository.save(user);

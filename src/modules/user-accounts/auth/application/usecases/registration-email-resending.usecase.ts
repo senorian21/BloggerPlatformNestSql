@@ -51,22 +51,19 @@ export class RegistrationEmailResendingUseCase
       });
     }
 
-    // if (userEmailConfirmation.expiryDate < new Date()) {
-    //   throw new DomainException({
-    //     code: DomainExceptionCode.BadRequest,
-    //     field: 'emailConfirmation.expirationDate',
-    //     message: 'Confirmation time expired',
-    //   });
-    // }
+    if (userEmailConfirmation.expirationDate < new Date()) {
+      throw new DomainException({
+        code: DomainExceptionCode.BadRequest,
+        field: 'emailConfirmation.expirationDate',
+        message: 'Confirmation time expired',
+      });
+    }
 
     const newConfirmationCode = randomUUID();
     const newExpirationDate = add(new Date(), { days: 7 });
 
-    await this.userRepository.updateCodeAndExpirationDate(
-      newConfirmationCode,
-      newExpirationDate,
-      user.id,
-    );
+    user.updateCodeAndExpirationDate(newConfirmationCode, newExpirationDate);
+    await this.userRepository.save(user);
 
     this.nodemailerService
       .sendEmail(
