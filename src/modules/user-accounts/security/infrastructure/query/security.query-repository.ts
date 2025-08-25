@@ -1,28 +1,27 @@
 import { Injectable } from '@nestjs/common';
 import { SessionViewDto } from '../../api/view-dto/session.view-dto';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import {InjectRepository} from '@nestjs/typeorm';
+import {Repository} from 'typeorm';
+import {Session} from "../../domain/session.entity";
 
 @Injectable()
 export class SessionsQueryRepository {
   constructor(
-    @InjectDataSource()
-    protected datasource: DataSource,
+    @InjectRepository(Session)
+    private sessionRepository: Repository<Session>,
   ) {}
   async getAllSessionByUser(userId: number): Promise<SessionViewDto[]> {
-    const sessions = await this.datasource.query(
-      `
-    SELECT 
-      ip, 
-      "deviceName" AS title, 
-      "createdAt" AS "lastActiveDate",
-      "deviceId"
-    FROM "Sessions" 
-    WHERE "userId" = $1
-      AND "deletedAt" IS NULL
-  `,
-      [userId],
-    );
+    const sessions = await this.sessionRepository
+        .createQueryBuilder('s')
+        .select([
+          's.ip AS ip',
+          's.deviceName AS title',
+          's.createdAt AS "lastActiveDate"',
+          's.deviceId AS "deviceId"',
+        ])
+        .where('s.userId = :userId', { userId })
+        .andWhere('s.deletedAt IS NULL')
+        .getRawMany<SessionViewDto>();
 
     return sessions;
   }

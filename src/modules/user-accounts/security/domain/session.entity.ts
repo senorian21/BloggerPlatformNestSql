@@ -26,7 +26,7 @@ export class Session {
   @Column({ type: 'varchar', length: 255, nullable: false })
   deviceId: string;
 
-  @Column({ type: 'varchar', length: 100, nullable: false })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   deviceName: string;
 
   @Column({ type: 'varchar', length: 50, nullable: false })
