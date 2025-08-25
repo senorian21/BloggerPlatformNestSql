@@ -41,7 +41,7 @@ export class RegistrationConfirmationUserUseCase
         message: 'User does not exist',
       });
     }
-    userEmailConfirmation.registrationConfirmationUser()
-    await this.userRepository.saveEmailConfirmation(userEmailConfirmation)
+    userEmailConfirmation.registrationConfirmationUser();
+    await this.userRepository.saveEmailConfirmation(userEmailConfirmation);
   }
 }

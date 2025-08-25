@@ -74,10 +74,8 @@ export class RefreshTokenUseCase
       });
     }
 
-    const iatDate = new Date(refreshTokenVerify.iat * 1000);
-    const expDate = new Date(refreshTokenVerify.exp * 1000);
-
-    await this.authRepository.updateSession(iatDate, expDate, userId);
+    sessionExists.updateSession(refreshTokenVerify.iat, refreshTokenVerify.exp);
+    await this.authRepository.saveSession(sessionExists);
 
     const accessToken = this.accessTokenContext.sign({
       userId: userId,

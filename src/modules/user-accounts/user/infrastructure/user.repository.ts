@@ -83,7 +83,9 @@ export class UserRepository {
     await this.userRepository.save(user);
   }
 
-  async saveEmailConfirmation(emailConfirmation: EmailConfirmation): Promise<void> {
+  async saveEmailConfirmation(
+    emailConfirmation: EmailConfirmation,
+  ): Promise<void> {
     await this.emailConfirmationRepository.save(emailConfirmation);
   }
 

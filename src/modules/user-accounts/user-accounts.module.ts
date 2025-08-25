@@ -40,6 +40,7 @@ import { UserAccountsConfig } from './config/user-accounts.config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from './user/domain/user.entity';
 import { EmailConfirmation } from './user/domain/email-confirmation.entity';
+import { Session } from './security/domain/session.entity';
 
 const commandHandlers = [
   CreateUserUseCase,
@@ -64,7 +65,9 @@ const queryHandlers = [
 ];
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User, EmailConfirmation, RateLimiter])],
+  imports: [
+    TypeOrmModule.forFeature([User, EmailConfirmation, RateLimiter, Session]),
+  ],
   controllers: [UserController, AuthController, DevicesController],
   providers: [
     SessionsQueryRepository,

@@ -19,7 +19,7 @@ export class DeleteDeviceByIdUseCase
     const foundSession = await this.authRepository.findSession({
       deviceId: deviceId,
     });
-    console.log(deviceId);
+    console.log(foundSession, deviceId);
     if (!foundSession || foundSession.deletedAt !== null) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
@@ -34,6 +34,6 @@ export class DeleteDeviceByIdUseCase
       });
     }
 
-    await this.authRepository.deleteSession(foundSession.id);
+    await this.authRepository.softDeleteSession(foundSession.id);
   }
 }

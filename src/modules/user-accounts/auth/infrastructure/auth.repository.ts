@@ -1,13 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
 import { SessionDto } from '../dto/session.dto';
+import { Session } from '../../security/domain/session.entity';
 
 @Injectable()
 export class AuthRepository {
   constructor(
     @InjectDataSource()
     protected datasource: DataSource,
+
+    @InjectRepository(Session)
+    private sessionRepository: Repository<Session>,
   ) {}
   async deleteOtherDevices(
     userId: number,
@@ -30,88 +34,21 @@ export class AuthRepository {
     userId?: number;
     deviceId?: string;
     deviceName?: string;
-  }): Promise<SessionDto | null> {
-    const conditions: string[] = [];
-    const params: any[] = [];
+  }): Promise<Session | null> {
+    const where: any = { deletedAt: IsNull() };
 
-    conditions.push(`"deletedAt" IS NULL`);
+    if (filters.userId) where.userId = filters.userId;
+    if (filters.deviceId) where.deviceId = filters.deviceId;
+    if (filters.deviceName) where.deviceName = filters.deviceName.trim();
 
-    if (filters.userId) {
-      conditions.push(`"userId" = $${params.length + 1}`);
-      params.push(filters.userId);
-    }
-
-    if (filters.deviceId) {
-      conditions.push(`"deviceId" = $${params.length + 1}`);
-      params.push(filters.deviceId);
-    }
-
-    if (filters.deviceName) {
-      conditions.push(
-        `TRIM(LOWER("deviceName")) = TRIM(LOWER($${params.length + 1}))`,
-      );
-      params.push(filters.deviceName.trim());
-    }
-
-    const whereClause = conditions.length
-      ? `WHERE ${conditions.join(' AND ')}`
-      : '';
-
-    const query = `
-        SELECT * 
-        FROM "Sessions"
-        ${whereClause}
-        LIMIT 1
-    `;
-
-    const result = await this.datasource.query(query, params);
-
-    return result.length > 0 ? result[0] : null;
+    return this.sessionRepository.findOne({ where });
   }
 
-  async updateSession(iat: Date, exp: Date, sessionId: number): Promise<void> {
-    const query = `
-        UPDATE "Sessions"
-        SET "createdAt" = $1,
-            "expiresAt" = $2
-        WHERE "id" = $3
-    `;
-
-    await this.datasource.query(query, [iat, exp, sessionId]);
+  async softDeleteSession(id: number): Promise<void> {
+    await this.sessionRepository.softDelete(id);
   }
 
-  async createSession(
-    userId: number,
-    iat: number,
-    exp: number,
-    deviceId: string,
-    ip: string,
-    deviceName: string,
-  ): Promise<void> {
-    const createdAt = new Date(iat * 1000);
-    const expiresAt = new Date(exp * 1000);
-
-    await this.datasource.query(
-      `INSERT INTO "Sessions" (
-          "userId",
-          "createdAt",
-          "expiresAt",
-          "deviceId",
-          "deviceName",
-          ip
-        ) VALUES ($1, $2, $3, $4, $5, $6)`,
-      [userId, createdAt, expiresAt, deviceId, deviceName, ip],
-    );
-  }
-
-  async deleteSession(sessionId: number): Promise<void> {
-    const dateNow = new Date();
-    await this.datasource.query(
-      `
-      UPDATE "Sessions"
-      SET "deletedAt" = $1
-      WHERE "id" = $2`,
-      [dateNow, sessionId],
-    );
+  async saveSession(session: Session): Promise<void> {
+    await this.sessionRepository.save(session);
   }
 }

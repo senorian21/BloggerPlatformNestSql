@@ -2,17 +2,15 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
-  Entity,
+  Entity, OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { EmailConfirmation } from './email-confirmation.entity';
 import { randomUUID } from 'crypto';
 import { add } from 'date-fns';
-import {
-  CreateUserDomainDto,
-  UpdateUserDomainDto,
-} from './dto/create-user.domain.dto';
+import { CreateUserDomainDto } from './dto/create-user.domain.dto';
+import { Session } from '../../security/domain/session.entity';
 
 export const loginConstraints = {
   minLength: 3,
@@ -32,38 +30,27 @@ export class User {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @Column({
-    type: 'varchar',
-    length: 10,
-    unique: true,
-    nullable: false,
-  })
+  @Column({ type: 'varchar', length: 10, unique: true, nullable: false })
   login: string;
 
-  @Column({
-    type: 'varchar',
-    length: 100,
-    unique: true,
-    nullable: false,
-  })
+  @Column({ type: 'varchar', length: 100, unique: true, nullable: false })
   email: string;
 
-  @Column({
-    type: 'varchar',
-    length: 255,
-    nullable: false,
-  })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   passwordHash: string;
 
   @CreateDateColumn()
   createdAt: Date;
 
   @OneToOne(
-    () => EmailConfirmation,
-    (emailConfirmation) => emailConfirmation.users,
-    { cascade: true },
+      () => EmailConfirmation,
+      (emailConfirmation) => emailConfirmation.users,
+      { cascade: true },
   )
   emailConfirmation: EmailConfirmation;
+
+  @OneToMany(() => Session, (session) => session.user, { cascade: true })
+  sessions: Session[];
 
   static create(dto: CreateUserDomainDto, passwordHash: string) {
     const newUser = new User();
@@ -85,10 +72,8 @@ export class User {
 
     return newUser;
   }
-  updateCodeAndExpirationDate(
-    newConfirmationCode: string,
-    newExpirationDate: Date,
-  ): void {
+
+  updateCodeAndExpirationDate(newConfirmationCode: string, newExpirationDate: Date): void {
     if (!this.emailConfirmation) {
       this.emailConfirmation = new EmailConfirmation();
       this.emailConfirmation.users = this;
@@ -99,7 +84,7 @@ export class User {
     this.emailConfirmation.isConfirmed = false;
   }
 
-  updatePassword(newPasswordHash: string){
+  updatePassword(newPasswordHash: string) {
     this.passwordHash = newPasswordHash;
   }
 }

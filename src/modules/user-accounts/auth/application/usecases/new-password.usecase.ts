@@ -35,6 +35,6 @@ export class NewPasswordUseCase
     );
 
     emailConfirmation.users.updatePassword(newPasswordHash);
-    await this.userRepository.save(emailConfirmation.users)
+    await this.userRepository.save(emailConfirmation.users);
   }
 }

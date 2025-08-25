@@ -27,7 +27,6 @@ export class AuthService {
       password,
       hash,
     });
-
     if (!isPassCorrect) {
       throw new DomainException({
         code: DomainExceptionCode.Unauthorized,

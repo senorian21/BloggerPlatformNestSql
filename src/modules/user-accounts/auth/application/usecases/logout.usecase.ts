@@ -26,6 +26,6 @@ export class LogoutUseCase implements ICommandHandler<LogoutCommand, void> {
       });
     }
 
-    await this.authRepository.deleteSession(sessionExists.id);
+    await this.authRepository.softDeleteSession(sessionExists.id);
   }
 }
