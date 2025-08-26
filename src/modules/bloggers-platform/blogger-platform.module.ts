@@ -27,6 +27,8 @@ import { UpdateCommentUseCase } from './comment/application/usecases/update-comm
 import { LikeStatusCommentUseCase } from './comment/application/usecases/create-like-or-dislike-comment.usecase';
 import { LikeStatusPostUseCase } from './post/application/usecases/post-like-status.usecase';
 import { SaBlogController } from './blog/api/sa-blog.controller';
+import {Blog} from "./blog/domain/blog.entity";
+import {TypeOrmModule} from "@nestjs/typeorm";
 
 const commandHandlers = [
   CreateBlogUseCase,
@@ -52,7 +54,10 @@ const queryHandlers = [
 ];
 
 @Module({
-  imports: [UserAccountsModule],
+  imports: [
+      UserAccountsModule,
+      TypeOrmModule.forFeature([Blog]),
+  ],
   controllers: [
     BlogController,
     SaBlogController,

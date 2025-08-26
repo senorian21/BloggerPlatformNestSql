@@ -21,6 +21,6 @@ export class DeleteBlogUseCase
         message: 'blog not found',
       });
     }
-    await this.blogsRepository.deleteBlog(blogId);
+    await this.blogsRepository.softDeleteBlog(blogId);
   }
 }

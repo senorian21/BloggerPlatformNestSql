@@ -1,9 +1,8 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import {
   CreateBlogDomainDto,
   UpdateBlogDomainDto,
 } from './dto/create-blog.domain.dto';
-import { HydratedDocument, Model } from 'mongoose';
+import {Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn} from "typeorm";
 
 export const nameConstraints = {
   minLength: 3,
@@ -19,3 +18,40 @@ export const websiteUrlConstraints = {
   minLength: 3,
   maxLength: 100,
 };
+
+@Entity('blog')
+export class Blog {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @DeleteDateColumn()
+  deletedAt: Date;
+
+  @Column({ type: 'varchar', length: 50, nullable: false })
+  name: string;
+
+  @Column({ type: 'varchar', length: 500, nullable: false })
+  description: string;
+
+  @Column({ type: 'varchar', length: 200, nullable: false })
+  websiteUrl: string;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @Column({ type: 'boolean', default: false })
+  isMembership: boolean;
+
+  static create(dto: CreateBlogDomainDto) {
+    const newBlog = new Blog();
+    newBlog.name = dto.name;
+    newBlog.description = dto.description;
+    newBlog.websiteUrl = dto.websiteUrl;
+    return newBlog;
+  }
+  update(dto: UpdateBlogDomainDto) {
+    this.name = dto.name;
+    this.description = dto.description;
+    this.websiteUrl = dto.websiteUrl;
+  }
+}

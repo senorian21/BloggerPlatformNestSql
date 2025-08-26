@@ -25,6 +25,7 @@ export class UpdateBlogUseCase
         message: 'blog not found',
       });
     }
-    await this.blogsRepository.updateBlog(blogId, dto);
+    blog.update(dto)
+    await this.blogsRepository.save(blog);
   }
 }
