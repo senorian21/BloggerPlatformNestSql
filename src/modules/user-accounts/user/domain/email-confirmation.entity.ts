@@ -17,6 +17,7 @@ export class EmailConfirmation {
     type: 'varchar',
     length: 255,
     nullable: false,
+    collation: 'C',
   })
   confirmationCode: string;
 

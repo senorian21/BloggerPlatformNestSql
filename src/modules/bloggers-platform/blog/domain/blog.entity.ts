@@ -2,7 +2,15 @@ import {
   CreateBlogDomainDto,
   UpdateBlogDomainDto,
 } from './dto/create-blog.domain.dto';
-import {Column, CreateDateColumn, DeleteDateColumn, Entity, PrimaryGeneratedColumn} from "typeorm";
+import {
+  Column,
+  CreateDateColumn,
+  DeleteDateColumn,
+  Entity,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { Post } from '../../post/domain/post.entity';
 
 export const nameConstraints = {
   minLength: 3,
@@ -27,13 +35,13 @@ export class Blog {
   @DeleteDateColumn()
   deletedAt: Date;
 
-  @Column({ type: 'varchar', length: 50, nullable: false })
+  @Column({ type: 'varchar', length: 50, nullable: false, collation: 'C' })
   name: string;
 
-  @Column({ type: 'varchar', length: 500, nullable: false })
+  @Column({ type: 'varchar', length: 500, nullable: false, collation: 'C' })
   description: string;
 
-  @Column({ type: 'varchar', length: 200, nullable: false })
+  @Column({ type: 'varchar', length: 200, nullable: false, collation: 'C' })
   websiteUrl: string;
 
   @CreateDateColumn()
@@ -42,6 +50,9 @@ export class Blog {
   @Column({ type: 'boolean', default: false })
   isMembership: boolean;
 
+  @OneToMany(() => Post, (post) => post.blog)
+  posts: Post[];
+
   static create(dto: CreateBlogDomainDto) {
     const newBlog = new Blog();
     newBlog.name = dto.name;
@@ -49,6 +60,7 @@ export class Blog {
     newBlog.websiteUrl = dto.websiteUrl;
     return newBlog;
   }
+
   update(dto: UpdateBlogDomainDto) {
     this.name = dto.name;
     this.description = dto.description;

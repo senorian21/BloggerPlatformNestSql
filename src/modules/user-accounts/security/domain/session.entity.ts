@@ -3,7 +3,8 @@ import {
   CreateDateColumn,
   DeleteDateColumn,
   Entity,
-  JoinColumn, ManyToOne,
+  JoinColumn,
+  ManyToOne,
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
@@ -40,12 +41,12 @@ export class Session {
   userId: number;
 
   static create(
-      userId: number,
-      iat: number,
-      exp: number,
-      deviceId: string,
-      ip: string,
-      deviceName: string,
+    userId: number,
+    iat: number,
+    exp: number,
+    deviceId: string,
+    ip: string,
+    deviceName: string,
   ) {
     const newSession = new Session();
 

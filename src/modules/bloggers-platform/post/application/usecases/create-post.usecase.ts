@@ -4,6 +4,7 @@ import { CreatePostDto } from '../../api/input-dto/post.input-dto';
 import { BlogsRepository } from '../../../blog/infrastructure/blog.repository';
 import { PostRepository } from '../../infrastructure/post.repository';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { Post } from '../../domain/post.entity';
 
 export class CreatePostCommand {
   constructor(
@@ -32,7 +33,8 @@ export class CreatePostUseCase
       });
     }
 
-    const postId = await this.postsRepository.createPost(dto, blog.name);
-    return postId;
+    const post = Post.create(dto);
+    await this.postsRepository.save(post);
+    return post.id;
   }
 }

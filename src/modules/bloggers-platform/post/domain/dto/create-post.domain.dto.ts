@@ -2,7 +2,11 @@ export class CreatePostDomainDto {
   title: string;
   shortDescription: string;
   content: string;
-  blogId: string;
+  blogId: number;
 }
 
-export class UpdatePostDomainDto extends CreatePostDomainDto {}
+export class UpdatePostDomainDto {
+  title: string;
+  shortDescription: string;
+  content: string;
+}

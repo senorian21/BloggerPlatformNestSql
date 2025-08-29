@@ -43,6 +43,6 @@ export class DeletePostUseCase
       });
     }
 
-    await this.postsRepository.deletePost(postId);
+    await this.postsRepository.softDeletePost(postId);
   }
 }

@@ -44,6 +44,7 @@ export class UpdatePostUseCase
       });
     }
 
-    await this.postsRepository.updatePost(postId, dto, blogId, blog.name);
+    post.update(dto, blog.id);
+    await this.postsRepository.save(post);
   }
 }

@@ -5,11 +5,9 @@ import { GetBlogsQueryParams } from '../../api/input-dto/get-blog-query-params.i
 import { plainToClass } from 'class-transformer';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
-import {InjectDataSource, InjectRepository} from '@nestjs/typeorm';
-import {Brackets, DataSource, Repository} from 'typeorm';
-import { FilterQuery } from 'mongoose';
-import { BlogDto } from '../../dto/blog.dto';
-import {Blog} from "../../domain/blog.entity";
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { Brackets, DataSource, Repository } from 'typeorm';
+import { Blog } from '../../domain/blog.entity';
 
 @Injectable()
 export class BlogQueryRepository {
@@ -23,18 +21,18 @@ export class BlogQueryRepository {
 
   async getByIdOrNotFoundFail(id: number): Promise<BlogViewDto> {
     const blog = await this.blogRepository
-        .createQueryBuilder('b')
-        .select([
-          'b.id::text AS id',
-          'b.name AS name',
-          'b.description AS description',
-          'b.websiteUrl AS "websiteUrl"',
-          'b.createdAt AS "createdAt"',
-          'b.isMembership AS "isMembership"',
-        ])
-        .where('b.id = :id', { id })
-        .andWhere('b.deletedAt IS NULL')
-        .getRawOne<BlogViewDto>();
+      .createQueryBuilder('b')
+      .select([
+        'b.id::text AS id',
+        'b.name AS name',
+        'b.description AS description',
+        'b.websiteUrl AS "websiteUrl"',
+        'b.createdAt AS "createdAt"',
+        'b.isMembership AS "isMembership"',
+      ])
+      .where('b.id = :id', { id })
+      .andWhere('b.deletedAt IS NULL')
+      .getRawOne<BlogViewDto>();
 
     if (!blog) {
       throw new DomainException({
@@ -47,62 +45,63 @@ export class BlogQueryRepository {
   }
 
   async getAll(
-      query: GetBlogsQueryParams,
+    query: GetBlogsQueryParams,
   ): Promise<PaginatedViewDto<BlogViewDto[]>> {
     const queryParams = plainToClass(GetBlogsQueryParams, query);
 
     const pageNumber = Math.max(1, Number(queryParams.pageNumber) || 1);
-    const pageSize = Math.min(100, Math.max(1, Number(queryParams.pageSize) || 10));
+    const pageSize = Math.min(
+      100,
+      Math.max(1, Number(queryParams.pageSize) || 10),
+    );
     const skip = (pageNumber - 1) * pageSize;
 
     const allowedSortFields = ['name', 'createdAt'] as const;
     const sortBy = allowedSortFields.includes(queryParams.sortBy as any)
-        ? (queryParams.sortBy as (typeof allowedSortFields)[number])
-        : 'createdAt';
+      ? (queryParams.sortBy as (typeof allowedSortFields)[number])
+      : 'createdAt';
     const sortDirection: 'ASC' | 'DESC' =
-        queryParams.sortDirection === 'asc' ? 'ASC' : 'DESC';
+      queryParams.sortDirection === 'asc' ? 'ASC' : 'DESC';
 
     const searchName = queryParams.searchNameTerm?.trim();
 
     const qb = this.blogRepository
-        .createQueryBuilder('b')
-        .select([
-          'b.id::text AS id',
-          'b.name AS name',
-          'b.description AS description',
-          'b.websiteUrl AS "websiteUrl"',
-          'b.createdAt AS "createdAt"',
-          'b.isMembership AS "isMembership"',
-        ])
-        .where('b.deletedAt IS NULL');
+      .createQueryBuilder('b')
+      .select([
+        'b.id::text AS id',
+        'b.name AS name',
+        'b.description AS description',
+        'b.websiteUrl AS "websiteUrl"',
+        'b.createdAt AS "createdAt"',
+        'b.isMembership AS "isMembership"',
+      ])
+      .where('b.deletedAt IS NULL');
 
     if (searchName) {
       qb.andWhere(
-          new Brackets((qb1) => {
-            qb1.where('LOWER(b.name) LIKE LOWER(:name)', {
-              name: `%${searchName}%`,
-            });
-          }),
+        new Brackets((qb1) => {
+          qb1.where('LOWER(b.name) LIKE LOWER(:name)', {
+            name: `%${searchName}%`,
+          });
+        }),
       );
     }
 
-    qb.orderBy(`b.${sortBy}`, sortDirection)
-        .skip(skip)
-        .take(pageSize);
+    qb.orderBy(`b.${sortBy}`, sortDirection).skip(skip).take(pageSize);
 
     const blogs = await qb.getRawMany<BlogViewDto>();
 
     const countQb = this.blogRepository
-        .createQueryBuilder('b')
-        .where('b.deletedAt IS NULL');
+      .createQueryBuilder('b')
+      .where('b.deletedAt IS NULL');
 
     if (searchName) {
       countQb.andWhere(
-          new Brackets((qb1) => {
-            qb1.where('LOWER(b.name) LIKE LOWER(:name)', {
-              name: `%${searchName}%`,
-            });
-          }),
+        new Brackets((qb1) => {
+          qb1.where('LOWER(b.name) LIKE LOWER(:name)', {
+            name: `%${searchName}%`,
+          });
+        }),
       );
     }
 
