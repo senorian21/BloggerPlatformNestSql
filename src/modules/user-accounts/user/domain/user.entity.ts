@@ -14,6 +14,8 @@ import { CreateUserDomainDto } from './dto/create-user.domain.dto';
 import { Session } from '../../security/domain/session.entity';
 import { PostLike } from '../../../bloggers-platform/post/domain/postLike.entity';
 import { NewestLikes } from '../../../bloggers-platform/post/domain/newestLikes.entity';
+import { Comment } from '../../../bloggers-platform/comment/domain/comment.entity';
+import { CommentLike } from '../../../bloggers-platform/comment/domain/commentLike.entity';
 
 export const loginConstraints = {
   minLength: 3,
@@ -69,6 +71,14 @@ export class User {
 
   @OneToMany(() => PostLike, (postLike) => postLike.user, { cascade: true })
   postLikes: PostLike[];
+
+  @OneToMany(() => CommentLike, (commentLike) => commentLike.user, {
+    cascade: true,
+  })
+  commentLike: CommentLike[];
+
+  @OneToMany(() => Comment, (comment) => comment.user, { cascade: true })
+  comments: Comment[];
 
   @OneToMany(() => NewestLikes, (newestLikes) => newestLikes.user, {
     cascade: true,

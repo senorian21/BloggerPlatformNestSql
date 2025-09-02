@@ -4,61 +4,66 @@ import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dt
 import { GetCommentQueryParams } from '../../api/input-dto/get-comment-query-params.input-dto';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, IsNull, Repository } from 'typeorm';
+import { Comment } from '../../domain/comment.entity';
 
 @Injectable()
 export class CommentsQueryRepository {
   constructor(
     @InjectDataSource()
     private dataSource: DataSource,
+
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>,
   ) {}
   async getByIdOrNotFoundFail(
     id: number,
     userId?: number,
   ): Promise<CommentViewDto> {
-    const params = [id, userId ?? null];
+    const qb = this.commentRepository
+      .createQueryBuilder('c')
+      .leftJoin('c.user', 'u')
+      .where('c.id = :id', { id })
+      .andWhere('c.deletedAt IS NULL')
+      .select([
+        // простые поля
+        'c.id::text AS id',
+        'c.content AS content',
+        'c.createdAt AS "createdAt"',
+        // commentatorInfo как JSON
+        `json_build_object(
+        'userId', u.id::text,
+        'userLogin', u.login
+      ) AS "commentatorInfo"`,
+        // likesInfo как JSON
+        `json_build_object(
+        'likesCount', c.likeCount,
+        'dislikesCount', c.dislikeCount,
+        'myStatus', COALESCE((
+          SELECT INITCAP(cl.status)
+          FROM "commentLike" cl
+          WHERE cl."commentId" = c.id
+            AND cl."userId" = :userId
+            AND :userId IS NOT NULL
+          ORDER BY cl."addedAt" DESC
+          LIMIT 1
+        ), 'None')
+      ) AS "likesInfo"`,
+      ]);
 
-    const [comment] = await this.dataSource.query(
-      `
-    SELECT 
-      c.id::TEXT AS "id",
-      c.content,
-      json_build_object(
-        'userId', c."userId"::TEXT,
-        'userLogin', c."userLogin"
-      ) AS "commentatorInfo",
-      c."createdAt",
-      json_build_object(
-        'likesCount', c."likesCount",
-        'dislikesCount', c."dislikesCount",
-        'myStatus', COALESCE(
-          (SELECT INITCAP(cl.status)
-           FROM "CommentLike" cl
-           WHERE cl."commentId" = c.id
-             AND cl."userId" = $2
-             AND $2 IS NOT NULL
-           ORDER BY cl."addedAt" DESC
-           LIMIT 1
-          ),
-          'None'
-        )
-      ) AS "likesInfo"
-    FROM "Comment" c
-    WHERE 
-      c.id = $1 
-      AND c."deletedAt" IS NULL
-    `,
-      params,
-    );
+    const result = await qb
+      .setParameters({ userId: userId ?? null })
+      .getRawOne<CommentViewDto>();
 
-    if (!comment) {
+    if (!result) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
         message: 'Comment not found',
       });
     }
-    return comment;
+
+    return result;
   }
 
   async getAll(
@@ -77,60 +82,45 @@ export class CommentsQueryRepository {
 
     const sortDirection = query.sortDirection === 'asc' ? 'ASC' : 'DESC';
 
-    const baseConditions = [`c."deletedAt" IS NULL`, `c."postId" = $1`];
+    const qb = this.commentRepository
+      .createQueryBuilder('c')
+      .leftJoin('c.user', 'u')
+      .where('c.deletedAt IS NULL')
+      .andWhere('c.postId = :postId', { postId })
+      .select([
+        'c.id::text AS id',
+        'c.content AS content',
+        'c.createdAt AS "createdAt"',
+        `json_build_object(
+        'userId', u.id::text,
+        'userLogin', u.login
+      ) AS "commentatorInfo"`,
+        `json_build_object(
+        'likesCount', c.likeCount,
+        'dislikesCount', c.dislikeCount,
+        'myStatus', COALESCE((
+          SELECT INITCAP(cl.status)
+          FROM "commentLike" cl
+          WHERE cl."commentId" = c.id
+            AND cl."userId" = :userId
+            AND :userId IS NOT NULL
+          ORDER BY cl."addedAt" DESC
+          LIMIT 1
+        ), 'None')
+      ) AS "likesInfo"`,
+      ])
+      .orderBy(`c.${sortBy}`, sortDirection as 'ASC' | 'DESC')
+      .limit(pageSize)
+      .offset(skip)
+      .setParameters({ userId: userId ?? null });
 
-    const params: any[] = [postId];
-    let paramIndex = 2;
+    const [items, totalCount] = await Promise.all([
+      qb.getRawMany<CommentViewDto>(),
+      this.commentRepository.count({
+        where: { postId, deletedAt: IsNull() },
+      }),
+    ]);
 
-    const whereClause = baseConditions.join(' AND ');
-
-    const dataQuery = `
-    SELECT 
-      c.id::TEXT AS "id",
-      c.content,
-      json_build_object(
-        'userId', c."userId"::TEXT,
-        'userLogin', c."userLogin"
-      ) AS "commentatorInfo",
-      c."createdAt",
-      json_build_object(
-        'likesCount', c."likesCount",
-        'dislikesCount', c."dislikesCount",
-        'myStatus',
-        CASE 
-          WHEN $${paramIndex}::INTEGER IS NOT NULL THEN COALESCE(
-            INITCAP((
-              SELECT cl.status
-              FROM "CommentLike" cl
-              WHERE cl."commentId" = c.id
-                AND cl."userId" = $${paramIndex}::INTEGER
-              ORDER BY cl."addedAt" DESC
-              LIMIT 1
-            )),
-            'None'
-          )
-          ELSE 'None'
-        END
-      ) AS "likesInfo"
-    FROM "Comment" c
-    ${whereClause ? `WHERE ${whereClause}` : ''}
-    ORDER BY c."${sortBy}" ${sortDirection}
-    LIMIT $${paramIndex + 1}
-    OFFSET $${paramIndex + 2}
-  `;
-
-    params.push(userId ?? null);
-    params.push(pageSize, skip);
-
-    const comments = await this.dataSource.query(dataQuery, params);
-
-    const countQuery = `
-    SELECT COUNT(*)::int AS total_count 
-    FROM "Comment" c
-    WHERE c."deletedAt" IS NULL AND c."postId" = $1
-  `;
-    const countResult = await this.dataSource.query(countQuery, [postId]);
-    const totalCount = countResult[0]?.total_count || 0;
     const pagesCount = totalCount === 0 ? 1 : Math.ceil(totalCount / pageSize);
 
     return {
@@ -138,7 +128,7 @@ export class CommentsQueryRepository {
       page: pageNumber,
       pageSize,
       totalCount,
-      items: comments,
+      items,
     };
   }
 }

@@ -1,4 +1,3 @@
-import { InjectModel } from '@nestjs/mongoose';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CreateCommentDto } from '../../../comment/dto/create-comment.dto';
 import { PostRepository } from '../../infrastructure/post.repository';
@@ -6,6 +5,7 @@ import { DomainException } from '../../../../../core/exceptions/domain-exception
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { UsersExternalQueryRepository } from '../../../../user-accounts/user/infrastructure/external-query/users.external-query-repository';
 import { CommentRepository } from '../../../comment/infrastructure/comment.repository';
+import { Comment } from '../../../comment/domain/comment.entity';
 
 export class CreateCommentCommand {
   constructor(
@@ -48,13 +48,9 @@ export class CreateCommentUseCase
       });
     }
 
-    const commentId = await this.commentRepository.createNewComment(
-      dto,
-      postId,
-      userId,
-      user.login,
-    );
+    const comment = Comment.create(dto, postId, userId);
+    await this.commentRepository.save(comment);
 
-    return commentId;
+    return comment.id;
   }
 }

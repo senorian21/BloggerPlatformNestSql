@@ -32,6 +32,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { Post } from './post/domain/post.entity';
 import { PostLike } from './post/domain/postLike.entity';
 import { NewestLikes } from './post/domain/newestLikes.entity';
+import { Comment } from './comment/domain/comment.entity';
+import { CommentLike } from './comment/domain/commentLike.entity';
 
 const commandHandlers = [
   CreateBlogUseCase,
@@ -59,7 +61,14 @@ const queryHandlers = [
 @Module({
   imports: [
     UserAccountsModule,
-    TypeOrmModule.forFeature([Blog, Post, PostLike, NewestLikes]),
+    TypeOrmModule.forFeature([
+      Blog,
+      Post,
+      PostLike,
+      NewestLikes,
+      Comment,
+      CommentLike,
+    ]),
   ],
   controllers: [
     BlogController,

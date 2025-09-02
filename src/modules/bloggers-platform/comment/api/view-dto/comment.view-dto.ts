@@ -1,10 +1,20 @@
 import { CommentDto } from '../../dto/comment.dto';
+export class CommentRawRow {
+  id: string; // c.id::text
+  content: string; // c.content
+  createdAt: Date; // c.createdAt
+  likesCount: number; // c.likeCount
+  dislikesCount: number; // c.dislikeCount
+  userId: string; // u.id::text
+  userLogin: string; // u.login
+  myStatus?: string; // подзапрос
+}
 
 export class CommentViewDto {
-  id: number;
+  id: string;
   content: string;
   commentatorInfo: {
-    userId: number;
+    userId: string;
     userLogin: string;
   };
   createdAt: Date;
@@ -15,22 +25,22 @@ export class CommentViewDto {
   };
 
   static mapToView = (
-    comment: CommentDto,
+    comment: CommentRawRow,
     myStatus: string,
   ): CommentViewDto => {
-    const dto = new CommentViewDto();
-    dto.id = comment.id;
-    dto.content = comment.content;
-    dto.commentatorInfo = {
-      userId: comment.userId,
-      userLogin: comment.userLogin,
+    return {
+      id: comment.id,
+      content: comment.content,
+      commentatorInfo: {
+        userId: comment.userId,
+        userLogin: comment.userLogin,
+      },
+      createdAt: comment.createdAt,
+      likesInfo: {
+        likesCount: comment.likesCount,
+        dislikesCount: comment.dislikesCount,
+        myStatus: myStatus ?? 'None',
+      },
     };
-    dto.createdAt = comment.createdAt;
-    dto.likesInfo = {
-      likesCount: comment.likesCount,
-      dislikesCount: comment.dislikesCount,
-      myStatus: myStatus,
-    };
-    return dto;
   };
 }

@@ -15,6 +15,7 @@ import {
 } from './dto/create-post.domain.dto';
 import { PostLike } from './postLike.entity';
 import { NewestLikes } from './newestLikes.entity';
+import { Comment } from '../../comment/domain/comment.entity';
 
 export const titleConstraints = {
   minLength: 3,
@@ -66,6 +67,9 @@ export class Post {
 
   @OneToMany(() => PostLike, (postLike) => postLike.post, { cascade: true })
   postLikes: PostLike[];
+
+  @OneToMany(() => Comment, (comment) => comment.post, { cascade: true })
+  comments: Comment[];
 
   @OneToMany(() => NewestLikes, (newestLikes) => newestLikes.post, {
     cascade: true,

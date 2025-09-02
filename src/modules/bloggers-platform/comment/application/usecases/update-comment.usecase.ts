@@ -40,8 +40,7 @@ export class UpdateCommentUseCase
       });
     }
 
-    await this.commentRepository.updateComment(dto, commentId);
-    // comment.updateComment(dto);
-    //await this.commentRepository.save(comment);
+    comment.update(dto);
+    await this.commentRepository.save(comment);
   }
 }
