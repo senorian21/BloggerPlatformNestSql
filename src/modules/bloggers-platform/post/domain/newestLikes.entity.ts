@@ -9,25 +9,28 @@ import {
 import { User } from '../../../user-accounts/user/domain/user.entity';
 import { Post } from './post.entity';
 
-@Entity({ name: 'newestLikes' })
+@Entity('newestLikes')
 export class NewestLikes {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @CreateDateColumn()
-  addedAt: Date;
+  @ManyToOne(() => Post, (post) => post.newestLikes, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'postId' })
+  post: Post;
 
-  @ManyToOne(() => User, (user) => user.newestLikes)
+  @Column()
+  postId: number;
+
+  @ManyToOne(() => User, (user) => user.newestLikes, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'userId' })
   user: User;
 
   @Column()
   userId: number;
 
-  @ManyToOne(() => Post, (post) => post.newestLikes)
-  @JoinColumn({ name: 'postId' })
-  post: Post;
+  @Column({ type: 'varchar', length: 100, nullable: false, collation: 'C' })
+  login: string;
 
-  @Column()
-  postId: number;
+  @CreateDateColumn()
+  addedAt: Date;
 }

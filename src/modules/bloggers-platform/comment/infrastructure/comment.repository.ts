@@ -3,15 +3,16 @@ import { CreateCommentDto, UpdateCommentDto } from '../dto/create-comment.dto';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { Comment } from '../domain/comment.entity';
+import {CommentLike} from "../domain/commentLike.entity";
 
 @Injectable()
 export class CommentRepository {
   constructor(
-    @InjectDataSource()
-    private dataSource: DataSource,
-
     @InjectRepository(Comment)
     private readonly commentRepository: Repository<Comment>,
+
+    @InjectRepository(CommentLike)
+    private commentLikeRepository: Repository<CommentLike>,
   ) {}
 
   async findById(id: number): Promise<Comment | null> {
@@ -28,69 +29,54 @@ export class CommentRepository {
   }
 
   async createLikeComment(
-    commentId: number,
-    userId: number,
-    likeStatusReq: string,
+      commentId: number,
+      userId: number,
+      likeStatusReq: string,
   ) {
     const normalizedStatus = likeStatusReq.toLowerCase(); // 'like' | 'dislike' | 'none'
 
-    await this.dataSource.query(
-      `
-                WITH
-                    old AS (
-                        SELECT status AS old_status
-                        FROM "CommentLike"
-                        WHERE "commentId" = $1
-                          AND "userId"    = $2
-                    ),
-                    ins AS (
-                INSERT INTO "CommentLike" ("commentId", "userId", status, "addedAt")
-                VALUES ($1, $2, $3, NOW())
-                ON CONFLICT ("commentId", "userId")
-                    DO UPDATE SET
-                    status    = EXCLUDED.status,
-                           "addedAt" = CASE
-                           WHEN "CommentLike".status <> EXCLUDED.status THEN NOW()
-                           ELSE "CommentLike"."addedAt"
-                END
-        RETURNING status AS new_status
-      ),
-      calc AS (
-        SELECT
-          old.old_status,
-          ins.new_status
-        FROM ins
-        LEFT JOIN old ON TRUE
-      )
-                UPDATE "Comment" c
-                SET
-                    "likesCount" = GREATEST(
-                            0,
-                            c."likesCount" +
-                            CASE
-                                WHEN calc.old_status = 'like'
-                                    AND calc.new_status <> 'like' THEN -1
-                                WHEN calc.old_status IS DISTINCT FROM 'like'
-                                AND calc.new_status = 'like' THEN 1
-                                ELSE 0
-                                END
-                                   ),
-                    "dislikesCount" = GREATEST(
-                            0,
-                            c."dislikesCount" +
-                            CASE
-                                WHEN calc.old_status = 'dislike'
-                                    AND calc.new_status <> 'dislike' THEN -1
-                                WHEN calc.old_status IS DISTINCT FROM 'dislike'
-                                AND calc.new_status = 'dislike' THEN 1
-                                ELSE 0
-                                END
-                                      )
-                    FROM calc
-                WHERE c.id = $1;
-            `,
-      [commentId, userId, normalizedStatus],
-    );
+    // 1. Получаем старый лайк, если он есть
+    const oldLike = await this.commentLikeRepository.findOne({
+      where: { commentId, userId },
+    });
+
+    const oldStatus = oldLike?.status ?? null;
+
+    // 2. Если лайка нет — создаём, иначе обновляем
+    if (!oldLike) {
+      const newLike = this.commentLikeRepository.create({
+        commentId,
+        userId,
+        status: normalizedStatus,
+      });
+      await this.commentLikeRepository.save(newLike);
+    } else {
+      if (oldLike.status !== normalizedStatus) {
+        oldLike.status = normalizedStatus;
+        oldLike.addedAt = new Date();
+        await this.commentLikeRepository.save(oldLike);
+      }
+    }
+
+    // 3. Обновляем счётчики в комментарии
+    const comment = await this.commentRepository.findOneBy({ id: commentId });
+    if (!comment) return;
+
+    // Логика изменения лайков
+    if (oldStatus === 'like' && normalizedStatus !== 'like') {
+      comment.likeCount = Math.max(0, comment.likeCount - 1);
+    } else if (oldStatus !== 'like' && normalizedStatus === 'like') {
+      comment.likeCount += 1;
+    }
+
+    // Логика изменения дизлайков
+    if (oldStatus === 'dislike' && normalizedStatus !== 'dislike') {
+      comment.dislikeCount = Math.max(0, comment.dislikeCount - 1);
+    } else if (oldStatus !== 'dislike' && normalizedStatus === 'dislike') {
+      comment.dislikeCount += 1;
+    }
+
+    await this.commentRepository.save(comment);
   }
 
   async save(comment: Comment) {
