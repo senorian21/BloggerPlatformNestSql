@@ -50,6 +50,9 @@ export class Blog {
   @Column({ type: 'boolean', default: false })
   isMembership: boolean;
 
+  @Column({ type: 'boolean', default: false })
+  isMembershipTest: boolean;
+
   @OneToMany(() => Post, (post) => post.blog)
   posts: Post[];
 
