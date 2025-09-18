@@ -23,14 +23,13 @@ import { UpdateBlogCommand } from '../application/usecases/update-blog.usecase';
 import { DeleteBlogCommand } from '../application/usecases/delete-blog.usecase';
 import { GetAllBlogsQuery } from '../application/queries/get-all-blogs.query-handler';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { BlogViewDto } from './view-dto/blog.view-dto';
+import { QuestionViewDto } from './view-dto/question.view-dto';
 import { GetBlogByIdQuery } from '../application/queries/get-blog-by-id.query-handler';
 import { CreatePostCommand } from '../../post/application/usecases/create-post.usecase';
 import { GetAllPostQuery } from '../../post/application/queries/get-all-post.query-handler';
 import { PostViewDto } from '../../post/api/view-dto/post.view-dto';
 import { GetPostByIdQuery } from '../../post/application/queries/get-post-by-id.query-handler';
 import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
-import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { UserContextDto } from '../../../user-accounts/auth/dto/user-context.dto';
 import { DeletePostCommand } from '../../post/application/usecases/delete-post.usecase';
@@ -50,7 +49,7 @@ export class SaBlogController {
     const blogId = await this.commandBus.execute<CreateBlogCommand, number>(
       new CreateBlogCommand(dto),
     );
-    return this.queryBus.execute<GetBlogByIdQuery, BlogViewDto>(
+    return this.queryBus.execute<GetBlogByIdQuery, QuestionViewDto>(
       new GetBlogByIdQuery(blogId),
     );
   }
@@ -74,7 +73,7 @@ export class SaBlogController {
   async getAll(@Query() query: GetBlogsQueryParams) {
     return this.queryBus.execute<
       GetAllBlogsQuery,
-      PaginatedViewDto<BlogViewDto[]>
+      PaginatedViewDto<QuestionViewDto[]>
     >(new GetAllBlogsQuery(query));
   }
 

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { BlogViewDto } from '../../api/view-dto/blog.view-dto';
+import { QuestionViewDto } from '../../api/view-dto/question.view-dto';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 import { GetBlogsQueryParams } from '../../api/input-dto/get-blog-query-params.input-dto';
 import { plainToClass } from 'class-transformer';
@@ -12,14 +12,11 @@ import { Blog } from '../../domain/blog.entity';
 @Injectable()
 export class BlogQueryRepository {
   constructor(
-    @InjectDataSource()
-    private dataSource: DataSource,
-
     @InjectRepository(Blog)
     private blogRepository: Repository<Blog>,
   ) {}
 
-  async getByIdOrNotFoundFail(id: number): Promise<BlogViewDto> {
+  async getByIdOrNotFoundFail(id: number): Promise<QuestionViewDto> {
     const blog = await this.blogRepository
       .createQueryBuilder('b')
       .select([
@@ -32,7 +29,7 @@ export class BlogQueryRepository {
       ])
       .where('b.id = :id', { id })
       .andWhere('b.deletedAt IS NULL')
-      .getRawOne<BlogViewDto>();
+      .getRawOne<QuestionViewDto>();
 
     if (!blog) {
       throw new DomainException({
@@ -46,7 +43,7 @@ export class BlogQueryRepository {
 
   async getAll(
     query: GetBlogsQueryParams,
-  ): Promise<PaginatedViewDto<BlogViewDto[]>> {
+  ): Promise<PaginatedViewDto<QuestionViewDto[]>> {
     const queryParams = plainToClass(GetBlogsQueryParams, query);
 
     const pageNumber = Math.max(1, Number(queryParams.pageNumber) || 1);
@@ -89,7 +86,7 @@ export class BlogQueryRepository {
 
     qb.orderBy(`b.${sortBy}`, sortDirection).skip(skip).take(pageSize);
 
-    const blogs = await qb.getRawMany<BlogViewDto>();
+    const blogs = await qb.getRawMany<QuestionViewDto>();
 
     const countQb = this.blogRepository
       .createQueryBuilder('b')

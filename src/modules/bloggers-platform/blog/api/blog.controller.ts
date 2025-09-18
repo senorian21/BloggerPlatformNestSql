@@ -17,7 +17,7 @@ import { GetPostQueryParams } from '../../post/api/input-dto/get-post-query-para
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetAllBlogsQuery } from '../application/queries/get-all-blogs.query-handler';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { BlogViewDto } from './view-dto/blog.view-dto';
+import { QuestionViewDto } from './view-dto/question.view-dto';
 import { GetBlogByIdQuery } from '../application/queries/get-blog-by-id.query-handler';
 import { CreatePostCommand } from '../../post/application/usecases/create-post.usecase';
 import { GetAllPostQuery } from '../../post/application/queries/get-all-post.query-handler';
@@ -37,7 +37,7 @@ export class BlogController {
 
   @Get(':id')
   async getBlogById(@Param('id') blogId: number) {
-    return this.queryBus.execute<GetBlogByIdQuery, BlogViewDto>(
+    return this.queryBus.execute<GetBlogByIdQuery, QuestionViewDto>(
       new GetBlogByIdQuery(blogId),
     );
   }
@@ -46,7 +46,7 @@ export class BlogController {
   async getAll(@Query() query: GetBlogsQueryParams) {
     return this.queryBus.execute<
       GetAllBlogsQuery,
-      PaginatedViewDto<BlogViewDto[]>
+      PaginatedViewDto<QuestionViewDto[]>
     >(new GetAllBlogsQuery(query));
   }
 

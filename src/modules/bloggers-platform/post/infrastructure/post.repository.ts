@@ -5,8 +5,8 @@ import { CreatePostDto } from '../api/input-dto/post.input-dto';
 import { PostDto } from '../dto/post.dto';
 import { UpdatePostDto } from '../dto/create-post.dto';
 import { Post } from '../domain/post.entity';
-import {PostLike} from "../domain/postLike.entity";
-import {NewestLikes} from "../domain/newestLikes.entity";
+import { PostLike } from '../domain/postLike.entity';
+import { NewestLikes } from '../domain/newestLikes.entity';
 
 @Injectable()
 export class PostRepository {
@@ -34,10 +34,10 @@ export class PostRepository {
   }
 
   async createLikePost(
-      postId: number,
-      userId: number,
-      likeStatusReq: string, // 'like' | 'dislike' | 'none'
-      userLogin: string,
+    postId: number,
+    userId: number,
+    likeStatusReq: string, // 'like' | 'dislike' | 'none'
+    userLogin: string,
   ): Promise<void> {
     const status = likeStatusReq.toLowerCase().trim();
     if (!['like', 'dislike', 'none'].includes(status)) {

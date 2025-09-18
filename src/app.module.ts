@@ -11,6 +11,7 @@ import { DomainHttpExceptionsFilter } from './core/exceptions/filters/domain-exc
 import { APP_FILTER } from '@nestjs/core';
 import { AllHttpExceptionsFilter } from './core/exceptions/filters/all-exceptions.filter';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { QuizGameModule } from './modules/quiz-game/quiz-game.module';
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
     BloggerPlatformModule,
     TestingModule,
     UserAccountsModule,
+    QuizGameModule,
   ],
   controllers: [AppController],
   providers: [

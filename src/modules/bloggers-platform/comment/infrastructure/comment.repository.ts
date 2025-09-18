@@ -3,7 +3,7 @@ import { CreateCommentDto, UpdateCommentDto } from '../dto/create-comment.dto';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, IsNull, Repository } from 'typeorm';
 import { Comment } from '../domain/comment.entity';
-import {CommentLike} from "../domain/commentLike.entity";
+import { CommentLike } from '../domain/commentLike.entity';
 
 @Injectable()
 export class CommentRepository {
@@ -29,9 +29,9 @@ export class CommentRepository {
   }
 
   async createLikeComment(
-      commentId: number,
-      userId: number,
-      likeStatusReq: string,
+    commentId: number,
+    userId: number,
+    likeStatusReq: string,
   ) {
     const normalizedStatus = likeStatusReq.toLowerCase(); // 'like' | 'dislike' | 'none'
 
