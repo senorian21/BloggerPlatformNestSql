@@ -23,7 +23,6 @@ import { UpdateBlogCommand } from '../application/usecases/update-blog.usecase';
 import { DeleteBlogCommand } from '../application/usecases/delete-blog.usecase';
 import { GetAllBlogsQuery } from '../application/queries/get-all-blogs.query-handler';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { QuestionViewDto } from './view-dto/question.view-dto';
 import { GetBlogByIdQuery } from '../application/queries/get-blog-by-id.query-handler';
 import { CreatePostCommand } from '../../post/application/usecases/create-post.usecase';
 import { GetAllPostQuery } from '../../post/application/queries/get-all-post.query-handler';
@@ -35,6 +34,7 @@ import { UserContextDto } from '../../../user-accounts/auth/dto/user-context.dto
 import { DeletePostCommand } from '../../post/application/usecases/delete-post.usecase';
 import { UpdatePostDto } from '../../post/api/input-dto/updats-post.input-dto';
 import { UpdatePostCommand } from '../../post/application/usecases/update-post.usecase';
+import { BlogViewDto } from './view-dto/blog.view-dto';
 
 @Controller('sa/blogs')
 @UseGuards(BasicAuthGuard)
@@ -49,7 +49,7 @@ export class SaBlogController {
     const blogId = await this.commandBus.execute<CreateBlogCommand, number>(
       new CreateBlogCommand(dto),
     );
-    return this.queryBus.execute<GetBlogByIdQuery, QuestionViewDto>(
+    return this.queryBus.execute<GetBlogByIdQuery, BlogViewDto>(
       new GetBlogByIdQuery(blogId),
     );
   }
@@ -73,7 +73,7 @@ export class SaBlogController {
   async getAll(@Query() query: GetBlogsQueryParams) {
     return this.queryBus.execute<
       GetAllBlogsQuery,
-      PaginatedViewDto<QuestionViewDto[]>
+      PaginatedViewDto<BlogViewDto[]>
     >(new GetAllBlogsQuery(query));
   }
 

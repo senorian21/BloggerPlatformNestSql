@@ -1,14 +1,8 @@
 import {
-  Body,
   Controller,
-  Delete,
   Get,
-  HttpCode,
-  HttpStatus,
   Param,
   ParseIntPipe,
-  Post,
-  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
@@ -17,16 +11,13 @@ import { GetPostQueryParams } from '../../post/api/input-dto/get-post-query-para
 import { CommandBus, QueryBus } from '@nestjs/cqrs';
 import { GetAllBlogsQuery } from '../application/queries/get-all-blogs.query-handler';
 import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
-import { QuestionViewDto } from './view-dto/question.view-dto';
 import { GetBlogByIdQuery } from '../application/queries/get-blog-by-id.query-handler';
-import { CreatePostCommand } from '../../post/application/usecases/create-post.usecase';
 import { GetAllPostQuery } from '../../post/application/queries/get-all-post.query-handler';
 import { PostViewDto } from '../../post/api/view-dto/post.view-dto';
-import { GetPostByIdQuery } from '../../post/application/queries/get-post-by-id.query-handler';
-import { BasicAuthGuard } from '../../../user-accounts/guards/basic/basic-auth.guard';
 import { JwtOptionalAuthGuard } from '../../../user-accounts/guards/bearer/jwt-optional-auth.guard';
 import { ExtractUserIfExistsFromRequest } from '../../../user-accounts/guards/decorators/param/extract-user-if-exists-from-request.decorator';
 import { UserContextDto } from '../../../user-accounts/auth/dto/user-context.dto';
+import { BlogViewDto } from './view-dto/blog.view-dto';
 
 @Controller('blogs')
 export class BlogController {
@@ -37,7 +28,7 @@ export class BlogController {
 
   @Get(':id')
   async getBlogById(@Param('id') blogId: number) {
-    return this.queryBus.execute<GetBlogByIdQuery, QuestionViewDto>(
+    return this.queryBus.execute<GetBlogByIdQuery, BlogViewDto>(
       new GetBlogByIdQuery(blogId),
     );
   }
@@ -46,7 +37,7 @@ export class BlogController {
   async getAll(@Query() query: GetBlogsQueryParams) {
     return this.queryBus.execute<
       GetAllBlogsQuery,
-      PaginatedViewDto<QuestionViewDto[]>
+      PaginatedViewDto<BlogViewDto[]>
     >(new GetAllBlogsQuery(query));
   }
 

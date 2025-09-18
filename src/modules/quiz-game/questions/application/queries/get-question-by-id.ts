@@ -1,6 +1,6 @@
 import { IQueryHandler, QueryHandler } from '@nestjs/cqrs';
-import { QuestionViewDto } from '../../../../bloggers-platform/blog/api/view-dto/question.view-dto';
 import { QuestionQueryRepository } from '../../infrastructure/query/question.query-repository';
+import { QuestionViewDto } from '../../api/view-dto/question.view-dto';
 
 export class GetQuestionByIdQuery {
   constructor(public id: number) {}

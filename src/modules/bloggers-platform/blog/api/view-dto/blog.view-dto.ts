@@ -1,6 +1,6 @@
 import { Question } from '../../../../quiz-game/questions/domain/question.entity';
 
-export class QuestionViewDto {
+export class BlogViewDto {
   id: number;
   body: string;
   correctAnswers: string[];
@@ -8,8 +8,8 @@ export class QuestionViewDto {
   createdAt: Date;
   updatedAt: Date | null;
 
-  static mapToView = (question: Question): QuestionViewDto => {
-    const dto = new QuestionViewDto();
+  static mapToView = (question: Question): BlogViewDto => {
+    const dto = new BlogViewDto();
     dto.id = question.id;
     dto.body = question.body;
     dto.correctAnswers = question.correctAnswers;

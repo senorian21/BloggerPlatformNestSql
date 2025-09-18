@@ -5,7 +5,11 @@ import {
   Entity,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { CreateQuestionDomainDto } from './dto/questions.input-dto';
+import {
+  CreateQuestionDomainDto,
+  UpdateQuestionDomainDto,
+} from './dto/questions.domain-dto';
+import { PublishQuestionDomainDto } from './dto/publish-question.domain-dto';
 
 export const bodyQuestionLength = {
   minLength: 10,
@@ -40,5 +44,18 @@ export class Question {
     question.body = dto.body;
     question.correctAnswers = dto.correctAnswers;
     return question;
+  }
+
+  update(dto: UpdateQuestionDomainDto) {
+    const timeNow = new Date();
+    this.body = dto.body;
+    this.correctAnswers = dto.correctAnswers;
+    this.updatedAt = timeNow;
+  }
+
+  publish(dto: PublishQuestionDomainDto) {
+    const timeNow = new Date();
+    this.published = dto.published;
+    this.updatedAt = timeNow;
   }
 }

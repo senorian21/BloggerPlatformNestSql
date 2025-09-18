@@ -8,7 +8,7 @@ export class CreateQuestionCommand {
 }
 
 @CommandHandler(CreateQuestionCommand)
-export class createQuestionUseCase
+export class CreateQuestionUseCase
   implements ICommandHandler<CreateQuestionCommand, number>
 {
   constructor(private questionRepository: QuestionRepository) {}

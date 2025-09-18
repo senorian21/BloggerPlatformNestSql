@@ -1,7 +1,6 @@
 import { IsStringWithTrim } from '../../../../../core/decorators/validation/is-string-with-trim';
 import { bodyQuestionLength } from '../../domain/question.entity';
 import { ArrayNotEmpty, IsArray, IsString } from 'class-validator';
-import { Transform } from 'class-transformer';
 
 export class CreateQuestionDto {
   @IsStringWithTrim(bodyQuestionLength.minLength, bodyQuestionLength.maxLength)
@@ -12,3 +11,5 @@ export class CreateQuestionDto {
   @IsString({ each: true, message: 'Each correct answer must be a string' })
   correctAnswers: string[];
 }
+
+export class UpdateQuestionDto extends CreateQuestionDto {}
