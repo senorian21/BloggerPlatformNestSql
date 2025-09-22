@@ -16,7 +16,7 @@ import { PostLike } from '../../../bloggers-platform/post/domain/postLike.entity
 import { NewestLikes } from '../../../bloggers-platform/post/domain/newestLikes.entity';
 import { Comment } from '../../../bloggers-platform/comment/domain/comment.entity';
 import { CommentLike } from '../../../bloggers-platform/comment/domain/commentLike.entity';
-import {Player} from "../../../quiz-game/player/domain/player.entity";
+import { Player } from '../../../quiz-game/player/domain/player.entity';
 
 export const loginConstraints = {
   minLength: 3,

@@ -10,9 +10,9 @@ import { UpdateQuestionUseCase } from './questions/application/usecases/update-q
 import { DeleteQuestionUseCase } from './questions/application/usecases/delete-question.usecase';
 import { PublishQuestionUseCase } from './questions/application/usecases/publish-question.usecase';
 import { GetAllQuestionQueryHandler } from './questions/application/queries/get-all-question.query-handler';
-import {Player} from "./player/domain/player.entity";
-import {Answer} from "./answer/domain/answer.entity";
-import {Game} from "./game/domain/game.entity";
+import { Player } from './player/domain/player.entity';
+import { Answer } from './answer/domain/answer.entity';
+import { Game } from './game/domain/game.entity';
 
 const commandHandlers = [
   CreateQuestionUseCase,

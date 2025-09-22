@@ -2,7 +2,8 @@ import {
   Column,
   CreateDateColumn,
   DeleteDateColumn,
-  Entity, OneToMany,
+  Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import {
@@ -10,7 +11,7 @@ import {
   UpdateQuestionDomainDto,
 } from './dto/questions.domain-dto';
 import { PublishQuestionDomainDto } from './dto/publish-question.domain-dto';
-import {GameQuestion} from "./game-question.entity";
+import { GameQuestion } from './game-question.entity';
 
 export const bodyQuestionLength = {
   minLength: 10,
@@ -40,7 +41,9 @@ export class Question {
   @Column({ type: 'timestamp with time zone', default: null })
   updatedAt: Date;
 
-  @OneToMany(() => GameQuestion, (gameQuestion) => gameQuestion.question, { cascade: true })
+  @OneToMany(() => GameQuestion, (gameQuestion) => gameQuestion.question, {
+    cascade: true,
+  })
   gameQuestions: GameQuestion[];
 
   static create(dto: CreateQuestionDomainDto) {
