@@ -26,4 +26,10 @@ export class Player {
 
   @OneToMany(() => Answer, (answer) => answer.player, { cascade: true })
   answers: Answer[];
+
+  static create(userId: number) {
+    const player = new Player();
+    player.userId = userId;
+    return player;
+  }
 }

@@ -13,24 +13,46 @@ import { GetAllQuestionQueryHandler } from './questions/application/queries/get-
 import { Player } from './player/domain/player.entity';
 import { Answer } from './answer/domain/answer.entity';
 import { Game } from './game/domain/game.entity';
+import { UserAccountsModule } from '../user-accounts/user-accounts.module';
+import { PlayerRepository } from './player/infrastructure/player.repository';
+import {GameQuestion} from "./questions/domain/game-question.entity";
+import {pairGameQuizController} from "./game/api/pair-game-quiz.controller";
+import {JoinGameUseCase} from "./game/application/usecases/join-game.usecase";
+import {GameRepository} from "./game/infrastructure/game.repository";
+import {GameQueryRepository} from "./game/infrastructure/query/game.query-repository";
+import {GetGameByIdQueryHandler} from "./game/application/queries/get-game-by-id";
+import {AnswerRepository} from "./answer/infrastructure/answer.repository";
+import {AnswerUseCase} from "./game/application/usecases/answer.usecase";
 
 const commandHandlers = [
   CreateQuestionUseCase,
   UpdateQuestionUseCase,
   DeleteQuestionUseCase,
   PublishQuestionUseCase,
+  JoinGameUseCase,
+  AnswerUseCase,
 ];
 
-const queryHandlers = [GetQuestionByIdQueryHandler, GetAllQuestionQueryHandler];
+const queryHandlers = [
+    GetQuestionByIdQueryHandler,
+  GetAllQuestionQueryHandler,
+  GetGameByIdQueryHandler];
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Question, Player, Answer, Game])],
-  controllers: [SAQuestionsController],
+  imports: [
+    TypeOrmModule.forFeature([Question, Player, Answer, Game, GameQuestion]),
+    UserAccountsModule,
+  ],
+  controllers: [SAQuestionsController, pairGameQuizController],
   providers: [
     ...commandHandlers,
     ...queryHandlers,
     QuestionRepository,
     QuestionQueryRepository,
+    PlayerRepository,
+    GameRepository,
+    GameQueryRepository,
+    AnswerRepository,
   ],
   exports: [],
 })

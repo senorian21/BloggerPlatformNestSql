@@ -39,6 +39,7 @@ export class QuestionQueryRepository {
     }
     return question;
   }
+
   async getAll(
     query: GetQuestionQueryParams,
   ): Promise<PaginatedViewDto<QuestionViewDto[]>> {

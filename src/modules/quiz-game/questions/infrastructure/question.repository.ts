@@ -33,4 +33,13 @@ export class QuestionRepository {
   async softDelete(id: number): Promise<void> {
     await this.questionRepository.softDelete(id);
   }
+
+  async findPublishedRandom(limit: number): Promise<Question[]> {
+    return this.questionRepository
+        .createQueryBuilder('q')
+        .where('q.published = :published', { published: true })
+        .orderBy('RANDOM()')
+        .limit(limit)
+        .getMany();
+  }
 }

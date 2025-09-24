@@ -9,6 +9,7 @@ import {
 } from 'typeorm';
 import { Player } from '../../player/domain/player.entity';
 import { GameQuestion } from '../../questions/domain/game-question.entity';
+import {Question} from "../../questions/domain/question.entity";
 
 export enum GameStatus {
   PendingSecondPlayer = 'PendingSecondPlayer',
@@ -55,4 +56,23 @@ export class Game {
     cascade: true,
   })
   gameQuestions: GameQuestion[];
+
+  static create(playerId: number): Game {
+    const game = new Game();
+    game.player_1_id = playerId;
+    return game;
+  }
+
+  connectionSecondPlayer(playerId: number, questions: Question[]) {
+    this.player_2_id = playerId;
+    this.status = GameStatus.Active;
+    this.startGameDate = new Date();
+
+    this.gameQuestions = questions.map(q => {
+      const gq = new GameQuestion();
+      gq.game = this;
+      gq.questionId = q.id;
+      return gq;
+    });
+  }
 }
