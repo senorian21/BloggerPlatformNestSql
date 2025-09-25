@@ -5,7 +5,7 @@ import { DomainException } from '../../../../../core/exceptions/domain-exception
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { GameStatus } from '../../domain/game.entity';
 import { AnswerRepository } from '../../../answer/infrastructure/answer.repository';
-import {Answer, AnswerStatus} from '../../../answer/domain/answer.entity';
+import { Answer, AnswerStatus } from '../../../answer/domain/answer.entity';
 
 export class AnswerCommand {
   constructor(
@@ -77,20 +77,32 @@ export class AnswerUseCase
 
     if (player1Answers >= totalQuestions && player2Answers >= totalQuestions) {
       const lastAnswerP1 = await this.answerRepository.findLastAnswerTime(
-          game.player_1_id,
+        game.player_1_id,
       );
       const lastAnswerP2 = await this.answerRepository.findLastAnswerTime(
-          game.player_2_id!,
+        game.player_2_id!,
       );
 
-      const player1 = await this.playerRepository.findByIdOrFail(game.player_1_id);
-      const player2 = await this.playerRepository.findByIdOrFail(game.player_2_id!);
+      const player1 = await this.playerRepository.findByIdOrFail(
+        game.player_1_id,
+      );
+      const player2 = await this.playerRepository.findByIdOrFail(
+        game.player_2_id!,
+      );
 
-      const answersP1 = await this.answerRepository.findByPlayerId(game.player_1_id);
-      const answersP2 = await this.answerRepository.findByPlayerId(game.player_2_id!);
+      const answersP1 = await this.answerRepository.findByPlayerId(
+        game.player_1_id,
+      );
+      const answersP2 = await this.answerRepository.findByPlayerId(
+        game.player_2_id!,
+      );
 
-      const hasCorrectP1 = answersP1.some(a => a.answerStatus === AnswerStatus.Correct);
-      const hasCorrectP2 = answersP2.some(a => a.answerStatus === AnswerStatus.Correct);
+      const hasCorrectP1 = answersP1.some(
+        (a) => a.answerStatus === AnswerStatus.Correct,
+      );
+      const hasCorrectP2 = answersP2.some(
+        (a) => a.answerStatus === AnswerStatus.Correct,
+      );
 
       if (lastAnswerP1 && lastAnswerP2) {
         if (lastAnswerP1 < lastAnswerP2 && hasCorrectP1) {

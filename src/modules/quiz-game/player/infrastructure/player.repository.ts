@@ -1,8 +1,8 @@
-import {InjectRepository} from '@nestjs/typeorm';
-import {Player} from '../domain/player.entity';
-import {Repository} from 'typeorm';
-import {DomainException} from "../../../../core/exceptions/domain-exceptions";
-import {DomainExceptionCode} from "../../../../core/exceptions/domain-exception-codes";
+import { InjectRepository } from '@nestjs/typeorm';
+import { Player } from '../domain/player.entity';
+import { Repository } from 'typeorm';
+import { DomainException } from '../../../../core/exceptions/domain-exceptions';
+import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
 
 export class PlayerRepository {
   constructor(
@@ -29,8 +29,8 @@ export class PlayerRepository {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,
         message: 'Not Found',
-      })
+      });
     }
-    return player
+    return player;
   }
 }

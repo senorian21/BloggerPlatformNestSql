@@ -25,7 +25,6 @@ export class AnswerQueryRepository {
       .where('a.id = :answerId', { answerId })
       .andWhere('gq."questionId" = :questionId', { questionId })
       .select([
-        'a.id AS "answerId"',
         'gq."questionId" AS "questionId"',
         'a.answerStatus AS "answerStatus"',
         'a.addedAt AS "addedAt"',
