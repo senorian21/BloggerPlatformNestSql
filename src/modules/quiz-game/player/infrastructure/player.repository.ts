@@ -14,7 +14,8 @@ export class PlayerRepository {
 
   async findByUserId(userId: number): Promise<Player | null> {
     return await this.playerRepository.findOne({
-      where: { userId: userId },
+      where: { userId },
+      order: { createdAt: 'DESC' },
     });
   }
 }

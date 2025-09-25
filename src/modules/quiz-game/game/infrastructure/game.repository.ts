@@ -31,6 +31,45 @@ export class GameRepository {
         });
     }
 
+    async findActiveOrPendingGameByPlayerId(playerId: number): Promise<Game | null> {
+        return this.gameRepository.findOne({
+            where: [
+                { player_1_id: playerId, status: GameStatus.Active },
+                { player_2_id: playerId, status: GameStatus.Active },
+                { player_1_id: playerId, status: GameStatus.PendingSecondPlayer },
+                { player_2_id: playerId, status: GameStatus.PendingSecondPlayer },
+            ],
+            relations: ['gameQuestions', 'gameQuestions.question', 'player_1', 'player_2'],
+        });
+    }
+
+    async findLastGameByPlayerId(playerId: number): Promise<Game | null> {
+        return this.gameRepository.findOne({
+            where: [
+                { player_1_id: playerId },
+                { player_2_id: playerId },
+            ],
+            order: { pairCreatedDate: 'DESC' }, // используем поле из сущности
+            relations: [
+                'gameQuestions',
+                'gameQuestions.question',
+                'player_1',
+                'player_2',
+            ],
+        });
+    }
+
+    async findLastGameByPlayerIdForUser(userId: number): Promise<Game | null> {
+        return this.gameRepository.findOne({
+            where: [
+                { player_1: { userId } },
+                { player_2: { userId } },
+            ],
+            order: { pairCreatedDate: 'DESC' },
+            relations: ['player_1', 'player_2'],
+        });
+    }
+
     async save(game: Game): Promise<void> {
         await this.gameRepository.save(game);
     }

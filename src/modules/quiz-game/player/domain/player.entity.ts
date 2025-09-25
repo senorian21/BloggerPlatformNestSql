@@ -1,5 +1,5 @@
 import {
-  Column,
+  Column, CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -26,6 +26,9 @@ export class Player {
 
   @OneToMany(() => Answer, (answer) => answer.player, { cascade: true })
   answers: Answer[];
+
+  @CreateDateColumn()
+  createdAt: Date;
 
   static create(userId: number) {
     const player = new Player();
