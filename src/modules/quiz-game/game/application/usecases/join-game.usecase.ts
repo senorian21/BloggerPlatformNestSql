@@ -1,40 +1,45 @@
-import {CommandHandler, ICommandHandler} from '@nestjs/cqrs';
-import {
-  UsersExternalQueryRepository
-} from '../../../../user-accounts/user/infrastructure/external-query/users.external-query-repository';
-import {Player} from '../../../player/domain/player.entity';
-import {PlayerRepository} from '../../../player/infrastructure/player.repository';
-import {Game, GameStatus} from "../../domain/game.entity";
-import {GameRepository} from "../../infrastructure/game.repository";
-import {DomainException} from "../../../../../core/exceptions/domain-exceptions";
-import {DomainExceptionCode} from "../../../../../core/exceptions/domain-exception-codes";
-import {QuestionRepository} from "../../../questions/infrastructure/question.repository";
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { UsersExternalQueryRepository } from '../../../../user-accounts/user/infrastructure/external-query/users.external-query-repository';
+import { Player } from '../../../player/domain/player.entity';
+import { PlayerRepository } from '../../../player/infrastructure/player.repository';
+import { Game, GameStatus } from '../../domain/game.entity';
+import { GameRepository } from '../../infrastructure/game.repository';
+import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
+import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
+import { QuestionRepository } from '../../../questions/infrastructure/question.repository';
 
 export class JoinGameCommand {
   constructor(public userId: number) {}
 }
 
 @CommandHandler(JoinGameCommand)
-export class JoinGameUseCase implements ICommandHandler<JoinGameCommand, string> {
+export class JoinGameUseCase
+  implements ICommandHandler<JoinGameCommand, string>
+{
   constructor(
-      private usersExternalQueryRepository: UsersExternalQueryRepository,
-      private playerRepository: PlayerRepository,
-      private gameRepository: GameRepository,
-      private questionRepository: QuestionRepository,
+    private usersExternalQueryRepository: UsersExternalQueryRepository,
+    private playerRepository: PlayerRepository,
+    private gameRepository: GameRepository,
+    private questionRepository: QuestionRepository,
   ) {}
 
   async execute({ userId }: JoinGameCommand): Promise<string> {
     // Проверяем, что пользователь существует
-    const user = await this.usersExternalQueryRepository.getByIdOrNotFoundFail(userId);
+    const user =
+      await this.usersExternalQueryRepository.getByIdOrNotFoundFail(userId);
 
     // Проверяем последнюю игру пользователя
-    const lastGame = await this.gameRepository.findLastGameByPlayerIdForUser(userId);
+    const lastGame =
+      await this.gameRepository.findLastGameByPlayerIdForUser(userId);
 
     if (lastGame) {
-      if (lastGame.status === GameStatus.Active || lastGame.status === GameStatus.PendingSecondPlayer) {
+      if (
+        lastGame.status === GameStatus.Active ||
+        lastGame.status === GameStatus.PendingSecondPlayer
+      ) {
         throw new DomainException({
           code: DomainExceptionCode.Forbidden,
-          message: "The user is already involved in an active or pending game",
+          message: 'The user is already involved in an active or pending game',
         });
       }
       // если Finished → продолжаем, создадим нового игрока
@@ -60,4 +65,3 @@ export class JoinGameUseCase implements ICommandHandler<JoinGameCommand, string>
     return newGame.id;
   }
 }
-

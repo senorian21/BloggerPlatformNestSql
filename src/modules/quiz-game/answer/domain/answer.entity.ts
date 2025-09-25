@@ -1,5 +1,6 @@
 import {
-  Column, CreateDateColumn,
+  Column,
+  CreateDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
@@ -36,11 +37,12 @@ export class Answer {
   @CreateDateColumn({ type: 'timestamptz' })
   addedAt: Date;
 
-
   static create(isCorrect: boolean, userAnswer: string, playerId: number) {
     const answer = new Answer();
     answer.body = userAnswer;
-    answer.answerStatus = isCorrect ? AnswerStatus.Correct : AnswerStatus.Incorrect;
+    answer.answerStatus = isCorrect
+      ? AnswerStatus.Correct
+      : AnswerStatus.Incorrect;
     answer.playerId = playerId;
     return answer;
   }

@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 import { Player } from '../../player/domain/player.entity';
 import { GameQuestion } from '../../questions/domain/game-question.entity';
-import {Question} from "../../questions/domain/question.entity";
+import { Question } from '../../questions/domain/question.entity';
 
 export enum GameStatus {
   PendingSecondPlayer = 'PendingSecondPlayer',
@@ -68,7 +68,7 @@ export class Game {
     this.status = GameStatus.Active;
     this.startGameDate = new Date();
 
-    this.gameQuestions = questions.map(q => {
+    this.gameQuestions = questions.map((q) => {
       const gq = new GameQuestion();
       gq.game = this;
       gq.questionId = q.id;
