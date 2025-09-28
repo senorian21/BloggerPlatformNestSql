@@ -29,7 +29,7 @@ export class AnswerUseCase
     userId,
     userAnswer,
   }: AnswerCommand): Promise<{ answerId: number; questionId: number }> {
-    const player = await this.playerRepository.findByUserId(userId);
+    const player = await this.playerRepository.findByUserIdLastPlayer(userId);
     if (!player) {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,

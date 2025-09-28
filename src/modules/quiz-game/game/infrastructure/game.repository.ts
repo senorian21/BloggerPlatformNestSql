@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Game, GameStatus } from '../domain/game.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 
 @Injectable()
 export class GameRepository {
@@ -17,6 +17,21 @@ export class GameRepository {
   async findPendingGame(): Promise<Game | null> {
     return this.gameRepository.findOne({
       where: { status: GameStatus.PendingSecondPlayer },
+    });
+  }
+
+  async findActiveGameByPlayer(playerId: number): Promise<Game | null> {
+    return this.gameRepository.findOne({
+      where: [
+        {
+          status: In([GameStatus.PendingSecondPlayer, GameStatus.Active]),
+          player_1_id: playerId,
+        },
+        {
+          status: In([GameStatus.PendingSecondPlayer, GameStatus.Active]),
+          player_2_id: playerId,
+        },
+      ],
     });
   }
 

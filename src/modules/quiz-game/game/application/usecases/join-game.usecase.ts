@@ -24,11 +24,9 @@ export class JoinGameUseCase
   ) {}
 
   async execute({ userId }: JoinGameCommand): Promise<string> {
-    // Проверяем, что пользователь существует
     const user =
       await this.usersExternalQueryRepository.getByIdOrNotFoundFail(userId);
 
-    // Проверяем последнюю игру пользователя
     const lastGame =
       await this.gameRepository.findLastGameByPlayerIdForUser(userId);
 
@@ -42,14 +40,11 @@ export class JoinGameUseCase
           message: 'The user is already involved in an active or pending game',
         });
       }
-      // если Finished → продолжаем, создадим нового игрока
     }
 
-    // Создаём нового игрока для каждой новой игры
     const player = Player.create(userId);
     await this.playerRepository.save(player);
 
-    // Ищем чужую pending‑игру
     const pendingGame = await this.gameRepository.findPendingGame();
 
     if (pendingGame && pendingGame.player_1_id !== player.id) {
@@ -59,7 +54,6 @@ export class JoinGameUseCase
       return pendingGame.id;
     }
 
-    // Создаём новую игру
     const newGame = Game.create(player.id);
     await this.gameRepository.save(newGame);
     return newGame.id;

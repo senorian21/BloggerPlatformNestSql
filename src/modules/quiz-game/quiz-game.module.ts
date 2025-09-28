@@ -26,6 +26,7 @@ import { AnswerUseCase } from './game/application/usecases/answer.usecase';
 import { AnswerQueryRepository } from './answer/infrastructure/query/answer.query-repository';
 import { GetAnswerByIdQueryHandler } from './answer/application/query/get-answer-by-id.query-handle';
 import { GetGameByIdForPlayerQueryHandler } from './game/application/queries/get-game-by-id-for-player.query-handle';
+import { GetActiveGameForPlayerQueryHandler } from './game/application/queries/get-active-game-for-player.query-handle';
 
 const commandHandlers = [
   CreateQuestionUseCase,
@@ -42,6 +43,7 @@ const queryHandlers = [
   GetGameByIdQueryHandler,
   GetAnswerByIdQueryHandler,
   GetGameByIdForPlayerQueryHandler,
+  GetActiveGameForPlayerQueryHandler,
 ];
 
 @Module({
