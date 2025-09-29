@@ -36,4 +36,8 @@ export class Player {
     player.userId = userId;
     return player;
   }
+
+  addBonus(): void {
+    this.score += 1;
+  }
 }

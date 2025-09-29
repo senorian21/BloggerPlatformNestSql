@@ -44,7 +44,6 @@ export class GameViewDto {
     dto.status = base.status;
     dto.pairCreatedDate = base.pairCreatedDate;
 
-    // Вопросы (distinct, в порядке добавления в игру)
     const questions = rawGame
       .map((r) => ({
         id: r.questionId != null ? String(r.questionId) : null,
@@ -61,7 +60,6 @@ export class GameViewDto {
         [] as { id: string; body: string }[],
       );
 
-    // Маппер ответов: сопоставляем ответы с вопросами по индексу
     const mapAnswers = (answers: Answer[]) =>
       answers.map((a, idx) => ({
         questionId: questions[idx] ? questions[idx].id : null,
@@ -69,14 +67,12 @@ export class GameViewDto {
         addedAt: a ? a.addedAt : null,
       }));
 
-    // Прогресс первого игрока
     dto.firstPlayerProgress = {
       player: {
         id: String(base.firstPlayerUserId),
         login: base.firstPlayerLogin,
       },
-      score: opts.firstPlayerAnswers.filter((a) => a.answerStatus === 'Correct')
-        .length,
+      score: base.firstPlayerScore ?? 0, // 🔥 теперь берём из запроса
       answers: mapAnswers(opts.firstPlayerAnswers),
     };
 
@@ -91,9 +87,7 @@ export class GameViewDto {
           id: String(base.secondPlayerUserId),
           login: base.secondPlayerLogin,
         },
-        score: opts.secondPlayerAnswers.filter(
-          (a) => a.answerStatus === 'Correct',
-        ).length,
+        score: base.secondPlayerScore ?? 0,
         answers: mapAnswers(opts.secondPlayerAnswers),
       };
 

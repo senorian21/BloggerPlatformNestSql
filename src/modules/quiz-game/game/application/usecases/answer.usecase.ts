@@ -10,23 +10,27 @@ import { DataSource } from 'typeorm';
 
 export class AnswerCommand {
   constructor(
-      public userId: number,
-      public userAnswer: string,
+    public userId: number,
+    public userAnswer: string,
   ) {}
 }
 
 @CommandHandler(AnswerCommand)
 export class AnswerUseCase
-    implements ICommandHandler<AnswerCommand, { answerId: number; questionId: number }>
+  implements
+    ICommandHandler<AnswerCommand, { answerId: number; questionId: number }>
 {
   constructor(
-      private readonly gameRepository: GameRepository,
-      private readonly playerRepository: PlayerRepository,
-      private readonly answerRepository: AnswerRepository,
-      private readonly dataSource: DataSource,
+    private readonly gameRepository: GameRepository,
+    private readonly playerRepository: PlayerRepository,
+    private readonly answerRepository: AnswerRepository,
+    private readonly dataSource: DataSource,
   ) {}
 
-  async execute({ userId, userAnswer }: AnswerCommand): Promise<{ answerId: number; questionId: number }> {
+  async execute({
+    userId,
+    userAnswer,
+  }: AnswerCommand): Promise<{ answerId: number; questionId: number }> {
     return this.dataSource.transaction(async (manager) => {
       const gameRepo = this.gameRepository.withManager(manager);
       const playerRepo = this.playerRepository.withManager(manager);
@@ -66,24 +70,42 @@ export class AnswerUseCase
       if (isCorrect) {
         player.score += 1;
         await playerRepo.save(player);
+      } else {
       }
 
       const player1Answers = await answerRepo.countByPlayerId(game.player_1_id);
-      const player2Answers = await answerRepo.countByPlayerId(game.player_2_id!);
+      const player2Answers = await answerRepo.countByPlayerId(
+        game.player_2_id!,
+      );
       const totalQuestions = game.gameQuestions.length;
 
-      if (player1Answers >= totalQuestions && player2Answers >= totalQuestions) {
+      if (
+        player1Answers >= totalQuestions &&
+        player2Answers >= totalQuestions
+      ) {
         const lastAnswerP1 = await answerRepo.findLastAnswer(game.player_1_id);
         const lastAnswerP2 = await answerRepo.findLastAnswer(game.player_2_id!);
 
-        const correctCountP1 = await answerRepo.countCorrectByPlayerId(game.player_1_id);
-        const correctCountP2 = await answerRepo.countCorrectByPlayerId(game.player_2_id!);
+        const correctCountP1 = await answerRepo.countCorrectByPlayerId(
+          game.player_1_id,
+        );
+        const correctCountP2 = await answerRepo.countCorrectByPlayerId(
+          game.player_2_id!,
+        );
 
         if (lastAnswerP1 && lastAnswerP2) {
-          if (lastAnswerP1.addedAt < lastAnswerP2.addedAt && correctCountP1 > 0) {
-            await playerRepo.incrementScore(game.player_1_id, 1);
-          } else if (lastAnswerP2.addedAt < lastAnswerP1.addedAt && correctCountP2 > 0) {
-            await playerRepo.incrementScore(game.player_2_id!, 1);
+          if (
+            lastAnswerP1.addedAt < lastAnswerP2.addedAt &&
+            correctCountP1 > 0
+          ) {
+            const player1 = await playerRepo.findByIdOrFail(game.player_1_id);
+            await playerRepo.addBonusAndSave(player1);
+          } else if (
+            lastAnswerP2.addedAt < lastAnswerP1.addedAt &&
+            correctCountP2 > 0
+          ) {
+            const player2 = await playerRepo.findByIdOrFail(game.player_2_id!);
+            await playerRepo.addBonusAndSave(player2);
           }
         }
 
@@ -96,4 +118,3 @@ export class AnswerUseCase
     });
   }
 }
-

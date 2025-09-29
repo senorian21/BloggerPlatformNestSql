@@ -3,7 +3,7 @@ import { Player } from '../domain/player.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
-import {Game} from "../../game/domain/game.entity";
+import { Game } from '../../game/domain/game.entity';
 
 export class PlayerRepository {
   constructor(
@@ -19,13 +19,20 @@ export class PlayerRepository {
     return new PlayerRepository(manager.getRepository(Player));
   }
 
-  async findByUserIdAndGameId(userId: number, gameId: string): Promise<Player | null> {
+  async findByUserIdAndGameId(
+    userId: number,
+    gameId: string,
+  ): Promise<Player | null> {
     return this.playerRepository
-        .createQueryBuilder('player')
-        .innerJoin('game', 'game', '(game.player_1_id = player.id OR game.player_2_id = player.id)')
-        .where('player.userId = :userId', { userId })
-        .andWhere('game.id = :gameId', { gameId })
-        .getOne();
+      .createQueryBuilder('player')
+      .innerJoin(
+        'game',
+        'game',
+        '(game.player_1_id = player.id OR game.player_2_id = player.id)',
+      )
+      .where('player.userId = :userId', { userId })
+      .andWhere('game.id = :gameId', { gameId })
+      .getOne();
   }
 
   async findByUserIdLastPlayer(userId: number): Promise<Player | null> {
@@ -48,7 +55,8 @@ export class PlayerRepository {
     return player;
   }
 
-  async incrementScore(playerId: number, delta: number): Promise<void> {
-    await this.playerRepository.increment({ id: playerId }, 'score', delta);
+  async addBonusAndSave(player: Player): Promise<Player> {
+    player.addBonus();
+    return this.playerRepository.save(player);
   }
 }
