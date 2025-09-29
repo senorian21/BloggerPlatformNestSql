@@ -25,23 +25,27 @@ export class AnswerQueryRepository {
       .where('a.id = :answerId', { answerId })
       .andWhere('gq."questionId" = :questionId', { questionId })
       .select([
-        'gq."questionId" AS "questionId"',
+        'gq."questionId" AS "questionId"', // ✅ берём из gameQuestion
         'a.answerStatus AS "answerStatus"',
         'a.addedAt AS "addedAt"',
       ])
       .getRawOne<{
-        questionId: number;
+        questionId: number | null;
         answerStatus: string | null;
         addedAt: Date | null;
       }>();
 
-    if (!raw) {
+    if (!raw || raw.questionId == null) {
       throw new DomainException({
         code: DomainExceptionCode.Forbidden,
         message: 'Answer not found',
       });
     }
 
-    return raw;
+    return {
+      questionId: String(questionId),
+      answerStatus: raw.answerStatus,
+      addedAt: raw.addedAt,
+    };
   }
 }

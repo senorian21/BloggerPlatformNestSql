@@ -35,7 +35,7 @@ export class GetActiveGameForPlayerQueryHandler
     const game = await this.gameRepository.findActiveGameByPlayer(player.id);
     if (!game) {
       throw new DomainException({
-        code: DomainExceptionCode.BadRequest,
+        code: DomainExceptionCode.NotFound,
         message: 'Game not found.',
       });
     }

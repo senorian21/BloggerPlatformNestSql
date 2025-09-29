@@ -5,7 +5,6 @@ import { QuestionSortBy } from './question-sort-by';
 export class GetQuestionQueryParams extends BaseQueryParams {
   @IsString()
   @IsOptional()
-  @IsIn(Object.values(QuestionSortBy))
   sortBy = QuestionSortBy.CreatedAt;
 
   @IsString()

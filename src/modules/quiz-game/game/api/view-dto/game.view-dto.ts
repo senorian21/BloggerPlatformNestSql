@@ -4,26 +4,26 @@ export class GameViewDto {
   id: string;
 
   firstPlayerProgress: {
-    player: { id: number; login: string };
+    player: { id: string; login: string };
     score: number;
     answers: {
-      questionId: number | null;
+      questionId: string | null;
       answerStatus: string | null;
       addedAt: Date | null;
     }[];
   };
 
   secondPlayerProgress: {
-    player: { id: number; login: string };
+    player: { id: string; login: string };
     score: number;
     answers: {
-      questionId: number | null;
+      questionId: string | null;
       answerStatus: string | null;
       addedAt: Date | null;
     }[];
   } | null;
 
-  questions: { id: number; body: string }[] | null;
+  questions: { id: string; body: string }[] | null;
 
   status: string;
   pairCreatedDate: Date;
@@ -40,64 +40,61 @@ export class GameViewDto {
     const dto = new GameViewDto();
     const base = rawGame[0];
 
-    dto.id = base.id;
+    dto.id = String(base.id);
     dto.status = base.status;
     dto.pairCreatedDate = base.pairCreatedDate;
 
     // Вопросы (distinct, в порядке добавления в игру)
     const questions = rawGame
-      .map((r) => ({ id: r.questionId, body: r.questionBody }))
-      .filter((q) => q.id)
+      .map((r) => ({
+        id: r.questionId != null ? String(r.questionId) : null,
+        body: r.questionBody,
+      }))
+      .filter((q) => q.id !== null)
       .reduce(
         (acc, q) => {
-          if (!acc.find((x) => x.id === q.id)) acc.push(q);
+          if (!acc.find((x) => x.id === q.id)) {
+            acc.push(q as { id: string; body: string });
+          }
           return acc;
         },
-        [] as { id: number; body: string }[],
+        [] as { id: string; body: string }[],
       );
+
+    // Маппер ответов: сопоставляем ответы с вопросами по индексу
+    const mapAnswers = (answers: Answer[]) =>
+      answers.map((a, idx) => ({
+        questionId: questions[idx] ? questions[idx].id : null,
+        answerStatus: a ? a.answerStatus : null,
+        addedAt: a ? a.addedAt : null,
+      }));
 
     // Прогресс первого игрока
     dto.firstPlayerProgress = {
       player: {
-        id: base.firstPlayerId,
+        id: String(base.firstPlayerUserId),
         login: base.firstPlayerLogin,
       },
       score: opts.firstPlayerAnswers.filter((a) => a.answerStatus === 'Correct')
         .length,
-      answers: questions.map((q, idx) => {
-        const answer = opts.firstPlayerAnswers[idx];
-        return {
-          questionId: q ? q.id : null,
-          answerStatus: answer ? answer.answerStatus : null,
-          addedAt: answer ? answer.addedAt : null,
-        };
-      }),
+      answers: mapAnswers(opts.firstPlayerAnswers),
     };
 
-    // Если игра в статусе ожидания второго игрока
     if (dto.status === 'PendingSecondPlayer') {
       dto.secondPlayerProgress = null;
       dto.questions = null;
       dto.startGameDate = null;
       dto.finishGameDate = null;
     } else {
-      // Прогресс второго игрока
       dto.secondPlayerProgress = {
         player: {
-          id: base.secondPlayerId,
+          id: String(base.secondPlayerUserId),
           login: base.secondPlayerLogin,
         },
         score: opts.secondPlayerAnswers.filter(
           (a) => a.answerStatus === 'Correct',
         ).length,
-        answers: questions.map((q, idx) => {
-          const answer = opts.secondPlayerAnswers[idx];
-          return {
-            questionId: q ? q.id : null,
-            answerStatus: answer ? answer.answerStatus : null,
-            addedAt: answer ? answer.addedAt : null,
-          };
-        }),
+        answers: mapAnswers(opts.secondPlayerAnswers),
       };
 
       dto.questions = questions;

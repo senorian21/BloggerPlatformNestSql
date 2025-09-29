@@ -6,6 +6,8 @@ import { GameRepository } from '../../infrastructure/game.repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
 import { PlayerRepository } from '../../../player/infrastructure/player.repository';
+import { isUUID } from 'class-validator';
+import { Game } from '../../domain/game.entity';
 
 export class GetGameByIdForPlayerQuery {
   constructor(
@@ -25,13 +27,31 @@ export class GetGameByIdForPlayerQueryHandler
   ) {}
 
   async execute(query: GetGameByIdForPlayerQuery): Promise<GameViewDto> {
-    const game = await this.gameRepository.findById(query.gameId);
+    if (!/^[0-9a-fA-F-]+$/.test(query.gameId)) {
+      throw new DomainException({
+        code: DomainExceptionCode.BadRequest,
+        message: 'Invalid game ID format',
+      });
+    }
+
+    let game: Game | null;
+
+    try {
+      game = await this.gameRepository.findById(query.gameId);
+    } catch (e) {
+      throw new DomainException({
+        code: DomainExceptionCode.NotFound,
+        message: 'Game not found',
+      });
+    }
+
     if (!game) {
       throw new DomainException({
         code: DomainExceptionCode.NotFound,
         message: 'Game not found',
       });
     }
+
     const player1 = await this.playerRepository.findByIdOrFail(
       game.player_1_id,
     );
@@ -45,7 +65,7 @@ export class GetGameByIdForPlayerQueryHandler
 
     if (!isParticipant) {
       throw new DomainException({
-        code: DomainExceptionCode.Forbidden,
+        code: DomainExceptionCode.Forbidden, // → 403
         message: 'You are not a participant of this game',
       });
     }

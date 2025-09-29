@@ -1,4 +1,13 @@
-import { Body, Controller, Get, Param, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
 import { ExtractUserFromRequest } from '../../../user-accounts/guards/decorators/param/user.decorator';
 import { UserContextDto } from '../../../user-accounts/auth/dto/user-context.dto';
@@ -21,6 +30,7 @@ export class pairGameQuizController {
   ) {}
 
   @Post('connection')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async connectUser(@ExtractUserFromRequest() user: UserContextDto) {
     const gameId = await this.commandBus.execute<JoinGameCommand, string>(
@@ -32,6 +42,7 @@ export class pairGameQuizController {
   }
 
   @Post('my-current/answers')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async answer(
     @ExtractUserFromRequest() user: UserContextDto,
@@ -50,7 +61,7 @@ export class pairGameQuizController {
   @UseGuards(JwtAuthGuard)
   async showActiveGame(@ExtractUserFromRequest() user: UserContextDto) {
     return this.queryBus.execute<GetActiveGameForPlayerQuery, GameViewDto>(
-        new GetActiveGameForPlayerQuery(user.id),
+      new GetActiveGameForPlayerQuery(user.id),
     );
   }
 

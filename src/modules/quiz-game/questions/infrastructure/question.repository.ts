@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Question } from '../domain/question.entity';
-import { IsNull, Repository } from 'typeorm';
+import { EntityManager, IsNull, Repository } from 'typeorm';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
+import { Game } from '../../game/domain/game.entity';
 
 @Injectable()
 export class QuestionRepository {
@@ -14,6 +15,10 @@ export class QuestionRepository {
 
   async save(question: Question) {
     await this.questionRepository.save(question);
+  }
+
+  withManager(manager: EntityManager): QuestionRepository {
+    return new QuestionRepository(manager.getRepository(Question));
   }
 
   async findByIdOrFail(id: number): Promise<Question> {

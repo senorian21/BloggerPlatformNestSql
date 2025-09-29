@@ -16,56 +16,57 @@ export class GameQueryRepository {
     private answerRepository: AnswerRepository,
   ) {}
 
-  async getGameViewByIdOrNotFoundFail(id: string): Promise<GameViewDto> {
-    // 1. Игра + игроки + вопросы
-    const rawGame = await this.gameRepository
-      .createQueryBuilder('g')
-      .leftJoin('g.player_1', 'p1')
-      .leftJoin('g.player_2', 'p2')
-      .leftJoin('p1.user', 'u1')
-      .leftJoin('p2.user', 'u2')
-      .leftJoin('g.gameQuestions', 'gq')
-      .leftJoin('gq.question', 'q')
-      .select([
-        'g.id AS id',
-        'g.status AS status',
-        'g.pairCreatedDate AS "pairCreatedDate"',
-        'g.startGameDate AS "startGameDate"',
-        'g.finishGameDate AS "finishGameDate"',
+    async getGameViewByIdOrNotFoundFail(id: string): Promise<GameViewDto> {
+        const rawGame = await this.gameRepository
+            .createQueryBuilder('g')
+            .leftJoin('g.player_1', 'p1')
+            .leftJoin('g.player_2', 'p2')
+            .leftJoin('p1.user', 'u1')
+            .leftJoin('p2.user', 'u2')
+            .leftJoin('g.gameQuestions', 'gq')
+            .leftJoin('gq.question', 'q')
+            .select([
+                'g.id AS id',
+                'g.status AS status',
+                'g.pairCreatedDate AS "pairCreatedDate"',
+                'g.startGameDate AS "startGameDate"',
+                'g.finishGameDate AS "finishGameDate"',
 
-        'p1.id AS "firstPlayerId"',
-        'u1.login AS "firstPlayerLogin"',
-        'p2.id AS "secondPlayerId"',
-        'u2.login AS "secondPlayerLogin"',
+                'p1.id AS "firstPlayerId"',
+                'u1.id AS "firstPlayerUserId"',       // добавлено
+                'u1.login AS "firstPlayerLogin"',
 
-        'q.id AS "questionId"',
-        'q.body AS "questionBody"',
-      ])
-      .where('g.id = :id', { id })
-      .getRawMany();
+                'p2.id AS "secondPlayerId"',
+                'u2.id AS "secondPlayerUserId"',      // добавлено
+                'u2.login AS "secondPlayerLogin"',
 
-    if (!rawGame.length) {
-      throw new DomainException({
-        code: DomainExceptionCode.NotFound,
-        message: 'Game not found.',
-      });
+                'q.id AS "questionId"',
+                'q.body AS "questionBody"',
+            ])
+            .where('g.id = :id', { id })
+            .getRawMany();
+
+        if (!rawGame.length) {
+            throw new DomainException({
+                code: DomainExceptionCode.NotFound,
+                message: 'Game not found.',
+            });
+        }
+
+        const firstPlayerId = rawGame[0].firstPlayerId;
+        const secondPlayerId = rawGame[0].secondPlayerId;
+
+        const firstPlayerAnswers = firstPlayerId
+            ? await this.answerRepository.findByPlayerId(firstPlayerId)
+            : [];
+        const secondPlayerAnswers = secondPlayerId
+            ? await this.answerRepository.findByPlayerId(secondPlayerId)
+            : [];
+
+        return GameViewDto.mapToView(rawGame, {
+            firstPlayerAnswers,
+            secondPlayerAnswers,
+        });
     }
 
-    // 2. Ответы игроков отдельными запросами
-    const firstPlayerId = rawGame[0].firstPlayerId;
-    const secondPlayerId = rawGame[0].secondPlayerId;
-
-    const firstPlayerAnswers = firstPlayerId
-      ? await this.answerRepository.findByPlayerId(firstPlayerId)
-      : [];
-    const secondPlayerAnswers = secondPlayerId
-      ? await this.answerRepository.findByPlayerId(secondPlayerId)
-      : [];
-
-    // 3. Собираем DTO
-    return GameViewDto.mapToView(rawGame, {
-      firstPlayerAnswers,
-      secondPlayerAnswers,
-    });
-  }
 }

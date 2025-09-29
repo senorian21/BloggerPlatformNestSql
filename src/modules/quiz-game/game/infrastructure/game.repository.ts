@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Game, GameStatus } from '../domain/game.entity';
-import { In, Repository } from 'typeorm';
+import { EntityManager, In, Repository } from 'typeorm';
+import { Player } from '../../player/domain/player.entity';
 
 @Injectable()
 export class GameRepository {
@@ -9,6 +10,11 @@ export class GameRepository {
     @InjectRepository(Game)
     private readonly gameRepository: Repository<Game>,
   ) {}
+
+  withManager(manager: EntityManager): GameRepository {
+    return new GameRepository(manager.getRepository(Game));
+  }
+
 
   async findById(id: string): Promise<Game | null> {
     return this.gameRepository.findOne({ where: { id } });
@@ -33,6 +39,18 @@ export class GameRepository {
         },
       ],
     });
+  }
+
+  async findActiveGameByUserId(userId: number): Promise<Game | null> {
+    return this.gameRepository
+        .createQueryBuilder('game')
+        .leftJoinAndSelect('game.player_1', 'p1')
+        .leftJoinAndSelect('game.player_2', 'p2')
+        .leftJoinAndSelect('game.gameQuestions', 'gq')
+        .leftJoinAndSelect('gq.question', 'q')
+        .where('(p1.userId = :userId OR p2.userId = :userId)', { userId })
+        .andWhere('game.status = :status', { status: GameStatus.Active })
+        .getOne();
   }
 
   async findGameByPlayerId(playerId: number): Promise<Game | null> {
