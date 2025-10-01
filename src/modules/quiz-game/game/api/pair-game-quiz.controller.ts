@@ -25,6 +25,10 @@ import { GetActiveGameForPlayerQuery } from '../application/queries/get-active-g
 import { StatisticGameCommand } from '../application/usecases/statistic-game.usecase';
 import { GetAllGamesQuery } from '../application/queries/get-all-game-by-id.query-handle';
 import { GetGamesQueryParams } from './input-dto/get-game-query-params.input-dto';
+import { GetTopUsersQueryParams } from './input-dto/get-top-user-query-params.input-dto';
+import { GetTopUsersQuery } from '../../player/application/queries/get-top-users.query-handle';
+import { PaginatedViewDto } from '../../../../core/dto/base.paginated.view-dto';
+import { TopUserViewDto } from '../../player/api/view-dto/top-user.view-dto';
 
 @Controller('pair-game-quiz')
 export class pairGameQuizController {
@@ -39,7 +43,6 @@ export class pairGameQuizController {
     @ExtractUserFromRequest() user: UserContextDto,
     @Query() query: GetGamesQueryParams,
   ) {
-    console.log(query, user.id);
     return this.queryBus.execute<
       GetAllGamesQuery,
       {
@@ -50,6 +53,14 @@ export class pairGameQuizController {
         items: GameViewDto[];
       }
     >(new GetAllGamesQuery(user.id, query));
+  }
+
+  @Get('pairs/top-users')
+  async topUsers(@Query() query: GetTopUsersQueryParams) {
+    return this.queryBus.execute<
+      GetTopUsersQuery,
+      PaginatedViewDto<TopUserViewDto[]>
+    >(new GetTopUsersQuery(query));
   }
 
   @Post('pairs/connection')

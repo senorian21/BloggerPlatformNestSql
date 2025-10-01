@@ -29,6 +29,8 @@ import { GetGameByIdForPlayerQueryHandler } from './game/application/queries/get
 import { GetActiveGameForPlayerQueryHandler } from './game/application/queries/get-active-game-for-player.query-handle';
 import { StatisticGameUseCase } from './game/application/usecases/statistic-game.usecase';
 import { GetAllGamesQueryHandler } from './game/application/queries/get-all-game-by-id.query-handle';
+import { PlayerQueryRepository } from './player/infrastructure/query/player.query-repository';
+import { GetTopUsersQueryHandler } from './player/application/queries/get-top-users.query-handle';
 
 const commandHandlers = [
   CreateQuestionUseCase,
@@ -48,6 +50,7 @@ const queryHandlers = [
   GetGameByIdForPlayerQueryHandler,
   GetActiveGameForPlayerQueryHandler,
   GetAllGamesQueryHandler,
+  GetTopUsersQueryHandler,
 ];
 
 @Module({
@@ -66,6 +69,7 @@ const queryHandlers = [
     GameQueryRepository,
     AnswerRepository,
     AnswerQueryRepository,
+    PlayerQueryRepository,
   ],
   exports: [],
 })
