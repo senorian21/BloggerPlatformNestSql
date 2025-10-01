@@ -33,17 +33,17 @@ export class AnswerRepository {
     return this.repo.find({ where: { playerId } });
   }
 
-  async hasCorrectAnswers(playerId: number): Promise<boolean> {
-    const correct = await this.repo.findOne({
-      where: { playerId, answerStatus: AnswerStatus.Correct },
-    });
-    return !!correct;
-  }
-
   async findLastAnswer(playerId: number): Promise<Answer | null> {
     return this.repo.findOne({
       where: { playerId },
       order: { addedAt: 'DESC' },
+    });
+  }
+
+  async findByPlayerIdAsc(playerId: number): Promise<Answer[]> {
+    return this.repo.find({
+      where: { playerId },
+      order: { addedAt: 'ASC' },
     });
   }
 }

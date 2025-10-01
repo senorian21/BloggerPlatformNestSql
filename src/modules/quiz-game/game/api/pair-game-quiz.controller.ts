@@ -6,6 +6,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../../../user-accounts/guards/bearer/jwt-auth.guard';
@@ -21,15 +22,37 @@ import { GetAnswerByIdQuery } from '../../answer/application/query/get-answer-by
 import { PlayerAnswerDto } from '../../answer/api/view-dto/answer.view-dto';
 import { GetGameByIdForPlayerQuery } from '../application/queries/get-game-by-id-for-player.query-handle';
 import { GetActiveGameForPlayerQuery } from '../application/queries/get-active-game-for-player.query-handle';
+import { StatisticGameCommand } from '../application/usecases/statistic-game.usecase';
+import { GetAllGamesQuery } from '../application/queries/get-all-game-by-id.query-handle';
+import { GetGamesQueryParams } from './input-dto/get-game-query-params.input-dto';
 
-@Controller('pair-game-quiz/pairs')
+@Controller('pair-game-quiz')
 export class pairGameQuizController {
   constructor(
     private readonly commandBus: CommandBus,
     private readonly queryBus: QueryBus,
   ) {}
 
-  @Post('connection')
+  @Get('pairs/my')
+  @UseGuards(JwtAuthGuard)
+  async getAllGameByUser(
+    @ExtractUserFromRequest() user: UserContextDto,
+    @Query() query: GetGamesQueryParams,
+  ) {
+    console.log(query, user.id);
+    return this.queryBus.execute<
+      GetAllGamesQuery,
+      {
+        pagesCount: number;
+        page: number;
+        pageSize: number;
+        totalCount: number;
+        items: GameViewDto[];
+      }
+    >(new GetAllGamesQuery(user.id, query));
+  }
+
+  @Post('pairs/connection')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async connectUser(@ExtractUserFromRequest() user: UserContextDto) {
@@ -41,7 +64,7 @@ export class pairGameQuizController {
     );
   }
 
-  @Post('my-current/answers')
+  @Post('pairs/my-current/answers')
   @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async answer(
@@ -57,7 +80,7 @@ export class pairGameQuizController {
     );
   }
 
-  @Get('my-current')
+  @Get('pairs/my-current')
   @UseGuards(JwtAuthGuard)
   async showActiveGame(@ExtractUserFromRequest() user: UserContextDto) {
     return this.queryBus.execute<GetActiveGameForPlayerQuery, GameViewDto>(
@@ -65,7 +88,7 @@ export class pairGameQuizController {
     );
   }
 
-  @Get('/:id')
+  @Get('pairs/:id')
   @UseGuards(JwtAuthGuard)
   async getGameById(
     @ExtractUserFromRequest() user: UserContextDto,
@@ -74,5 +97,21 @@ export class pairGameQuizController {
     return this.queryBus.execute<GetGameByIdForPlayerQuery, GameViewDto>(
       new GetGameByIdForPlayerQuery(gameId, user.id),
     );
+  }
+
+  @Get('users/my-statistic')
+  @UseGuards(JwtAuthGuard)
+  async getStatisticUser(@ExtractUserFromRequest() user: UserContextDto) {
+    return this.commandBus.execute<
+      StatisticGameCommand,
+      {
+        sumScore: number;
+        avgScores: number;
+        gamesCount: number;
+        winsCount: number;
+        lossesCount: number;
+        drawsCount: number;
+      }
+    >(new StatisticGameCommand(user.id));
   }
 }

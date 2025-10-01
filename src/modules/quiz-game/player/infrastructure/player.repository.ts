@@ -1,5 +1,5 @@
 import { InjectRepository } from '@nestjs/typeorm';
-import { Player } from '../domain/player.entity';
+import { GameStatusPlayer, Player } from '../domain/player.entity';
 import { EntityManager, Repository } from 'typeorm';
 import { DomainException } from '../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../core/exceptions/domain-exception-codes';
@@ -58,5 +58,46 @@ export class PlayerRepository {
   async addBonusAndSave(player: Player): Promise<Player> {
     player.addBonus();
     return this.playerRepository.save(player);
+  }
+
+  async getUserStats(userId: number) {
+    const players = await this.playerRepository.find({
+      where: { userId },
+    });
+
+    if (players.length === 0) {
+      return {
+        sumScore: 0,
+        avgScores: 0,
+        gamesCount: 0,
+        winsCount: 0,
+        lossesCount: 0,
+        drawsCount: 0,
+      };
+    }
+
+    const sumScore = players.reduce((acc, p) => acc + p.score, 0);
+    const gamesCount = players.length;
+    const avgScores =
+      gamesCount > 0 ? parseFloat((sumScore / gamesCount).toFixed(2)) : 0;
+
+    const winsCount = players.filter(
+      (p) => p.status === GameStatusPlayer.Winner,
+    ).length;
+    const lossesCount = players.filter(
+      (p) => p.status === GameStatusPlayer.Losing,
+    ).length;
+    const drawsCount = players.filter(
+      (p) => p.status === GameStatusPlayer.Draw,
+    ).length;
+
+    return {
+      sumScore,
+      avgScores,
+      gamesCount,
+      winsCount,
+      lossesCount,
+      drawsCount,
+    };
   }
 }

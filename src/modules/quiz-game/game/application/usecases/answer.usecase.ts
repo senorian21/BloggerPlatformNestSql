@@ -7,6 +7,7 @@ import { GameStatus } from '../../domain/game.entity';
 import { AnswerRepository } from '../../../answer/infrastructure/answer.repository';
 import { Answer, AnswerStatus } from '../../../answer/domain/answer.entity';
 import { DataSource } from 'typeorm';
+import { GameStatusPlayer } from '../../../player/domain/player.entity';
 
 export class AnswerCommand {
   constructor(
@@ -108,6 +109,23 @@ export class AnswerUseCase
             await playerRepo.addBonusAndSave(player2);
           }
         }
+
+        const finalP1 = await playerRepo.findByIdOrFail(game.player_1_id);
+        const finalP2 = await playerRepo.findByIdOrFail(game.player_2_id!);
+
+        if (finalP1.score > finalP2.score) {
+          finalP1.status = GameStatusPlayer.Winner;
+          finalP2.status = GameStatusPlayer.Losing;
+        } else if (finalP2.score > finalP1.score) {
+          finalP2.status = GameStatusPlayer.Winner;
+          finalP1.status = GameStatusPlayer.Losing;
+        } else {
+          finalP1.status = GameStatusPlayer.Draw;
+          finalP2.status = GameStatusPlayer.Draw;
+        }
+
+        await playerRepo.save(finalP1);
+        await playerRepo.save(finalP2);
 
         game.status = GameStatus.Finished;
         game.finishGameDate = new Date();

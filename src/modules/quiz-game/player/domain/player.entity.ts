@@ -10,6 +10,12 @@ import {
 import { User } from '../../../user-accounts/user/domain/user.entity';
 import { Answer } from '../../answer/domain/answer.entity';
 
+export enum GameStatusPlayer {
+  Winner = 'Winner',
+  Losing = 'Losing',
+  Draw = 'Draw',
+}
+
 @Entity('player')
 export class Player {
   @PrimaryGeneratedColumn()
@@ -30,6 +36,13 @@ export class Player {
 
   @CreateDateColumn()
   createdAt: Date;
+
+  @Column({
+    type: 'enum',
+    enum: GameStatusPlayer,
+    default: null,
+  })
+  status: GameStatusPlayer;
 
   static create(userId: number) {
     const player = new Player();
