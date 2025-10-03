@@ -23,8 +23,8 @@ export class PlayerQueryRepository {
       .createQueryBuilder('p')
       .innerJoin('p.user', 'u')
       .innerJoin(Game, 'g', 'g.player_1_id = p.id OR g.player_2_id = p.id')
-      .select('u.id', 'userId')
-      .addSelect('u.login', 'login')
+      .select('u.id', 'player_id')
+      .addSelect('u.login', 'player_login')
       .addSelect('SUM(p.score)', 'sumScore')
       .addSelect('COUNT(g.id)', 'gamesCount')
       .addSelect(
@@ -48,6 +48,10 @@ export class PlayerQueryRepository {
         END, 0) THEN 1 ELSE 0 END)`,
         'drawsCount',
       )
+      .addSelect(
+        'ROUND(SUM(p.score)::numeric / NULLIF(COUNT(g.id),0), 2)',
+        'avgScores',
+      )
       .groupBy('u.id')
       .addGroupBy('u.login');
 
@@ -57,6 +61,7 @@ export class PlayerQueryRepository {
       winsCount: '"winsCount"',
       lossesCount: '"lossesCount"',
       drawsCount: '"drawsCount"',
+      avgScores: '"avgScores"',
     };
 
     const sortParams: [string, 'ASC' | 'DESC'][] = [];
@@ -79,13 +84,23 @@ export class PlayerQueryRepository {
       else qb.addOrderBy(column, dir);
     });
 
-    const totalCount = await qb.getCount();
+    // считаем количество уникальных игроков (групп)
+    const countQb = this.playerRepository
+      .createQueryBuilder('p')
+      .innerJoin('p.user', 'u')
+      .innerJoin(Game, 'g', 'g.player_1_id = p.id OR g.player_2_id = p.id')
+      .select('u.id')
+      .groupBy('u.id');
+
+    const totalCount = (await countQb.getRawMany()).length;
     const pagesCount = Math.ceil(totalCount / pageSize);
 
-    const items = await qb
+    const rawItems = await qb
       .offset((pageNumber - 1) * pageSize)
       .limit(pageSize)
-      .getRawMany<TopUserViewDto>();
+      .getRawMany();
+
+    const items = rawItems.map((r) => TopUserViewDto.mapToView(r));
 
     return {
       pagesCount,

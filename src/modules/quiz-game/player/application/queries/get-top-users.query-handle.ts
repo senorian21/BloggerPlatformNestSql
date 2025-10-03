@@ -5,7 +5,7 @@ import { TopUserViewDto } from '../../api/view-dto/top-user.view-dto';
 import { PaginatedViewDto } from '../../../../../core/dto/base.paginated.view-dto';
 
 export class GetTopUsersQuery {
-  constructor(public prams: GetTopUsersQueryParams) {}
+  constructor(public params: GetTopUsersQueryParams) {}
 }
 
 @QueryHandler(GetTopUsersQuery)
@@ -17,6 +17,6 @@ export class GetTopUsersQueryHandler
   async execute(
     query: GetTopUsersQuery,
   ): Promise<PaginatedViewDto<TopUserViewDto[]>> {
-    return this.playerQueryRepository.getTopUsers(query.prams);
+    return this.playerQueryRepository.getTopUsers(query.params);
   }
 }

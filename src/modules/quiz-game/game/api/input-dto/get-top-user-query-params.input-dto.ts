@@ -6,18 +6,21 @@ export class GetTopUsersQueryParams extends BaseQueryParams {
   @IsOptional()
   @IsString({ each: true })
   @Transform(({ value }) => {
-    if (Array.isArray(value)) return value;
+    if (Array.isArray(value)) {
+      // ["sumScore desc", "avgScores desc"]
+      return value.map((v) => String(v).trim()).filter(Boolean);
+    }
     return String(value)
-      .split(';')
+      .split(/[;,]/) // поддержим и ; и ,
       .map((v) => v.trim())
       .filter(Boolean);
   })
   @Matches(
-    /^(sumScore|gamesCount|winsCount|lossesCount|drawsCount)(\.| )(asc|desc)$/i,
+    /^(sumScore|gamesCount|winsCount|lossesCount|drawsCount|avgScores)(\.| )(asc|desc)$/i,
     {
       each: true,
       message:
-        'sort must be in format "fieldName.asc|desc", allowed fields: sumScore, gamesCount, winsCount, lossesCount, drawsCount',
+        'sort must be in format "fieldName.asc|desc", allowed fields: sumScore, gamesCount, winsCount, lossesCount, drawsCount, avgScores',
     },
   )
   sort?: string[];

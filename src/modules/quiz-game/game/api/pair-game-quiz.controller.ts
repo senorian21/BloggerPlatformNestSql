@@ -55,7 +55,7 @@ export class pairGameQuizController {
     >(new GetAllGamesQuery(user.id, query));
   }
 
-  @Get('pairs/top-users')
+  @Get('users/top')
   async topUsers(@Query() query: GetTopUsersQueryParams) {
     return this.queryBus.execute<
       GetTopUsersQuery,
