@@ -8,11 +8,11 @@ import { Game } from '../../game/domain/game.entity';
 export class AnswerRepository {
   constructor(
     @InjectRepository(Answer)
-    private readonly repo: Repository<Answer>,
+    private readonly answerRepository: Repository<Answer>,
   ) {}
 
   async save(answer: Answer): Promise<Answer> {
-    return this.repo.save(answer);
+    return this.answerRepository.save(answer);
   }
 
   withManager(manager: EntityManager): AnswerRepository {
@@ -20,28 +20,28 @@ export class AnswerRepository {
   }
 
   async countCorrectByPlayerId(playerId: number): Promise<number> {
-    return this.repo.count({
+    return this.answerRepository.count({
       where: { playerId, answerStatus: AnswerStatus.Correct },
     });
   }
 
   async countByPlayerId(playerId: number): Promise<number> {
-    return this.repo.count({ where: { playerId } });
+    return this.answerRepository.count({ where: { playerId } });
   }
 
   async findByPlayerId(playerId: number): Promise<Answer[]> {
-    return this.repo.find({ where: { playerId } });
+    return this.answerRepository.find({ where: { playerId } });
   }
 
   async findLastAnswer(playerId: number): Promise<Answer | null> {
-    return this.repo.findOne({
+    return this.answerRepository.findOne({
       where: { playerId },
       order: { addedAt: 'DESC' },
     });
   }
 
   async findByPlayerIdAsc(playerId: number): Promise<Answer[]> {
-    return this.repo.find({
+    return this.answerRepository.find({
       where: { playerId },
       order: { addedAt: 'ASC' },
     });

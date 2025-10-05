@@ -3,11 +3,9 @@ import { GameRepository } from '../../infrastructure/game.repository';
 import { PlayerRepository } from '../../../player/infrastructure/player.repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
-import { Game, GameStatus } from '../../domain/game.entity';
 import { AnswerRepository } from '../../../answer/infrastructure/answer.repository';
 import { Answer } from '../../../answer/domain/answer.entity';
 import { DataSource } from 'typeorm';
-import { GameStatusPlayer } from '../../../player/domain/player.entity';
 import { SchedulerRegistry } from '@nestjs/schedule';
 
 export class AnswerCommand {

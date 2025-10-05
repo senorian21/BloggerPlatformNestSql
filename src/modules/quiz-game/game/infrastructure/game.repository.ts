@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Game, GameStatus } from '../domain/game.entity';
 import { EntityManager, In, Repository } from 'typeorm';
-import { Player } from '../../player/domain/player.entity';
 
 @Injectable()
 export class GameRepository {
@@ -53,18 +52,6 @@ export class GameRepository {
       .where('(p1.userId = :userId OR p2.userId = :userId)', { userId })
       .andWhere('game.status = :status', { status: GameStatus.Active })
       .getOne();
-  }
-
-  async findGameByPlayerId(playerId: number): Promise<Game | null> {
-    return this.gameRepository.findOne({
-      where: [{ player_1_id: playerId }, { player_2_id: playerId }],
-      relations: [
-        'gameQuestions',
-        'gameQuestions.question',
-        'player_1',
-        'player_2',
-      ],
-    });
   }
 
   async findLastGameByPlayerIdForUser(userId: number): Promise<Game | null> {
