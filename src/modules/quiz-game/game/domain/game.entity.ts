@@ -7,7 +7,7 @@ import {
   OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
-import { Player } from '../../player/domain/player.entity';
+import { GameStatusPlayer, Player } from '../../player/domain/player.entity';
 import { GameQuestion } from '../../questions/domain/game-question.entity';
 import { Question } from '../../questions/domain/question.entity';
 
@@ -74,5 +74,40 @@ export class Game {
       gq.questionId = q.id;
       return gq;
     });
+  }
+
+  finish(
+    players: { p1: Player; p2: Player },
+    stats: {
+      lastAnswerP1?: Date;
+      lastAnswerP2?: Date;
+      correctCountP1: number;
+      correctCountP2: number;
+    },
+  ) {
+    if (stats.lastAnswerP1 && stats.lastAnswerP2) {
+      if (stats.lastAnswerP1 < stats.lastAnswerP2 && stats.correctCountP1 > 0) {
+        players.p1.addBonus();
+      } else if (
+        stats.lastAnswerP2 < stats.lastAnswerP1 &&
+        stats.correctCountP2 > 0
+      ) {
+        players.p2.addBonus();
+      }
+    }
+
+    if (players.p1.score > players.p2.score) {
+      players.p1.status = GameStatusPlayer.Winner;
+      players.p2.status = GameStatusPlayer.Losing;
+    } else if (players.p2.score > players.p1.score) {
+      players.p2.status = GameStatusPlayer.Winner;
+      players.p1.status = GameStatusPlayer.Losing;
+    } else {
+      players.p1.status = GameStatusPlayer.Draw;
+      players.p2.status = GameStatusPlayer.Draw;
+    }
+
+    this.status = GameStatus.Finished;
+    this.finishGameDate = new Date();
   }
 }

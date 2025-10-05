@@ -3,11 +3,12 @@ import { GameRepository } from '../../infrastructure/game.repository';
 import { PlayerRepository } from '../../../player/infrastructure/player.repository';
 import { DomainException } from '../../../../../core/exceptions/domain-exceptions';
 import { DomainExceptionCode } from '../../../../../core/exceptions/domain-exception-codes';
-import { GameStatus } from '../../domain/game.entity';
+import { Game, GameStatus } from '../../domain/game.entity';
 import { AnswerRepository } from '../../../answer/infrastructure/answer.repository';
-import { Answer, AnswerStatus } from '../../../answer/domain/answer.entity';
+import { Answer } from '../../../answer/domain/answer.entity';
 import { DataSource } from 'typeorm';
 import { GameStatusPlayer } from '../../../player/domain/player.entity';
+import { SchedulerRegistry } from '@nestjs/schedule';
 
 export class AnswerCommand {
   constructor(
@@ -26,6 +27,7 @@ export class AnswerUseCase
     private readonly playerRepository: PlayerRepository,
     private readonly answerRepository: AnswerRepository,
     private readonly dataSource: DataSource,
+    private readonly schedulerRegistry: SchedulerRegistry,
   ) {}
 
   async execute({
@@ -38,29 +40,26 @@ export class AnswerUseCase
       const answerRepo = this.answerRepository.withManager(manager);
 
       const game = await gameRepo.findActiveGameByUserId(userId);
-      if (!game) {
+      if (!game)
         throw new DomainException({
           code: DomainExceptionCode.Forbidden,
           message: 'Active game not found.',
         });
-      }
 
       const player = await playerRepo.findByUserIdAndGameId(userId, game.id);
-      if (!player) {
+      if (!player)
         throw new DomainException({
           code: DomainExceptionCode.Forbidden,
           message: 'Player not found in this game.',
         });
-      }
 
       const answersCount = await answerRepo.countByPlayerId(player.id);
       const nextGameQuestion = game.gameQuestions[answersCount];
-      if (!nextGameQuestion) {
+      if (!nextGameQuestion)
         throw new DomainException({
           code: DomainExceptionCode.Forbidden,
           message: 'No more questions left for this player.',
         });
-      }
 
       const question = nextGameQuestion.question;
       const isCorrect = question.correctAnswers.includes(userAnswer);
@@ -71,7 +70,6 @@ export class AnswerUseCase
       if (isCorrect) {
         player.score += 1;
         await playerRepo.save(player);
-      } else {
       }
 
       const player1Answers = await answerRepo.countByPlayerId(game.player_1_id);
@@ -80,13 +78,71 @@ export class AnswerUseCase
       );
       const totalQuestions = game.gameQuestions.length;
 
+      // если один игрок закончил, запускаем таймер
+      if (
+        (player1Answers >= totalQuestions && player2Answers < totalQuestions) ||
+        (player2Answers >= totalQuestions && player1Answers < totalQuestions)
+      ) {
+        const timeoutName = `finish-game-${game.id}`;
+        if (!this.schedulerRegistry.doesExist('timeout', timeoutName)) {
+          const timeout = setTimeout(async () => {
+            await this.dataSource.transaction(async (m) => {
+              const gRepo = this.gameRepository.withManager(m);
+              const pRepo = this.playerRepository.withManager(m);
+              const aRepo = this.answerRepository.withManager(m);
+
+              const g = await gRepo.findById(game.id);
+              if (!g) return;
+
+              const p1 = await pRepo.findByIdOrFail(g.player_1_id);
+              const p2 = await pRepo.findByIdOrFail(g.player_2_id!);
+
+              const p1Answers = await aRepo.countByPlayerId(p1.id);
+              const p2Answers = await aRepo.countByPlayerId(p2.id);
+
+              if (p1Answers < totalQuestions) {
+                for (const q of g.gameQuestions.slice(p1Answers)) {
+                  await aRepo.save(Answer.create(false, '', p1.id));
+                }
+              }
+              if (p2Answers < totalQuestions) {
+                for (const q of g.gameQuestions.slice(p2Answers)) {
+                  await aRepo.save(Answer.create(false, '', p2.id));
+                }
+              }
+
+              const lastAnswerP1 = await aRepo.findLastAnswer(p1.id);
+              const lastAnswerP2 = await aRepo.findLastAnswer(p2.id);
+              const correctCountP1 = await aRepo.countCorrectByPlayerId(p1.id);
+              const correctCountP2 = await aRepo.countCorrectByPlayerId(p2.id);
+
+              g.finish(
+                { p1, p2 },
+                {
+                  lastAnswerP1: lastAnswerP1?.addedAt,
+                  lastAnswerP2: lastAnswerP2?.addedAt,
+                  correctCountP1,
+                  correctCountP2,
+                },
+              );
+
+              await pRepo.save(p1);
+              await pRepo.save(p2);
+              await gRepo.save(g);
+            });
+            this.schedulerRegistry.deleteTimeout(timeoutName);
+          }, 10_000);
+          this.schedulerRegistry.addTimeout(timeoutName, timeout);
+        }
+      }
+
+      // если оба игрока закончили
       if (
         player1Answers >= totalQuestions &&
         player2Answers >= totalQuestions
       ) {
         const lastAnswerP1 = await answerRepo.findLastAnswer(game.player_1_id);
         const lastAnswerP2 = await answerRepo.findLastAnswer(game.player_2_id!);
-
         const correctCountP1 = await answerRepo.countCorrectByPlayerId(
           game.player_1_id,
         );
@@ -94,41 +150,21 @@ export class AnswerUseCase
           game.player_2_id!,
         );
 
-        if (lastAnswerP1 && lastAnswerP2) {
-          if (
-            lastAnswerP1.addedAt < lastAnswerP2.addedAt &&
-            correctCountP1 > 0
-          ) {
-            const player1 = await playerRepo.findByIdOrFail(game.player_1_id);
-            await playerRepo.addBonusAndSave(player1);
-          } else if (
-            lastAnswerP2.addedAt < lastAnswerP1.addedAt &&
-            correctCountP2 > 0
-          ) {
-            const player2 = await playerRepo.findByIdOrFail(game.player_2_id!);
-            await playerRepo.addBonusAndSave(player2);
-          }
-        }
+        const p1 = await playerRepo.findByIdOrFail(game.player_1_id);
+        const p2 = await playerRepo.findByIdOrFail(game.player_2_id!);
 
-        const finalP1 = await playerRepo.findByIdOrFail(game.player_1_id);
-        const finalP2 = await playerRepo.findByIdOrFail(game.player_2_id!);
+        game.finish(
+          { p1, p2 },
+          {
+            lastAnswerP1: lastAnswerP1?.addedAt,
+            lastAnswerP2: lastAnswerP2?.addedAt,
+            correctCountP1,
+            correctCountP2,
+          },
+        );
 
-        if (finalP1.score > finalP2.score) {
-          finalP1.status = GameStatusPlayer.Winner;
-          finalP2.status = GameStatusPlayer.Losing;
-        } else if (finalP2.score > finalP1.score) {
-          finalP2.status = GameStatusPlayer.Winner;
-          finalP1.status = GameStatusPlayer.Losing;
-        } else {
-          finalP1.status = GameStatusPlayer.Draw;
-          finalP2.status = GameStatusPlayer.Draw;
-        }
-
-        await playerRepo.save(finalP1);
-        await playerRepo.save(finalP2);
-
-        game.status = GameStatus.Finished;
-        game.finishGameDate = new Date();
+        await playerRepo.save(p1);
+        await playerRepo.save(p2);
         await gameRepo.save(game);
       }
 

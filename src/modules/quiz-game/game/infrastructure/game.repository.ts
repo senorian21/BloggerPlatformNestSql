@@ -16,7 +16,10 @@ export class GameRepository {
   }
 
   async findById(id: string): Promise<Game | null> {
-    return this.gameRepository.findOne({ where: { id } });
+    return this.gameRepository.findOne({
+      where: { id },
+      relations: ['gameQuestions', 'gameQuestions.question'],
+    });
   }
 
   async findPendingGame(): Promise<Game | null> {

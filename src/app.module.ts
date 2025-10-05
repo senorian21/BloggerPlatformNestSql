@@ -12,6 +12,7 @@ import { APP_FILTER } from '@nestjs/core';
 import { AllHttpExceptionsFilter } from './core/exceptions/filters/all-exceptions.filter';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { QuizGameModule } from './modules/quiz-game/quiz-game.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -30,6 +31,7 @@ import { QuizGameModule } from './modules/quiz-game/quiz-game.module';
       }),
       inject: [ConfigService],
     }),
+    ScheduleModule.forRoot(),
     CoreModule,
     BloggerPlatformModule,
     TestingModule,
