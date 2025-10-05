@@ -31,6 +31,7 @@ import { StatisticGameUseCase } from './game/application/usecases/statistic-game
 import { GetAllGamesQueryHandler } from './game/application/queries/get-all-game-by-id.query-handle';
 import { PlayerQueryRepository } from './player/infrastructure/query/player.query-repository';
 import { GetTopUsersQueryHandler } from './player/application/queries/get-top-users.query-handle';
+import { GameCronService } from './game/application/service/cron-game.service';
 
 const commandHandlers = [
   CreateQuestionUseCase,
@@ -70,6 +71,7 @@ const queryHandlers = [
     AnswerRepository,
     AnswerQueryRepository,
     PlayerQueryRepository,
+    GameCronService,
   ],
   exports: [],
 })

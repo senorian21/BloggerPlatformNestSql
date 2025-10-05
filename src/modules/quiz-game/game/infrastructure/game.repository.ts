@@ -10,6 +10,13 @@ export class GameRepository {
     private readonly gameRepository: Repository<Game>,
   ) {}
 
+  async findActiveGamesWithQuestions(): Promise<Game[]> {
+    return this.gameRepository.find({
+      where: { status: GameStatus.Active },
+      relations: ['gameQuestions', 'gameQuestions.question'],
+    });
+  }
+
   withManager(manager: EntityManager): GameRepository {
     return new GameRepository(manager.getRepository(Game));
   }
