@@ -15,7 +15,9 @@ export class GameCronService {
     private readonly dataSource: DataSource,
   ) {}
 
-  @Cron(CronExpression.EVERY_SECOND)
+  @Cron(CronExpression.EVERY_SECOND, {
+    disabled: process.env.NODE_ENV === 'test',
+  })
   async checkGames() {
     const games = await this.gameRepository.findActiveGamesWithQuestions();
 

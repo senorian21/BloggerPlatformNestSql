@@ -1,7 +1,7 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
-import {initApp} from "../utils/app.test-helper";
+import { initApp } from '../utils/app.test-helper';
 
 describe('Blog (e2e)', () => {
   let app: INestApplication;
@@ -28,7 +28,7 @@ describe('Blog (e2e)', () => {
   });
 
   describe('Super Admin BlogController', () => {
-    it('Correct blog creation; POST /api/sa/blogs', async () => {
+    it('✅Correct blog creation; POST /api/sa/blogs', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .auth('admin', 'qwerty')
@@ -42,7 +42,7 @@ describe('Blog (e2e)', () => {
         websiteUrl: validBlogData.websiteUrl,
       });
     });
-    it('Incorrect blog creation; POST /api/sa/blogs', async () => {
+    it('❌Incorrect blog creation; POST /api/sa/blogs', async () => {
       const incorrectResponse1 = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .auth('admin', 'qwerty')
@@ -70,13 +70,13 @@ describe('Blog (e2e)', () => {
         })
         .expect(HttpStatus.BAD_REQUEST);
     });
-    it('Creating a blog by an unauthorized user; POST /api/sa/blogs', async () => {
+    it('❌Creating a blog by an unauthorized user; POST /api/sa/blogs', async () => {
       const incorrectResponse1 = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .send(validBlogData)
         .expect(HttpStatus.UNAUTHORIZED);
     });
-    it('Getting all blogs with pagination; GET /api/sa/blogs', async () => {
+    it('✅Getting all blogs with pagination; GET /api/sa/blogs', async () => {
       const response1 = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .auth('admin', 'qwerty')
@@ -142,7 +142,7 @@ describe('Blog (e2e)', () => {
       expect(getResponse2.body.items).toHaveLength(1);
       expect(getResponse2.body.items[0].name).toBe('Search Blog');
     });
-    it('Correct blog update; PUT /api/sa/blogs', async () => {
+    it('✅Correct blog update; PUT /api/sa/blogs', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .auth('admin', 'qwerty')
@@ -170,7 +170,7 @@ describe('Blog (e2e)', () => {
         createdAt: expect.any(String),
       });
     });
-    it('Incorrect blog update; PUT /api/sa/blogs', async () => {
+    it('❌Incorrect blog update; PUT /api/sa/blogs', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .auth('admin', 'qwerty')
@@ -210,7 +210,7 @@ describe('Blog (e2e)', () => {
         createdAt: expect.any(String),
       });
     });
-    it('Blog update by an unauthorized user; PUT /api/sa/blogs/:blogId', async () => {
+    it('❌Blog update by an unauthorized user; PUT /api/sa/blogs/:blogId', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .auth('admin', 'qwerty')
@@ -241,7 +241,7 @@ describe('Blog (e2e)', () => {
         createdAt: expect.any(String),
       });
     });
-    it('Deleting a blog; PUT /api/sa/blogs/:blogId', async () => {
+    it('✅Deleting a blog; PUT /api/sa/blogs/:blogId', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .auth('admin', 'qwerty')
@@ -267,7 +267,7 @@ describe('Blog (e2e)', () => {
   });
 
   describe('Public BlogController', () => {
-    it('Getting a blog by ID; GET /api/blogs/:blogId', async () => {
+    it('✅Getting a blog by ID; GET /api/blogs/:blogId', async () => {
       const response = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .auth('admin', 'qwerty')
@@ -296,7 +296,7 @@ describe('Blog (e2e)', () => {
         .get(`/api/blogs/${blogId}`)
         .expect(HttpStatus.NOT_FOUND);
     });
-    it('Getting all blogs with pagination; GET /api/blogs', async () => {
+    it('✅Getting all blogs with pagination; GET /api/blogs', async () => {
       const response1 = await request(app.getHttpServer())
         .post('/api/sa/blogs')
         .auth('admin', 'qwerty')
