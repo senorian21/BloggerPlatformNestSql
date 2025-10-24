@@ -1,209 +1,366 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { HttpStatus, INestApplication } from '@nestjs/common';
+import { INestApplication, HttpStatus } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import request from 'supertest';
-import { Connection } from 'mongoose';
-import { getConnectionToken } from '@nestjs/mongoose';
-import { AppModule } from '../../src/app.module';
-import { GLOBAL_PREFIX } from '../../src/setup/global-prefix.setup';
+import {initApp} from "../utils/app.test-helper";
 
-describe('AppController (e2e)', () => {
+describe('Blog (e2e)', () => {
   let app: INestApplication;
-  let connection: Connection;
+  let dataSource: DataSource;
+
+  const validBlogData = {
+    name: 'Valid Name',
+    description: 'Valid description',
+    websiteUrl: 'https://example.com',
+  };
+
+  beforeAll(async () => {
+    const init = await initApp();
+    app = init.app;
+    dataSource = init.dataSource;
+  });
 
   beforeEach(async () => {
-    const testingModuleBuilder = Test.createTestingModule({
-      imports: [AppModule],
-    });
-
-    const moduleFixture: TestingModule = await testingModuleBuilder.compile();
-
-    app = moduleFixture.createNestApplication();
-    await app.init();
-
-    connection = moduleFixture.get<Connection>(getConnectionToken());
-
-    if (connection?.db) {
-      const collections = await connection.db.listCollections().toArray();
-      for (const collection of collections) {
-        await connection.db.collection(collection.name).deleteMany({});
-      }
-    }
+    await dataSource.query(`SELECT truncate_tables('postgres');`);
   });
 
   afterAll(async () => {
     await app.close();
   });
 
-  it('should create blog; POST /blogs', async () => {
-    const Body = {
-      name: 'Jaba',
-      description: 'qwfsddsd',
-      websiteUrl: 'https://someurl.com',
-    };
+  describe('Super Admin BlogController', () => {
+    it('Correct blog creation; POST /api/sa/blogs', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
 
-    const response = await request(app.getHttpServer())
-      .post(`/blogs`)
-      .auth('admin', 'qwerty')
-      .send(Body)
-      .expect(HttpStatus.CREATED);
-
-    expect(response.body).toEqual({
-      id: expect.any(String),
-      name: Body.name,
-      description: Body.description,
-      websiteUrl: Body.websiteUrl.trim(),
-      createdAt: expect.any(String),
-      isMembership: false,
+      expect(response.body).toMatchObject({
+        id: expect.any(String),
+        name: validBlogData.name,
+        description: validBlogData.description,
+        websiteUrl: validBlogData.websiteUrl,
+      });
     });
-  });
+    it('Incorrect blog creation; POST /api/sa/blogs', async () => {
+      const incorrectResponse1 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send({
+          ...validBlogData,
+          name: '',
+        })
+        .expect(HttpStatus.BAD_REQUEST);
 
-  it('should return blogs by id ; GET /blogs/:blogId', async () => {
-    const Body1 = {
-      name: 'Jaba',
-      description: 'qwfsddsd',
-      websiteUrl: 'https://someurl.com',
-    };
+      const incorrectResponse2 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send({
+          ...validBlogData,
+          description: '',
+        })
+        .expect(HttpStatus.BAD_REQUEST);
 
-    const Body2 = {
-      name: 'Jaba',
-      description: 'qwfsddsd',
-      websiteUrl: 'https://someurl.com',
-    };
-
-    const blog1 = await request(app.getHttpServer())
-      .post(`/blogs`)
-      .auth('admin', 'qwerty')
-      .send(Body1)
-      .expect(HttpStatus.CREATED);
-
-    const blog2 = await request(app.getHttpServer())
-      .post(`/blogs`)
-      .auth('admin', 'qwerty')
-      .send(Body2)
-      .expect(HttpStatus.CREATED);
-
-    const response = await request(app.getHttpServer())
-      .get(`/blogs/${blog1.body.id}`)
-      .expect(HttpStatus.OK);
-
-    expect(response.body).toEqual({
-      id: expect.any(String),
-      name: Body1.name,
-      description: Body1.description,
-      websiteUrl: Body1.websiteUrl.trim(),
-      createdAt: expect.any(String),
-      isMembership: false,
+      const incorrectResponse3 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send({
+          ...validBlogData,
+          websiteUrl: '',
+        })
+        .expect(HttpStatus.BAD_REQUEST);
     });
-  });
+    it('Creating a blog by an unauthorized user; POST /api/sa/blogs', async () => {
+      const incorrectResponse1 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .send(validBlogData)
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+    it('Getting all blogs with pagination; GET /api/sa/blogs', async () => {
+      const response1 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
 
-  it('should return blogs list ; GET /blogs', async () => {
-    const Body = {
-      name: 'Jaba',
-      description: 'qwfsddsd',
-      websiteUrl: 'https://someurl.com',
-    };
+      const response2 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
 
-    const blog1 = await request(app.getHttpServer())
-      .post(`/blogs`)
-      .auth('admin', 'qwerty')
-      .send(Body)
-      .expect(HttpStatus.CREATED);
+      const response3 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send({ ...validBlogData, name: 'Search Blog' })
+        .expect(HttpStatus.CREATED);
 
-    const blog2 = await request(app.getHttpServer())
-      .post(`/blogs`)
-      .auth('admin', 'qwerty')
-      .send(Body)
-      .expect(HttpStatus.CREATED);
+      const getResponse = await request(app.getHttpServer())
+        .get('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .expect(HttpStatus.OK);
 
-    const response = await request(app.getHttpServer())
-      .get(`/blogs`)
-      .query({
-        pageNumber: 1,
+      expect(getResponse.body).toMatchObject({
+        pagesCount: expect.any(Number),
+        page: 1,
         pageSize: 10,
-        sortBy: 'createdAt',
-        sortDirection: 'desc',
-      })
-      .expect(HttpStatus.OK);
+        totalCount: 3,
+        items: expect.any(Array),
+      });
 
-    expect(response.body.items.length).toEqual(2);
-    expect(response.body.page).toBe(1);
-    expect(response.body.pagesCount).toBe(1);
-    expect(response.body.pageSize).toBe(10);
-    expect(response.body.totalCount).toBe(2);
-  });
+      expect(getResponse.body.items).toHaveLength(3);
 
-  it('should update blogs; PUT /blogs/:id', async () => {
-    const Body = {
-      name: 'Jaba',
-      description: 'qwfsddsd',
-      websiteUrl: 'https://someurl.com',
-    };
+      expect(getResponse.body.items[0]).toMatchObject({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String),
+        websiteUrl: expect.any(String),
+        createdAt: expect.any(String),
+        isMembership: expect.any(Boolean),
+      });
 
-    const blog = await request(app.getHttpServer())
-      .post(`/blogs`)
-      .auth('admin', 'qwerty')
-      .send(Body)
-      .expect(HttpStatus.CREATED);
+      const getResponse2 = await request(app.getHttpServer())
+        .get('/api/sa/blogs')
+        .query({
+          searchNameTerm: 'Search Blog',
+          pageNumber: 1,
+          pageSize: 5,
+          sortBy: 'createdAt',
+          sortDirection: 'desc',
+        })
+        .auth('admin', 'qwerty')
+        .expect(HttpStatus.OK);
 
-    const Body2 = {
-      name: 'Jaba123',
-      description: 'qwfsddsd123',
-      websiteUrl: 'https://someurl.com123',
-    };
+      expect(getResponse2.body).toMatchObject({
+        pagesCount: 1,
+        page: 1,
+        pageSize: 5,
+        totalCount: 1,
+        items: expect.any(Array),
+      });
 
-    const updateBlog = await request(app.getHttpServer())
-      .put(`/blogs/${blog.body.id}`)
-      .auth('admin', 'qwerty')
-      .send(Body2)
-      .expect(HttpStatus.NO_CONTENT);
+      expect(getResponse2.body.items).toHaveLength(1);
+      expect(getResponse2.body.items[0].name).toBe('Search Blog');
+    });
+    it('Correct blog update; PUT /api/sa/blogs', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
 
-    const response = await request(app.getHttpServer())
-      .get(`/blogs/${blog.body.id}`)
-      .expect(HttpStatus.OK);
+      const blogId = response.body.id;
 
-    expect(response.body).toEqual({
-      id: expect.any(String),
-      name: Body2.name,
-      description: Body2.description,
-      websiteUrl: Body2.websiteUrl.trim(),
-      createdAt: expect.any(String),
-      isMembership: false,
+      await request(app.getHttpServer())
+        .put(`/api/sa/blogs/${blogId}`)
+        .auth('admin', 'qwerty')
+        .send({ ...validBlogData, name: 'Search Blog' })
+        .expect(HttpStatus.NO_CONTENT);
+
+      const getResponse = await request(app.getHttpServer())
+        .get(`/api/blogs/${blogId}`)
+        .expect(HttpStatus.OK);
+
+      expect(getResponse.body).toMatchObject({
+        id: blogId,
+        name: 'Search Blog',
+        description: validBlogData.description,
+        websiteUrl: validBlogData.websiteUrl,
+        isMembership: expect.any(Boolean),
+        createdAt: expect.any(String),
+      });
+    });
+    it('Incorrect blog update; PUT /api/sa/blogs', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
+
+      const blogId = response.body.id;
+
+      await request(app.getHttpServer())
+        .put(`/api/sa/blogs/${blogId}`)
+        .auth('admin', 'qwerty')
+        .send({ ...validBlogData, name: ' ' })
+        .expect(HttpStatus.BAD_REQUEST);
+
+      await request(app.getHttpServer())
+        .put(`/api/sa/blogs/${blogId}`)
+        .auth('admin', 'qwerty')
+        .send({ ...validBlogData, description: '' })
+        .expect(HttpStatus.BAD_REQUEST);
+
+      await request(app.getHttpServer())
+        .put(`/api/sa/blogs/${blogId}`)
+        .auth('admin', 'qwerty')
+        .send({ ...validBlogData, websiteUrl: '' })
+        .expect(HttpStatus.BAD_REQUEST);
+
+      const getResponse = await request(app.getHttpServer())
+        .get(`/api/blogs/${blogId}`)
+        .expect(HttpStatus.OK);
+
+      expect(getResponse.body).toMatchObject({
+        id: blogId,
+        name: validBlogData.name,
+        description: validBlogData.description,
+        websiteUrl: validBlogData.websiteUrl,
+        isMembership: expect.any(Boolean),
+        createdAt: expect.any(String),
+      });
+    });
+    it('Blog update by an unauthorized user; PUT /api/sa/blogs/:blogId', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
+
+      const blogId = response.body.id;
+
+      await request(app.getHttpServer())
+        .put(`/api/sa/blogs/${blogId}`)
+        .send({
+          ...validBlogData,
+          name: 'Search Blog',
+          description: 'aaaaaaaaaaaaaaaaaaaaasdasdasd',
+        })
+        .expect(HttpStatus.UNAUTHORIZED);
+
+      const getResponse = await request(app.getHttpServer())
+        .get(`/api/blogs/${blogId}`)
+        .expect(HttpStatus.OK);
+
+      expect(getResponse.body).toMatchObject({
+        id: blogId,
+        name: validBlogData.name,
+        description: validBlogData.description,
+        websiteUrl: validBlogData.websiteUrl,
+        isMembership: expect.any(Boolean),
+        createdAt: expect.any(String),
+      });
+    });
+    it('Deleting a blog; PUT /api/sa/blogs/:blogId', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
+
+      const blogId = response.body.id;
+
+      await request(app.getHttpServer())
+        .delete(`/api/sa/blogs/${blogId}`)
+        .auth('admin', 'qwerty')
+        .expect(HttpStatus.NO_CONTENT);
+
+      const getResponse = await request(app.getHttpServer())
+        .get(`/api/blogs/${blogId}`)
+        .expect(HttpStatus.NOT_FOUND);
+
+      await request(app.getHttpServer())
+        .delete(`/api/sa/blogs/${blogId}`)
+        .auth('admin', 'qwerty')
+        .expect(HttpStatus.NOT_FOUND);
     });
   });
 
-  it('DELETE blogs/:id and check after NOT FOUND', async () => {
-    const Body = {
-      name: 'Jaba',
-      description: 'qwfsddsd',
-      websiteUrl: 'https://someurl.com',
-    };
+  describe('Public BlogController', () => {
+    it('Getting a blog by ID; GET /api/blogs/:blogId', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
 
-    const blog = await request(app.getHttpServer())
-      .post(`/blogs`)
-      .auth('admin', 'qwerty')
-      .send(Body)
-      .expect(HttpStatus.CREATED);
+      const blogId = response.body.id;
 
-    const response1 = await request(app.getHttpServer())
-      .get(`/blogs/${blog.body.id}`)
-      .expect(HttpStatus.OK);
+      const getResponse = await request(app.getHttpServer())
+        .get(`/api/blogs/${blogId}`)
+        .expect(HttpStatus.OK);
 
-    expect(response1.body).toEqual({
-      id: expect.any(String),
-      name: Body.name,
-      description: Body.description,
-      websiteUrl: Body.websiteUrl.trim(),
-      createdAt: expect.any(String),
-      isMembership: false,
+      expect(getResponse.body).toMatchObject({
+        id: expect.any(String),
+        name: validBlogData.name,
+        description: validBlogData.description,
+        websiteUrl: validBlogData.websiteUrl,
+      });
+
+      const deleteResponse = await request(app.getHttpServer())
+        .delete(`/api/sa/blogs/${blogId}`)
+        .auth('admin', 'qwerty')
+        .expect(HttpStatus.NO_CONTENT);
+
+      const getResponse2 = await request(app.getHttpServer())
+        .get(`/api/blogs/${blogId}`)
+        .expect(HttpStatus.NOT_FOUND);
     });
+    it('Getting all blogs with pagination; GET /api/blogs', async () => {
+      const response1 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
 
-    const deleteResponse = await request(app.getHttpServer())
-      .delete(`/blogs/${blog.body.id}`)
-      .auth('admin', 'qwerty')
-      .expect(HttpStatus.NO_CONTENT);
+      const response2 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send(validBlogData)
+        .expect(HttpStatus.CREATED);
 
-    const response2 = await request(app.getHttpServer())
-      .get(`/blogs/${blog.body.id}`)
-      .expect(HttpStatus.NOT_FOUND);
+      const response3 = await request(app.getHttpServer())
+        .post('/api/sa/blogs')
+        .auth('admin', 'qwerty')
+        .send({ ...validBlogData, name: 'Search Blog' })
+        .expect(HttpStatus.CREATED);
+
+      const getResponse = await request(app.getHttpServer())
+        .get('/api/blogs')
+        .auth('admin', 'qwerty')
+        .expect(HttpStatus.OK);
+
+      expect(getResponse.body).toMatchObject({
+        pagesCount: expect.any(Number),
+        page: 1,
+        pageSize: 10,
+        totalCount: 3,
+        items: expect.any(Array),
+      });
+
+      expect(getResponse.body.items).toHaveLength(3);
+
+      expect(getResponse.body.items[0]).toMatchObject({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String),
+        websiteUrl: expect.any(String),
+        createdAt: expect.any(String),
+        isMembership: expect.any(Boolean),
+      });
+
+      const getResponse2 = await request(app.getHttpServer())
+        .get('/api/blogs')
+        .query({
+          searchNameTerm: 'Search Blog',
+          pageNumber: 1,
+          pageSize: 5,
+          sortBy: 'createdAt',
+          sortDirection: 'desc',
+        })
+        .auth('admin', 'qwerty')
+        .expect(HttpStatus.OK);
+
+      expect(getResponse2.body).toMatchObject({
+        pagesCount: 1,
+        page: 1,
+        pageSize: 5,
+        totalCount: 1,
+        items: expect.any(Array),
+      });
+
+      expect(getResponse2.body.items).toHaveLength(1);
+      expect(getResponse2.body.items[0].name).toBe('Search Blog');
+    });
   });
 });
