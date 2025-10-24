@@ -25,10 +25,11 @@ export class PasswordRecoveryUseCase
   async execute({ dto }: PasswordRecoveryCommand): Promise<void> {
     const user = await this.userRepository.findByLoginOrEmail(dto.email);
     if (!user) {
-      throw new DomainException({
-        code: DomainExceptionCode.Unauthorized,
-        message: 'User does not exist',
-      });
+      // throw new DomainException({
+      //   code: DomainExceptionCode.Unauthorized,
+      //   message: 'User does not exist',
+      // });
+      return;
     }
 
     const newConfirmationCode = randomUUID();

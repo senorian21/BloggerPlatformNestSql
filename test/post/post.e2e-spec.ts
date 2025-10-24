@@ -1,6 +1,6 @@
 import { HttpStatus, INestApplication } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { initApp } from '../utils/app.test-helper';
+import { initApp } from '../helper/app.test-helper';
 import { BlogsTestHelper } from '../blog/blogs.test-helper';
 import request from 'supertest';
 

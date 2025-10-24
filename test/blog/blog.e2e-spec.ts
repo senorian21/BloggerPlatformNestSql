@@ -1,7 +1,7 @@
 import { INestApplication, HttpStatus } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import request from 'supertest';
-import { initApp } from '../utils/app.test-helper';
+import { initApp } from '../helper/app.test-helper';
 
 describe('Blog (e2e)', () => {
   let app: INestApplication;

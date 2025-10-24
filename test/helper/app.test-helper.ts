@@ -4,6 +4,7 @@ import { getDataSourceToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { AppModule } from '../../src/app.module';
 import { appSetup } from '../../src/setup/app.setup';
+import { NodemailerService } from '../../src/modules/user-accounts/adapters/nodemeiler/nodemeiler.service';
 
 export const initApp = async (): Promise<{
   app: INestApplication;
@@ -11,7 +12,12 @@ export const initApp = async (): Promise<{
 }> => {
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
-  }).compile();
+  })
+    .overrideProvider(NodemailerService)
+    .useValue({
+      sendEmail: jest.fn().mockResolvedValue(undefined), // мок метода
+    })
+    .compile();
 
   const app = moduleFixture.createNestApplication();
   appSetup(app);
