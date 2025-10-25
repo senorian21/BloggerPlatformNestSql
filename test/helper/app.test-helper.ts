@@ -5,6 +5,7 @@ import { DataSource } from 'typeorm';
 import { AppModule } from '../../src/app.module';
 import { appSetup } from '../../src/setup/app.setup';
 import { NodemailerService } from '../../src/modules/user-accounts/adapters/nodemeiler/nodemeiler.service';
+import { GameCronService } from '../../src/modules/quiz-game/game/application/service/cron-game.service';
 
 export const initApp = async (): Promise<{
   app: INestApplication;
@@ -17,6 +18,8 @@ export const initApp = async (): Promise<{
     .useValue({
       sendEmail: jest.fn().mockResolvedValue(undefined), // мок метода
     })
+    .overrideProvider(GameCronService)
+    .useValue({ checkGames: jest.fn() })
     .compile();
 
   const app = moduleFixture.createNestApplication();

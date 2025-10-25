@@ -30,6 +30,7 @@ describe('Auth (e2e)', () => {
   afterAll(async () => {
     await app.close();
   });
+
   describe('Auth login (e2e)', () => {
     it('✅ Correct login; POST /api/auth/login', async () => {
       const validUserData = {
@@ -314,6 +315,190 @@ describe('Auth (e2e)', () => {
         .post('/api/auth/password-recovery')
         .send({ email: 'ratelimitFinal@example.com' })
         .expect(HttpStatus.TOO_MANY_REQUESTS);
+    });
+  });
+  describe('Auth password recovery flow (e2e)', () => {
+    it('❌ POST /api/auth/password-recovery should return 204 and call mailer only if user exists', async () => {
+      const existingUser = {
+        login: 'Recover',
+        password: 'StrongPass1',
+        email: 'recover1@example.com',
+      };
+      await userHelper.createUser(existingUser);
+
+      await request(app.getHttpServer())
+        .post('/api/auth/password-recovery')
+        .send({ email: existingUser.email })
+        .expect(HttpStatus.NO_CONTENT);
+
+      expect(mailer.sendEmail).toHaveBeenCalledTimes(1);
+      expect(mailer.sendEmail).toHaveBeenCalledWith(
+        existingUser.email,
+        expect.any(String),
+        expect.any(Function),
+      );
+
+      jest.clearAllMocks();
+
+      await request(app.getHttpServer())
+        .post('/api/auth/password-recovery')
+        .send({ email: 'nonexistent@example.com' })
+        .expect(HttpStatus.NO_CONTENT);
+
+      expect(mailer.sendEmail).not.toHaveBeenCalled();
+    });
+    it('❌ POST /api/auth/password-recovery with invalid email should return 400', async () => {
+      await request(app.getHttpServer())
+        .post('/api/auth/password-recovery')
+        .send({ email: 'bad*gmail.com' })
+        .expect(400);
+    });
+    it('✅ POST /api/auth/new-password with valid code should return 204', async () => {
+      const userData = {
+        login: 'Recover2',
+        password: 'StrongPass1',
+        email: 'recover2@example.com',
+      };
+      await userHelper.createUser(userData);
+
+      await request(app.getHttpServer())
+        .post('/api/auth/password-recovery')
+        .send({ email: userData.email })
+        .expect(HttpStatus.NO_CONTENT);
+
+      expect(mailer.sendEmail).toHaveBeenCalled();
+      const [to, recoveryCode, templateFn] = (mailer.sendEmail as jest.Mock)
+        .mock.calls[0];
+
+      const { html } = templateFn(recoveryCode);
+      expect(html).toContain(recoveryCode);
+
+      const newPassword = 'StrongPass123';
+      await request(app.getHttpServer())
+        .post('/api/auth/new-password')
+        .send({ recoveryCode, newPassword })
+        .expect(HttpStatus.NO_CONTENT);
+    });
+    it('❌ POST /api/auth/new-password with wrong code should return 400', async () => {
+      await request(app.getHttpServer())
+        .post('/api/auth/new-password')
+        .send({ recoveryCode: 'wrong-code', newPassword: 'StrongPass123' })
+        .expect(400);
+    });
+    it('❌ POST /api/auth/new-password with invalid password should return 400', async () => {
+      await request(app.getHttpServer())
+        .post('/api/auth/new-password')
+        .send({ recoveryCode: 'some-code', newPassword: '123' }) // слишком короткий
+        .expect(400);
+    });
+  });
+  describe('Auth registration + email resending (e2e)', () => {
+    it('should send email on registration and again on resending', async () => {
+      const email = 'user@example.com';
+      const password = 'StrongPass123';
+
+      await request(app.getHttpServer())
+        .post('/api/auth/registration')
+        .send({ email, password, login: 'testuser' })
+        .expect(204);
+
+      expect(mailer.sendEmail).toHaveBeenCalledTimes(1);
+      expect((mailer.sendEmail as jest.Mock).mock.calls[0][0]).toBe(email);
+
+      await request(app.getHttpServer())
+        .post('/api/auth/registration-email-resending')
+        .send({ email })
+        .expect(204);
+
+      expect(mailer.sendEmail).toHaveBeenCalledTimes(2);
+      expect((mailer.sendEmail as jest.Mock).mock.calls[1][0]).toBe(email);
+    });
+  });
+  describe('Auth logout (e2e)', () => {
+    it('✅ Should logout user with valid refreshToken cookie', async () => {
+      const userData = {
+        login: 'UsrLogout1',
+        password: 'Strong123',
+        email: 'logout1@example.com',
+      };
+      await userHelper.createUser(userData);
+
+      const loginResponse = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          loginOrEmail: userData.login,
+          password: userData.password,
+        })
+        .expect(HttpStatus.OK);
+
+      const cookiesRaw = loginResponse.headers['set-cookie'];
+      const cookies = Array.isArray(cookiesRaw) ? cookiesRaw : [cookiesRaw];
+      const refreshTokenCookie = cookies.find((c) =>
+        c.startsWith('refreshToken='),
+      );
+      expect(refreshTokenCookie).toBeDefined();
+
+      const tokenValue = refreshTokenCookie!
+        .split(';')[0]
+        .replace('refreshToken=', '');
+
+      const decoded: any = jwt.decode(tokenValue);
+      expect(decoded).toBeDefined();
+      expect(decoded.userId).toBeDefined();
+      expect(decoded.deviceId).toBeDefined();
+
+      await request(app.getHttpServer())
+        .post('/api/auth/logout')
+        .set('Cookie', `refreshToken=${tokenValue}`)
+        .expect(HttpStatus.NO_CONTENT);
+
+      await request(app.getHttpServer())
+        .post('/api/auth/logout')
+        .set('Cookie', `refreshToken=${tokenValue}`)
+        .expect(HttpStatus.UNAUTHORIZED);
+    });
+  });
+  describe('Auth me (e2e)', () => {
+    it('✅ Should return current user info with valid accessToken', async () => {
+      const userData = {
+        login: 'UsrMe1',
+        password: 'Strong123',
+        email: 'me1@example.com',
+      };
+      await userHelper.createUser(userData);
+
+      // 1. логин
+      const loginResponse = await request(app.getHttpServer())
+        .post('/api/auth/login')
+        .send({
+          loginOrEmail: userData.login,
+          password: userData.password,
+        })
+        .expect(HttpStatus.OK);
+
+      // достаём accessToken из тела ответа
+      expect(loginResponse.body).toMatchObject({
+        accessToken: expect.any(String),
+      });
+      const accessToken = loginResponse.body.accessToken;
+
+      // 2. запрос к /me с Bearer токеном
+      const meResponse = await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(HttpStatus.OK);
+
+      // 3. проверяем данные
+      expect(meResponse.body).toMatchObject({
+        email: userData.email,
+        login: userData.login,
+        userId: expect.any(String),
+      });
+    });
+    it('❌ Should return 401 without token', async () => {
+      await request(app.getHttpServer())
+        .get('/api/auth/me')
+        .expect(HttpStatus.UNAUTHORIZED);
     });
   });
 });
