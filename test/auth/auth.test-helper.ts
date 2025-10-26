@@ -10,11 +10,22 @@ interface LoginResult {
 export class AuthTestHelper {
   constructor(private app: INestApplication) {}
 
-  async login(loginOrEmail: string, password: string): Promise<LoginResult> {
-    const loginResponse = await request(this.app.getHttpServer())
+  async login(
+    loginOrEmail: string,
+    password: string,
+    deviceName?: string,
+  ): Promise<LoginResult> {
+    const payload = { loginOrEmail, password };
+
+    let req = request(this.app.getHttpServer())
       .post('/api/auth/login')
-      .send({ loginOrEmail, password })
-      .expect(HttpStatus.OK);
+      .send(payload);
+
+    if (deviceName) {
+      req = req.set('User-Agent', deviceName);
+    }
+
+    const loginResponse = await req.expect(HttpStatus.OK);
 
     expect(loginResponse.body).toMatchObject({
       accessToken: expect.any(String),
